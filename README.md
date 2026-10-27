@@ -1,7 +1,9 @@
 # The Sample Room
 
-A text-free, interactive 3D hanging-file sample box. Twenty-four white sample files with red binding edges and hanging hooks sit inside a deep blue box. Scroll to send a lift-and-tilt wave through the files. Click an exposed edge or file to inspect its material texture. Icon controls save samples to a browser-local board and download a vector SVG board.
+A text-free axonometric material library in an elongated wooden drawer. Each file is a solid material sample inside a thick, cloudy acrylic holder with six modeled outer faces and a separate solid core. Materials use a coordinated palette of warm timber, mineral neutrals, muted textiles, and metals. The page starts near the center of the collection.
 
-Built with HTML, CSS 3D transforms, and vanilla JavaScript. No build required. Serve this directory with any static server to preview. GitHub Pages publishes the repository root from main.
+Scrolling sends a wave through the samples and translates the entire drawer so the focused sample stays at a fixed screen position. Orthographic projection keeps parallel edges parallel. Select an exposed sample to inspect its texture. Icon controls save a browser-local board and download it as vector SVG.
 
-Arrow keys, Page Up / Down, Home / End, and the small previous / next controls browse the files. Accessible names and live announcements remain available to screen readers without visible page copy. Reduced-motion mode removes interpolation and velocity ripples. Material names and procedural textures are illustrative studies.
+Built with HTML, CSS 3D transforms, procedural SVG wood grain, and vanilla JavaScript. No build required. Serve this directory with a static server; GitHub Pages publishes main / repository root.
+
+Use wheel or touch scrolling, arrow keys, Page Up / Down, Home / End, or the previous / next icons. Accessible labels remain without visible copy. Reduced-motion mode removes interpolation and velocity ripples. Material textures are illustrative studies.
