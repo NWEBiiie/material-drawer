@@ -1,13 +1,6 @@
-/* Four levels share the same orthographic camera; opacity stays on individual
-   faces so translucency never flattens the three-dimensional category drawers. */
+/* Four solid levels share the same orthographic camera. */
 .drawer-level{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
 .category-drawer{transform:translateZ(var(--level-z))}
-.ghost-drawer .box-face{background-image:none;background-color:#b5b2a012;box-shadow:inset 0 0 0 1px #868d7b45}
-.ghost-drawer .category-case>.box-top{background:#d1cebc25}
-.ghost-drawer .category-handle>.box-face{background:#929b8a18;box-shadow:inset 0 0 0 1px #7d8b7a52}
-.ghost-drawer .ghost-sample>.box-face{background:color-mix(in srgb,var(--ghost-tone) 9%,transparent);box-shadow:inset 0 0 0 1px #9fa79945}
-.ghost-drawer .ghost-sample>.box-top{background:color-mix(in srgb,var(--ghost-tone) 24%,transparent)}
-.ghost-cool .box-face{box-shadow:inset 0 0 0 1px #8c9d9e48}.ghost-cool .category-case>.box-top{background:#bdcaca26}
 .foam-piece>.box-face{background-color:#373b35;background-image:radial-gradient(#d8dfca24 .7px,transparent 1px),radial-gradient(#10170e66 .8px,transparent 1.3px);background-size:5px 5px,7px 7px;box-shadow:inset 0 0 0 .5px #0f150d55}
 .foam-piece>.box-top{background-color:#50554a}.foam-piece>.box-left,.foam-piece>.box-far{background-color:#30352e}.foam-piece>.box-near{background-color:#3d4238}
 .material-block>.box-face{background-color:var(--block-tone);background-image:repeating-linear-gradient(15deg,#ffffff0a 0 1px,transparent 1px 4px);box-shadow:inset 0 0 0 .6px #ffffff28}

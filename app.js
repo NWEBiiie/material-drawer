@@ -30,38 +30,40 @@
   let saved=new Set();
   try{const ids=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(ids))saved=new Set(ids.filter(id=>samples.some(s=>s.id===id)));}catch{}
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let visibleSamples=samples;
   const {pose,track,clamp}=window.SampleWave,reduced=matchMedia('(prefers-reduced-motion:reduce)');
   const colors={timber:'#bdb99b',stone:'#b8c0b2',textiles:'#c5aa96',finishes:'#b1bec1'};
   const plusIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',checkIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-8"/></svg>',closeIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>';
   let currentIndex=-1,position=0,target=0,lastTime=0,velocity=0,frame=0,step=140,slots=[],announceTimer;
   function fileMarkup(s,i){return `<div class="file-slot" data-file="${s.id}" style="--sample-tone:${s.color}"><button class="sample file-card" data-sample="${s.id}" tabindex="-1" aria-label="Inspect ${escape(s.name)} in frosted acrylic"><span class="file-back" aria-hidden="true"></span><span class="file-core-back material ${s.texture}" aria-hidden="true"></span><span class="core-edge core-left" aria-hidden="true"></span><span class="core-edge core-right" aria-hidden="true"></span><span class="core-edge core-top" aria-hidden="true"></span><span class="core-edge core-bottom" aria-hidden="true"></span><span class="file-edge edge-top" aria-hidden="true"></span><span class="file-edge edge-bottom" aria-hidden="true"></span><span class="file-edge edge-left" aria-hidden="true"></span><span class="file-edge edge-right" aria-hidden="true"></span><span class="file-front"><span class="file-art material ${s.texture}" aria-hidden="true"></span><span class="acrylic-glaze" aria-hidden="true"></span><span class="file-tab" aria-hidden="true"></span><span class="file-saved" ${saved.has(s.id)?'':'hidden'} aria-label="Saved"></span></span></button></div>`;}
   function updateCurrent(){
-    const next=clamp(Math.round(position),0,samples.length-1);if(next===currentIndex)return;currentIndex=next;
-    $('#previousFile').disabled=next===0;$('#nextFile').disabled=next===samples.length-1;
+    const next=clamp(Math.round(position),0,visibleSamples.length-1);if(next===currentIndex)return;currentIndex=next;
+    $('#previousFile').disabled=next===0;$('#nextFile').disabled=next===visibleSamples.length-1;
     slots.forEach((slot,i)=>{slot.classList.toggle('is-current',i===next);slot.querySelector('button').tabIndex=i===next?0:-1;});
-    clearTimeout(announceTimer);announceTimer=setTimeout(()=>{$('#currentAnnouncement').textContent=`${next+1} of ${samples.length}: ${samples[next].name}`;},180);
+    clearTimeout(announceTimer);announceTimer=setTimeout(()=>{$('#currentAnnouncement').textContent=`${next+1} of ${visibleSamples.length}: ${visibleSamples[next].name}`;},180);
   }
   function draw(time){
     frame=0;const dt=Math.min(40,Math.max(1,time-(lastTime||time-16)));lastTime=time;const before=position;
     position=reduced.matches?target:position+(target-position)*(1-Math.exp(-dt/105));velocity=reduced.matches?0:(position-before)/dt;
     if(Math.abs(target-position)<.0005){position=target;velocity=0;}
     slots.forEach((slot,i)=>{const p=pose(i,position,velocity,reduced.matches);slot.style.transform=`translate3d(${p.x}px,${p.y}px,${p.z}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`;});
-    $('#drawerWorld').style.setProperty('--focus-travel',`${track(position)}px`);
+    window.DrawerCabinet.track(track(position));
     updateCurrent();if(Math.abs(target-position)>.0005)requestDraw();
   }
   function requestDraw(){if(!frame)frame=requestAnimationFrame(draw);}
-  function syncScroll(){target=clamp(window.scrollY/step,0,samples.length-1);requestDraw();}
-  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(samples.length-1)*step}px`);const scale=Math.min(.46,(innerWidth-24)/1800,(innerHeight-40)/2200);document.documentElement.style.setProperty('--drawer-scale',Math.max(.27,scale));syncScroll();}
-  function goTo(index,focus=false){index=clamp(index,0,samples.length-1);window.scrollTo({top:index*step,behavior:'instant'});target=index;requestDraw();if(focus)slots[index].querySelector('button').focus({preventScroll:true});}
-  function renderFiles(){$('#files').innerHTML=samples.map(fileMarkup).join('');slots=[...document.querySelectorAll('.file-slot')];resize();position=target=11;window.scrollTo({top:11*step,behavior:'instant'});draw(performance.now());}
+  function syncScroll(){target=clamp(window.scrollY/step,0,visibleSamples.length-1);requestDraw();}
+  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(visibleSamples.length-1)*step}px`);const scale=Math.min(.33,(innerWidth-24)/1800,(innerHeight-40)/3000);document.documentElement.style.setProperty('--drawer-scale',Math.max(.23,scale));syncScroll();}
+  function goTo(index,focus=false){index=clamp(index,0,visibleSamples.length-1);window.scrollTo({top:index*step,behavior:'instant'});target=index;requestDraw();if(focus)slots[index].querySelector('button').focus({preventScroll:true});}
+  function renderFiles(){$('#files').innerHTML=visibleSamples.map(fileMarkup).join('');slots=[...document.querySelectorAll('.file-slot')];currentIndex=-1;resize();position=target=Math.floor((visibleSamples.length-1)/2);window.scrollTo({top:position*step,behavior:'instant'});draw(performance.now());}
+  addEventListener('drawer-category-change',e=>{const index=e.detail.index;if(index<0||index===3)return;visibleSamples=index===1?samples.filter(s=>s.family==='timber'||s.family==='textiles'):index===2?samples.filter(s=>s.family==='stone'||s.family==='finishes'):samples;const level=document.querySelectorAll('.drawer-level')[index];level.append($('#files'));renderFiles();});
   addEventListener('scroll',syncScroll,{passive:true});addEventListener('resize',resize);reduced.addEventListener('change',requestDraw);
   $('#previousFile').onclick=()=>goTo(currentIndex-1);$('#nextFile').onclick=()=>goTo(currentIndex+1);
-  addEventListener('keydown',e=>{if(document.querySelector('dialog[open]')||e.altKey||e.ctrlKey||e.metaKey)return;const indices={ArrowDown:currentIndex+1,ArrowUp:currentIndex-1,PageDown:currentIndex+4,PageUp:currentIndex-4,Home:0,End:samples.length-1};if(e.key in indices){e.preventDefault();goTo(indices[e.key],!!e.target.closest('.file-card'));}});
+  addEventListener('keydown',e=>{if(document.body.dataset.drawer!=='files'||document.querySelector('dialog[open]')||e.altKey||e.ctrlKey||e.metaKey)return;const indices={ArrowDown:currentIndex+1,ArrowUp:currentIndex-1,PageDown:currentIndex+4,PageUp:currentIndex-4,Home:0,End:visibleSamples.length-1};if(e.key in indices){e.preventDefault();goTo(indices[e.key],!!e.target.closest('.file-card'));}});
   function notify(message){$('#toast').textContent=message;}
   function save(){try{localStorage.setItem(storageKey,JSON.stringify([...saved]));}catch{notify('Saved for this visit.');}updateBoard();}
   function toggleSample(id){saved.has(id)?saved.delete(id):saved.add(id);save();const b=$('#detailSave');if(b){b.innerHTML=saved.has(id)?checkIcon:plusIcon;b.setAttribute('aria-pressed',saved.has(id));b.setAttribute('aria-label',saved.has(id)?'Remove saved sample':'Save sample');}notify(saved.has(id)?'Sample saved':'Sample removed');}
   function inspect(id){const s=samples.find(s=>s.id===id);if(!s)return;$('#sampleDetail').innerHTML=`<div class="detail-art material ${s.texture}" style="--sample-tone:${s.color}" role="img" aria-label="${escape(s.name)} texture"></div><div class="detail-actions"><button id="detailSave" class="round-control" aria-label="${saved.has(id)?'Remove saved sample':'Save sample'}" aria-pressed="${saved.has(id)}">${saved.has(id)?checkIcon:plusIcon}</button></div>`;$('#sampleDialog').setAttribute('aria-label',s.name);$('#detailSave').onclick=()=>toggleSample(id);$('#sampleDialog').showModal();}
-  $('#files').addEventListener('click',e=>{const b=e.target.closest('[data-sample]');if(!b)return;const index=samples.findIndex(s=>s.id===b.dataset.sample);goTo(index);inspect(b.dataset.sample);});
+  $('#files').addEventListener('click',e=>{const b=e.target.closest('[data-sample]');if(!b)return;const index=visibleSamples.findIndex(s=>s.id===b.dataset.sample);goTo(index);inspect(b.dataset.sample);});
   function updateBoard(){
     $('#boardDot').hidden=!saved.size;$('#boardToggle').setAttribute('aria-label',`Open saved samples, ${saved.size} saved`);
     document.querySelectorAll('.file-saved').forEach(marker=>{marker.hidden=!saved.has(marker.closest('[data-sample]').dataset.sample);});
