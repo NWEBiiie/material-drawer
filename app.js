@@ -52,7 +52,7 @@
   }
   function requestDraw(){if(!frame)frame=requestAnimationFrame(draw);}
   function syncScroll(){target=clamp(window.scrollY/step,0,visibleSamples.length-1);requestDraw();}
-  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(visibleSamples.length-1)*step}px`);const scale=Math.min(.33,(innerWidth-24)/1800,(innerHeight-40)/3000);document.documentElement.style.setProperty('--drawer-scale',Math.max(.23,scale));syncScroll();}
+  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(visibleSamples.length-1)*step}px`);const scale=Math.min(1.02,(innerWidth-84)/1100,(innerHeight-70)/820);document.documentElement.style.setProperty('--drawer-scale',Math.max(.42,scale));syncScroll();}
   function goTo(index,focus=false){index=clamp(index,0,visibleSamples.length-1);window.scrollTo({top:index*step,behavior:'instant'});target=index;requestDraw();if(focus)slots[index].querySelector('button').focus({preventScroll:true});}
   function renderFiles(){$('#files').innerHTML=visibleSamples.map(fileMarkup).join('');slots=[...document.querySelectorAll('.file-slot')];currentIndex=-1;resize();position=target=Math.floor((visibleSamples.length-1)/2);window.scrollTo({top:position*step,behavior:'instant'});draw(performance.now());}
   addEventListener('drawer-category-change',e=>{const index=e.detail.index;if(index<0||index===3)return;visibleSamples=index===1?samples.filter(s=>s.family==='timber'||s.family==='textiles'):index===2?samples.filter(s=>s.family==='stone'||s.family==='finishes'):samples;const level=document.querySelectorAll('.drawer-level')[index];level.append($('#files'));renderFiles();});
@@ -82,5 +82,5 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><title>The Sample Room — Your material board</title><defs>${defs}</defs><rect width="100%" height="100%" fill="#f2efe8"/><text x="48" y="65" font-family="Georgia,serif" font-size="35" fill="#323b30">A material story.</text><text x="49" y="98" font-family="Arial,sans-serif" font-size="11" fill="#77796f">THE SAMPLE ROOM / ${selected.length} MATERIAL STUDIES</text>${cards}<text x="48" y="${height-20}" font-family="Arial,sans-serif" font-size="10" fill="#77796f">Illustrative digital textures and colours. Confirm with physical samples.</text></svg>`;
   }
   $('#downloadBoard').onclick=()=>{if(!saved.size)return;const url=URL.createObjectURL(new Blob([boardSvg()],{type:'image/svg+xml'})),a=document.createElement('a');a.href=url;a.download='the-sample-room-board.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Your material story, ready to keep.');};
-  renderFiles();updateBoard();
+  renderFiles();updateBoard();window.DrawerCabinet.select(0);
 })();
