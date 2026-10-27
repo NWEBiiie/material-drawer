@@ -51,7 +51,7 @@
   }
   function requestDraw(){if(!frame)frame=requestAnimationFrame(draw);}
   function syncScroll(){target=clamp(window.scrollY/step,0,samples.length-1);requestDraw();}
-  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(samples.length-1)*step}px`);const scale=Math.min(.94,(innerWidth-36)/1180,(innerHeight-100)/1000);document.documentElement.style.setProperty('--drawer-scale',Math.max(.2,scale));syncScroll();}
+  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(samples.length-1)*step}px`);const scale=Math.min(1.05,(innerWidth-24)/1360);document.documentElement.style.setProperty('--drawer-scale',Math.max(.46,scale));syncScroll();}
   function goTo(index,focus=false){index=clamp(index,0,samples.length-1);window.scrollTo({top:index*step,behavior:'instant'});target=index;requestDraw();if(focus)slots[index].querySelector('button').focus({preventScroll:true});}
   function renderFiles(){$('#files').innerHTML=samples.map(fileMarkup).join('');slots=[...document.querySelectorAll('.file-slot')];resize();position=target=11;window.scrollTo({top:11*step,behavior:'instant'});draw(performance.now());}
   addEventListener('scroll',syncScroll,{passive:true});addEventListener('resize',resize);reduced.addEventListener('change',requestDraw);
