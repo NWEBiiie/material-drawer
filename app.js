@@ -1,6 +1,5 @@
 (() => {
   'use strict';
-  const families=[{id:'timber',name:'Timber',note:'NATURALLY GROUNDED',type:'Grain & character'},{id:'stone',name:'Stone',note:'A LITTLE EARTH, REFINED',type:'Weight & permanence'},{id:'textiles',name:'Textiles',note:'SOFTEN THE EDGES',type:'Woven & wonderful'},{id:'finishes',name:'Finishes',note:'THE FINISHING TOUCH',type:'Light & atmosphere'}];
   const samples=[
     ['timber','Natural oak','oak','#c4a16e','Warm / linear grain','Matte, open grain','The easy warmth of pale oak. A quiet foundation that plays beautifully with stone and soft, woven textures.'],
     ['timber','American walnut','walnut','#785a40','Rich / warm brown','Satin, straight grain','Deep brown grain with a gentle glow. Pair with pale plaster or aged brass for a little contrast.'],
@@ -28,59 +27,50 @@
     ['finishes','Glazed celadon','glaze','#a8bfc0','Cool / soft reflection','Gloss glaze','A watery green-blue glaze with a soft reflection. A small, bright counterpoint to grounded natural textures.']
   ].map((s,i)=>({family:s[0],name:s[1],texture:s[2],color:s[3],character:s[4],finish:s[5],description:s[6],id:`SR-${String(i+1).padStart(2,'0')}`}));
   const $=selector=>document.querySelector(selector),storageKey='sample-room-board-v1';
-  let saved=new Set(),query='',toastTimer;
+  let saved=new Set();
   try{const ids=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(ids))saved=new Set(ids.filter(id=>samples.some(s=>s.id===id)));}catch{}
-  const open=new Set(['timber']);
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const matching=s=>`${s.name} ${s.family} ${s.character} ${s.finish}`.toLowerCase().includes(query);
-  function swatch(s){return `<span class="sample-art material ${s.texture}" aria-hidden="true"></span>${saved.has(s.id)?'<span class="sample-saved" aria-label="On your board">✓</span>':''}<span class="sample-name">${escape(s.name)}</span><span class="sample-code">${s.id} / ${escape(s.finish)}</span>`;}
-  $('#drawers').innerHTML=families.map((f,i)=>`<section class="drawer${open.has(f.id)?' open':''}" data-drawer="${f.id}"><div class="drawer-tray" id="tray-${f.id}"><div class="tray-overflow"><div class="tray-content"><p class="tray-note"><span>${f.note}</span><span>SELECT A SAMPLE ↗</span></p><div class="swatch-grid">${samples.filter(s=>s.family===f.id).map(s=>`<button class="sample" data-sample="${s.id}" aria-label="Inspect ${escape(s.name)}">${swatch(s)}</button>`).join('')}</div></div></div></div><button class="drawer-front" data-handle="${f.id}" aria-controls="tray-${f.id}" aria-expanded="${open.has(f.id)}" aria-label="${open.has(f.id)?'Close':'Open'} ${f.name} drawer"><span class="drawer-label"><strong>${f.name}</strong><small>${f.type.toUpperCase()}</small></span><span class="handle" aria-hidden="true"><span class="handle-slot"></span></span><span class="drawer-number">NO. 0${i+1}</span><span class="open-label">6 SAMPLES / ${open.has(f.id)?'PUSH IN':'PULL OUT'}</span></button></section>`).join('');
-  function updateDrawers(){
-    let total=0;
-    families.forEach(f=>{
-      const drawer=$(`[data-drawer="${f.id}"]`),handle=drawer.querySelector('[data-handle]'),tray=drawer.querySelector('.drawer-tray');
-      const matches=samples.filter(s=>s.family===f.id&&matching(s)),isOpen=open.has(f.id);
-      drawer.classList.toggle('open',isOpen);drawer.hidden=!!query&&!matches.length;
-      handle.setAttribute('aria-expanded',isOpen);handle.setAttribute('aria-label',`${isOpen?'Close':'Open'} ${f.name} drawer`);
-      handle.querySelector('.open-label').textContent=`${query?matches.length:6} SAMPLES / ${isOpen?'PUSH IN':'PULL OUT'}`;
-      tray.inert=!isOpen;
-      drawer.querySelectorAll('[data-sample]').forEach(button=>{button.hidden=!matching(samples.find(s=>s.id===button.dataset.sample));});
-      total+=matches.length;
-      $(`[data-family="${f.id}"]`).classList.toggle('active',isOpen);
-    });
-    $('#emptySearch').hidden=total>0;
+  const {pose,clamp}=window.SampleWave,reduced=matchMedia('(prefers-reduced-motion:reduce)');
+  const colors={timber:'#bdb99b',stone:'#b8c0b2',textiles:'#c5aa96',finishes:'#b1bec1'};
+  const plusIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',checkIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-8"/></svg>',closeIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>';
+  let currentIndex=-1,position=0,target=0,lastTime=0,velocity=0,frame=0,step=140,slots=[],announceTimer;
+  function fileMarkup(s,i){return `<div class="file-slot" data-file="${s.id}"><button class="sample file-card" data-sample="${s.id}" tabindex="-1" aria-label="Pull out ${escape(s.name)}"><span class="file-back" aria-hidden="true"></span><span class="file-edge edge-top" aria-hidden="true"></span><span class="file-edge edge-bottom" aria-hidden="true"></span><span class="file-edge edge-left" aria-hidden="true"></span><span class="file-edge edge-right" aria-hidden="true"></span><span class="file-front"><span class="file-art material ${s.texture}" aria-hidden="true"></span><span class="file-hanger" aria-hidden="true"></span><span class="file-hook hook-left" aria-hidden="true"></span><span class="file-hook hook-right" aria-hidden="true"></span><span class="file-tab" aria-hidden="true"></span><span class="file-saved" ${saved.has(s.id)?'':'hidden'} aria-label="Saved"></span></span></button></div>`;}
+  function updateCurrent(){
+    const next=clamp(Math.round(position),0,samples.length-1);if(next===currentIndex)return;currentIndex=next;
+    $('#previousFile').disabled=next===0;$('#nextFile').disabled=next===samples.length-1;
+    slots.forEach((slot,i)=>{slot.classList.toggle('is-current',i===next);slot.querySelector('button').tabIndex=i===next?0:-1;});
+    clearTimeout(announceTimer);announceTimer=setTimeout(()=>{$('#currentAnnouncement').textContent=`${next+1} of ${samples.length}: ${samples[next].name}`;},180);
   }
-  function toggleDrawer(id,force){const next=force??!open.has(id);next?open.add(id):open.delete(id);updateDrawers();}
-  document.querySelectorAll('[data-handle]').forEach(button=>{
-    let gesture=null,suppressClick=false;
-    button.addEventListener('pointerdown',e=>{if(e.button!==0||e.isPrimary===false)return;gesture={y:e.clientY,pointer:e.pointerId,moved:false,wasOpen:open.has(button.dataset.handle)};button.setPointerCapture(e.pointerId);});
-    button.addEventListener('pointermove',e=>{if(!gesture||gesture.pointer!==e.pointerId)return;const delta=e.clientY-gesture.y;if(Math.abs(delta)>8)gesture.moved=true;if(gesture.moved){button.style.transform=`translateY(${Math.max(-5,Math.min(10,delta*.12))}px)`;}});
-    button.addEventListener('pointerup',e=>{if(!gesture||gesture.pointer!==e.pointerId)return;const delta=e.clientY-gesture.y;if(gesture.moved){suppressClick=true;toggleDrawer(button.dataset.handle,Math.abs(delta)>20?delta>0:gesture.wasOpen);setTimeout(()=>suppressClick=false,0);}button.style.transform='';gesture=null;});
-    button.addEventListener('pointercancel',()=>{button.style.transform='';gesture=null;});
-    button.addEventListener('click',e=>{if(e.detail===0||!suppressClick)toggleDrawer(button.dataset.handle);});
-  });
-  document.querySelectorAll('[data-family]').forEach(button=>button.addEventListener('click',()=>{
-    if(query){$('#search').value='';query='';}
-    open.clear();toggleDrawer(button.dataset.family,true);
-    if(matchMedia('(max-width:760px)').matches)$(`[data-drawer="${button.dataset.family}"]`).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth',block:'center'});
-  }));
-  $('#search').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();if(query)families.forEach(f=>{if(samples.some(s=>s.family===f.id&&matching(s)))open.add(f.id);});updateDrawers();});
-  function notify(message){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),2200);}
-  function save(){try{localStorage.setItem(storageKey,JSON.stringify([...saved]));}catch{notify('Board updated. Browser storage is unavailable.');}updateBoard();}
-  function toggleSample(id){if(saved.has(id)){saved.delete(id);notify('Removed from your board');}else{saved.add(id);notify('A little possibility, saved.');}save();const button=$('#detailSave');if(button)button.innerHTML=`${saved.has(id)?'Remove from your board':'Add to your board'} <span>${saved.has(id)?'−':'+'}</span>`;}
-  function inspect(id){const s=samples.find(s=>s.id===id);if(!s)return;$('#sampleDetail').innerHTML=`<div class="sample-detail-layout"><div class="detail-art-wrap"><div class="detail-art material ${s.texture}" role="img" aria-label="Illustrative ${escape(s.name)} texture"></div></div><div class="detail-copy"><p class="eyebrow">${s.id} / ${s.family.toUpperCase()}</p><h2>${escape(s.name)}</h2><p class="description">${escape(s.description)}</p><dl class="detail-specs"><div><dt>Character</dt><dd>${escape(s.character)}</dd></div><div><dt>Finish study</dt><dd>${escape(s.finish)}</dd></div><div><dt>Palette</dt><dd>${s.color.toUpperCase()}</dd></div></dl><button class="primary-button" id="detailSave">${saved.has(id)?'Remove from your board':'Add to your board'} <span>${saved.has(id)?'−':'+'}</span></button><p class="detail-disclaimer">Digital material study, not a supplier product. Colour and texture are illustrative; confirm with a physical sample.</p></div></div>`;$('#detailSave').onclick=()=>toggleSample(id);$('#sampleDialog').showModal();}
-  $('#drawers').addEventListener('click',e=>{const button=e.target.closest('[data-sample]');if(button)inspect(button.dataset.sample);});
+  function draw(time){
+    frame=0;const dt=Math.min(40,Math.max(1,time-(lastTime||time-16)));lastTime=time;const before=position;
+    position=reduced.matches?target:position+(target-position)*(1-Math.exp(-dt/105));velocity=reduced.matches?0:(position-before)/dt;
+    if(Math.abs(target-position)<.0005){position=target;velocity=0;}
+    slots.forEach((slot,i)=>{const p=pose(i,position,velocity,reduced.matches);slot.style.transform=`translate3d(${p.x}px,${p.y}px,${p.z}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`;});
+    updateCurrent();if(Math.abs(target-position)>.0005)requestDraw();
+  }
+  function requestDraw(){if(!frame)frame=requestAnimationFrame(draw);}
+  function syncScroll(){target=clamp(window.scrollY/step,0,samples.length-1);requestDraw();}
+  function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(samples.length-1)*step}px`);const scale=Math.min(1.02,(innerWidth-40)/1130,(innerHeight-100)/980);document.documentElement.style.setProperty('--drawer-scale',Math.max(.2,scale));syncScroll();}
+  function goTo(index,focus=false){index=clamp(index,0,samples.length-1);window.scrollTo({top:index*step,behavior:'instant'});target=index;requestDraw();if(focus)slots[index].querySelector('button').focus({preventScroll:true});}
+  function renderFiles(){$('#files').innerHTML=samples.map(fileMarkup).join('');slots=[...document.querySelectorAll('.file-slot')];resize();draw(performance.now());}
+  addEventListener('scroll',syncScroll,{passive:true});addEventListener('resize',resize);reduced.addEventListener('change',requestDraw);
+  $('#previousFile').onclick=()=>goTo(currentIndex-1);$('#nextFile').onclick=()=>goTo(currentIndex+1);
+  addEventListener('keydown',e=>{if(document.querySelector('dialog[open]')||e.altKey||e.ctrlKey||e.metaKey)return;const indices={ArrowDown:currentIndex+1,ArrowUp:currentIndex-1,PageDown:currentIndex+4,PageUp:currentIndex-4,Home:0,End:samples.length-1};if(e.key in indices){e.preventDefault();goTo(indices[e.key],!!e.target.closest('.file-card'));}});
+  function notify(message){$('#toast').textContent=message;}
+  function save(){try{localStorage.setItem(storageKey,JSON.stringify([...saved]));}catch{notify('Saved for this visit.');}updateBoard();}
+  function toggleSample(id){saved.has(id)?saved.delete(id):saved.add(id);save();const b=$('#detailSave');if(b){b.innerHTML=saved.has(id)?checkIcon:plusIcon;b.setAttribute('aria-pressed',saved.has(id));b.setAttribute('aria-label',saved.has(id)?'Remove saved sample':'Save sample');}notify(saved.has(id)?'Sample saved':'Sample removed');}
+  function inspect(id){const s=samples.find(s=>s.id===id);if(!s)return;$('#sampleDetail').innerHTML=`<div class="detail-art material ${s.texture}" role="img" aria-label="${escape(s.name)} texture"></div><div class="detail-actions"><button id="detailSave" class="round-control" aria-label="${saved.has(id)?'Remove saved sample':'Save sample'}" aria-pressed="${saved.has(id)}">${saved.has(id)?checkIcon:plusIcon}</button></div>`;$('#sampleDialog').setAttribute('aria-label',s.name);$('#detailSave').onclick=()=>toggleSample(id);$('#sampleDialog').showModal();}
+  $('#files').addEventListener('click',e=>{const b=e.target.closest('[data-sample]');if(!b)return;const index=samples.findIndex(s=>s.id===b.dataset.sample);goTo(index);inspect(b.dataset.sample);});
   function updateBoard(){
-    $('#boardCount').textContent=saved.size;$('#boardToggle').setAttribute('aria-label',`Your board, ${saved.size} samples`);
-    document.querySelectorAll('.sample').forEach(button=>{const s=samples.find(s=>s.id===button.dataset.sample);button.innerHTML=swatch(s);});
-    $('#boardItems').innerHTML=saved.size?[...saved].map(id=>{const s=samples.find(s=>s.id===id);return `<article class="board-item"><div class="material ${s.texture}" role="img" aria-label="${escape(s.name)} texture"></div><button class="remove-sample" data-remove="${s.id}" aria-label="Remove ${escape(s.name)}">×</button><h3>${escape(s.name)}</h3><p>${s.id} / ${s.family.toUpperCase()}</p></article>`;}).join(''):'<p class="board-empty"><span>Room for ideas.</span>Open a drawer and choose a sample.<br>Add your favourites to start a story.</p>';
+    $('#boardDot').hidden=!saved.size;$('#boardToggle').setAttribute('aria-label',`Open saved samples, ${saved.size} saved`);
+    document.querySelectorAll('.file-saved').forEach(marker=>{marker.hidden=!saved.has(marker.closest('[data-sample]').dataset.sample);});
+    $('#boardItems').innerHTML=saved.size?[...saved].map(id=>{const s=samples.find(s=>s.id===id);return `<article class="board-item"><div class="material ${s.texture}" role="img" aria-label="${escape(s.name)} texture"></div><button class="remove-sample" data-remove="${s.id}" aria-label="Remove ${escape(s.name)}">${closeIcon}</button></article>`;}).join(''):`<div class="board-empty" role="status" aria-label="No saved samples"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="1"/><rect x="27" y="8" width="13" height="13" rx="1"/><rect x="8" y="27" width="13" height="13" rx="1"/><rect x="27" y="27" width="13" height="13" rx="1"/></svg></div>`;
     $('#downloadBoard').disabled=!saved.size;$('#clearBoard').disabled=!saved.size;
   }
-  $('#boardToggle').onclick=()=>$('#boardDialog').showModal();
-  $('#boardItems').addEventListener('click',e=>{const button=e.target.closest('[data-remove]');if(button){saved.delete(button.dataset.remove);save();}});
-  $('#clearBoard').onclick=()=>{saved.clear();save();notify('A fresh start.');};
-  document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>document.getElementById(button.dataset.close).close()));
+  $('#boardToggle').onclick=()=>$('#boardDialog').showModal();$('#boardItems').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(b){saved.delete(b.dataset.remove);save();}});$('#clearBoard').onclick=()=>{saved.clear();save();};
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>document.getElementById(b.dataset.close).close()));
   document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',e=>{if(e.target!==dialog)return;const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}));
+
   // A self-contained SVG board: real vector texture studies, not screenshots.
   function boardSvg(){
     const selected=[...saved].map(id=>samples.find(s=>s.id===id)),width=960,rows=Math.ceil(selected.length/3),height=210+rows*255;
@@ -89,5 +79,5 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><title>The Sample Room — Your material board</title><defs>${defs}</defs><rect width="100%" height="100%" fill="#f2efe8"/><text x="48" y="65" font-family="Georgia,serif" font-size="35" fill="#323b30">A material story.</text><text x="49" y="98" font-family="Arial,sans-serif" font-size="11" fill="#77796f">THE SAMPLE ROOM / ${selected.length} MATERIAL STUDIES</text>${cards}<text x="48" y="${height-20}" font-family="Arial,sans-serif" font-size="10" fill="#77796f">Illustrative digital textures and colours. Confirm with physical samples.</text></svg>`;
   }
   $('#downloadBoard').onclick=()=>{if(!saved.size)return;const url=URL.createObjectURL(new Blob([boardSvg()],{type:'image/svg+xml'})),a=document.createElement('a');a.href=url;a.download='the-sample-room-board.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Your material story, ready to keep.');};
-  updateDrawers();updateBoard();
+  renderFiles();updateBoard();
 })();

@@ -1,57 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#eeeae2">
-  <meta name="description" content="Pull open a drawer. Explore a tactile collection of timber, stone, textiles and finishes, and make a material board of your own.">
-  <title>The Sample Room — a material library</title>
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f2f2ef"><meta name="description" content="An interactive three-dimensional material sample drawer."><title>The Sample Room</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="archive-3d.css?v=hanging-4"><script src="file-wave.js?v=hanging-4" defer></script><script src="app.js?v=hanging-4" defer></script>
 </head>
 <body>
-  <header class="site-header">
-    <a href="./" class="wordmark" aria-label="The Sample Room home"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span>The Sample Room<span class="brand-dot">01</span></a>
-    <span class="header-note">A library of possibilities.</span>
-    <button class="board-toggle" id="boardToggle"><span class="board-icon" aria-hidden="true">▦</span> Your board <span id="boardCount">0</span></button>
-  </header>
-  <main>
-    <aside class="introduction">
-      <p class="eyebrow"><span></span> OPEN TO EXPLORATION</p>
-      <h1>Start with<br>something<br><em>you can feel.</em></h1>
-      <p class="intro-copy">An inviting little archive of surfaces,<br class="desktop-break"> textures, and happy combinations.</p>
-      <div class="pull-hint"><svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true"><path d="M5 10h18M17 4l7 6-7 6M9 23h19M22 17l7 6-7 6" stroke="currentColor" stroke-width="1.2"/></svg><p>Pull a drawer.<br>See what speaks to you.</p></div>
-      <nav class="family-nav" aria-label="Material drawers">
-        <button data-family="timber" class="active"><span>01</span>Timber <i>↗</i></button>
-        <button data-family="stone"><span>02</span>Stone <i>↗</i></button>
-        <button data-family="textiles"><span>03</span>Textiles <i>↗</i></button>
-        <button data-family="finishes"><span>04</span>Finishes <i>↗</i></button>
-      </nav>
-      <div class="intro-bottom"><span class="mini-swatch" aria-hidden="true"></span><p>Less scrolling. More discovering.<br>Pick a sample to take a closer look.</p></div>
-    </aside>
-    <section class="archive" aria-label="Interactive material cabinet">
-      <div class="archive-tools"><p>THE COLLECTION <span>24 samples / 4 drawers</span></p><label class="search"><svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="currentColor"/><path d="m12 12 5 5" stroke="currentColor"/></svg><input id="search" type="search" placeholder="Find a material" aria-label="Search materials"></label></div>
-      <div class="cabinet" id="cabinet">
-        <div class="cabinet-crown"><span class="archive-label">SAMPLE ARCHIVE</span><span>EST. FOR THE CURIOUS</span></div>
-        <div class="cabinet-body" id="drawers"></div>
-        <div class="cabinet-plinth"><span></span><span></span></div>
-      </div>
-      <p id="emptySearch" class="empty-search" hidden>No samples found. Try “oak”, “warm”, or “woven”.</p>
-      <div class="cabinet-caption"><span><i></i> Pull the handles or click to open</span><span>Collected, not complicated.</span></div>
-    </section>
-  </main>
-  <footer><span>THE SAMPLE ROOM <span class="footer-divider">/</span> A digital materials cabinet</span><span>Illustrative textures. Real inspiration.</span></footer>
-  <dialog id="sampleDialog" class="sample-dialog">
-    <button class="close-button" data-close="sampleDialog" aria-label="Close sample">×</button>
-    <div id="sampleDetail"></div>
-  </dialog>
-  <dialog id="boardDialog" class="board-dialog">
-    <div class="board-heading"><div><p class="eyebrow">YOUR SELECTION</p><h2>A material story.</h2></div><button class="close-button" data-close="boardDialog" aria-label="Close board">×</button></div>
-    <p class="board-description">A few things that feel good together.<br>Your collection stays in this browser.</p>
-    <div id="boardItems" class="board-items"></div>
-    <div class="board-actions"><button id="downloadBoard" class="primary-button">Download board <span>↓</span></button><button id="clearBoard" class="text-button">Clear selection</button></div>
-  </dialog>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-</body>
-</html>
+<button id="boardToggle" class="round-control board-toggle" aria-label="Open saved samples"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><i id="boardDot" hidden></i></button>
+<main id="scrollTrack"><div class="drawer-stage" id="fileScene" role="group" aria-label="Material sample drawer. Scroll or use arrow keys to browse; select a sample to pull it out.">
+<div class="ground-shadow" aria-hidden="true"></div><div class="drawer-camera"><div class="drawer-world" id="drawerWorld">
+<div class="drawer-floor" aria-hidden="true"></div><div class="drawer-wall drawer-rear" aria-hidden="true"></div><div class="drawer-wall drawer-left" aria-hidden="true"></div><div class="drawer-wall drawer-right" aria-hidden="true"></div><div class="drawer-rim rim-rear" aria-hidden="true"></div><div class="drawer-rim rim-left" aria-hidden="true"></div><div class="drawer-rim rim-right" aria-hidden="true"></div><div class="drawer-rail rail-left" aria-hidden="true"></div><div class="drawer-rail rail-right" aria-hidden="true"></div>
+<div class="file-rack" id="files"></div><div class="drawer-wall drawer-front" aria-hidden="true"><span class="drawer-screw screw-left"></span><span class="drawer-screw screw-right"></span><span class="drawer-handle"></span></div><div class="drawer-rim rim-front" aria-hidden="true"></div>
+</div></div>
+<nav class="drawer-controls" aria-label="Browse samples"><button class="round-control" id="previousFile" aria-label="Previous sample"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 14 4-4 4 4"/></svg></button><span class="scroll-mark" aria-hidden="true"><i></i></span><button class="round-control" id="nextFile" aria-label="Next sample"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></button></nav>
+<span id="currentAnnouncement" class="sr-only" aria-live="polite"></span></div></main>
+<dialog id="sampleDialog" class="sample-dialog"><button class="round-control close-button" data-close="sampleDialog" aria-label="Close sample"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><div id="sampleDetail"></div></dialog>
+<dialog id="boardDialog" class="board-dialog" aria-label="Saved material samples"><button class="round-control close-button" data-close="boardDialog" aria-label="Close saved samples"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button><div id="boardItems" class="board-items"></div><div class="board-actions"><button id="downloadBoard" class="round-control" aria-label="Download material board"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 19h14"/></svg></button><button id="clearBoard" class="round-control" aria-label="Clear saved samples"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13M10 10v7m4-7v7"/></svg></button></div></dialog>
+<div id="toast" class="sr-only" role="status" aria-live="polite"></div>
+</body></html>
+
