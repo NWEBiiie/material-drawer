@@ -1,5 +1,5 @@
 import * as THREE from './three.module.min.js';
-import {surfaceCanvas,labelCanvas} from './material-textures.js';
+import {surfaceCanvas,labelCanvas} from './material-textures.js?v=webgl-2';
 
 export class MaterialRoom {
   constructor(canvas,{inspect,hover,onBrowse}){
@@ -27,29 +27,54 @@ export class MaterialRoom {
     for(const x of [-3.98,3.98])this.box(g,x,.25,0,.10,.14,12.8,this.metal);
     if(i===2){const lid=this.group(g,0,3.8,-6.45);lid.rotation.x=-1.18;this.box(lid,0,0,3.0,8,.18,6.2,this.ivory);this.box(lid,0,.12,3,7.5,.05,5.7,this.material('#c3c7b9'));}
   }
-  sampleMaterial(sample){if(this.surfaces.has(sample.id))return this.surfaces.get(sample.id);const canvas=surfaceCanvas(sample);const t=this.texture(canvas);const mat=new THREE.MeshStandardMaterial({map:t,roughness:sample.family==='finishes'?.48:.82,metalness:['brass','steel'].includes(sample.texture)?.6:0});this.surfaces.set(sample.id,mat);this.textures.set(sample.id,t);
-    if(sample.url){const img=new Image();img.onload=()=>{const c=canvas.getContext('2d'),k=Math.max(canvas.width/img.width,canvas.height/img.height);c.fillStyle='#e5e2d6';c.fillRect(0,0,512,512);c.drawImage(img,(512-img.width*k)/2,(512-img.height*k)/2,img.width*k,img.height*k);t.needsUpdate=true;this.invalidate();};img.src=sample.url;}return mat;
+  sampleMaterial(sample){const key=sample.url||sample.textureId||sample.texture;const old=this.surfaces.get(sample.id);if(old?.userData.textureKey===key)return old;if(old){old.map?.dispose();old.dispose();} const canvas=surfaceCanvas(sample);const t=this.texture(canvas);const mat=new THREE.MeshStandardMaterial({map:t,roughness:sample.family==='finishes'?.48:.82,metalness:['brass','steel'].includes(sample.texture)?.6:0});mat.userData.textureKey=key;this.surfaces.set(sample.id,mat);this.textures.set(sample.id,t);
+    if(sample.url){const img=new Image();img.onload=()=>{if(this.surfaces.get(sample.id)!==mat)return;const c=canvas.getContext('2d'),k=Math.max(canvas.width/img.width,canvas.height/img.height);c.fillStyle='#e5e2d6';c.fillRect(0,0,512,512);c.drawImage(img,(512-img.width*k)/2,(512-img.height*k)/2,img.width*k,img.height*k);t.needsUpdate=true;this.invalidate();};img.src=sample.url;}return mat;
   }
-  clearContent(){this.hovered=null;this.callbacks.hover(null);this.content.traverse(o=>{if(o.geometry&&o.geometry!==this.unit&&o.geometry!==this.plane)o.geometry.dispose();if(o.material){for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat.userData.owned){mat.map?.dispose();mat.dispose();}}});this.content.removeFromParent();this.content=new THREE.Group();this.drawers[Math.max(0,this.category)].add(this.content);this.items=[];this.sheets=[];}
-  setSamples(samples){this.samples=samples;this.index=this.position=0;this.rebuild();const active=new Set(samples.map(s=>s.id));for(const [id,mat] of this.surfaces)if(!active.has(id)){mat.map?.dispose();mat.dispose();this.surfaces.delete(id);this.textures.delete(id);}}
+  clearContent(){this.hovered=null;this.callbacks.hover(null);this.content.traverse(o=>{if(o.geometry&&o.geometry!==this.unit&&o.geometry!==this.plane)o.geometry.dispose();if(o.material){for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat.userData.owned){mat.map?.dispose();mat.dispose();}}});this.content.removeFromParent();this.content=new THREE.Group();this.drawers[Math.max(0,this.category)].add(this.content);this.items=[];this.sheets=[];this.slots=[];}
+  setSamples(samples,{preserve=false}={}){this.samples=samples;this.index=this.position=preserve?Math.min(this.index,this.count()-1):0;this.rebuild();const active=new Set(samples.map(s=>s.id));for(const [id,mat] of this.surfaces)if(!active.has(id)){mat.map?.dispose();mat.dispose();this.surfaces.delete(id);this.textures.delete(id);}}
   select(category){this.category=category;this.index=this.position=0;this.rebuild();this.invalidate();}
-  count(){if(!this.samples?.length||this.category<0)return 1;return this.category===0?this.samples.length:this.category===1?Math.ceil(this.samples.length/6):Math.ceil(this.samples.length/(this.category===2?6:12));}
-  visibleSamples(){if(this.category<0)return[];if(this.category===0)return this.samples;const size=this.category===1?6:this.category===2?6:12;return this.samples.slice(Math.round(this.index)*size,(Math.round(this.index)+1)*size);}
-  browse(index){const prev=this.index;this.index=THREE.MathUtils.clamp(index,0,this.count()-1);if(this.category>1&&Math.round(prev)!==Math.round(this.index))this.rebuild();if(this.category===1&&Math.floor(prev/4)!==Math.floor(this.index/4))this.rebuild();if(this.category===0&&Math.floor(prev/24)!==Math.floor(this.index/24)){this.position=this.index;this.rebuild();}this.invalidate();}
+  count(){if(!this.samples?.length||this.category<0)return 1;return this.category===0?this.samples.length:this.category===1?Math.ceil(this.samples.length/6):Math.ceil(this.samples.length/(this.category===2?10:12));}
+  visibleSamples(){if(this.category<0)return[];if(this.category===0)return this.samples;const size=this.category===1?6:this.category===2?10:12;return this.samples.slice(Math.round(this.index)*size,(Math.round(this.index)+1)*size);}
+  browse(index){const prev=this.index;this.index=THREE.MathUtils.clamp(index,0,this.count()-1);if(this.category>1&&Math.round(prev)!==Math.round(this.index))this.rebuild();if(this.category===0&&Math.floor(prev/24)!==Math.floor(this.index/24)){this.position=this.index;this.rebuild();}this.invalidate();}
   rebuild(){if(!this.samples)return;this.clearContent();if(this.category===0)this.buildAcrylic();if(this.category===1)this.buildBinder();if(this.category===2)this.buildSlanted();if(this.category===3)this.buildBlocks();this.invalidate();}
   interactive(group,sample){group.userData.sample=sample;const entry={group,sample,base:group.position.clone(),hover:0};this.items.push(entry);return entry;}
   buildAcrylic(){const glass=new THREE.MeshPhysicalMaterial({color:'#c6cfbd',roughness:.42,metalness:0,transparent:true,opacity:.28,depthWrite:false,clearcoat:.5});glass.userData.owned=true;this.glass=glass;
     this.rackStart=Math.floor(this.index/24)*24;const list=this.samples.slice(this.rackStart,this.rackStart+24);this.rackCenter=(list.length-1)/2;for(let i=0;i<list.length;i++){const s=list[i],g=this.group(this.content,0,2.8,(i-this.rackCenter)*.48);const mat=this.sampleMaterial(s);const core=this.box(g,0,0,0,5.9,3.8,.14,mat);core.userData.sample=s;const cover=this.box(g,0,0,.12,6.35,4.25,.10,glass);cover.castShadow=false;this.box(g,-3.16,0,0,.055,4.25,.25,this.ivory);this.box(g,3.16,0,0,.055,4.25,.25,this.ivory);this.box(g,0,2.11,0,6.35,.055,.25,this.ivory);this.decal(g,labelCanvas(s.name,{light:true,small:true}),1.1,1.85,.18,3.6,.45);const item=this.interactive(g,s);item.i=this.rackStart+i;}
   }
-  buildSlanted(){const list=this.visibleSamples(),n=list.length;const ys=list.map((s,i)=>(i-(n-1)/2)*1.05);this.box(this.content,0,.37,0,7.5,.74,12.5,this.foam);let edge=-6.25;for(const z of ys){const a=z+.07,b=z+.40;this.box(this.content,0,1.2,(edge+a)/2,7.5,.9,a-edge,this.foam);edge=b;}this.box(this.content,0,1.2,(edge+6.25)/2,7.5,.9,6.25-edge,this.foam);
-    list.forEach((s,i)=>{const g=this.group(this.content,-.65,2.15,ys[i]);g.rotation.x=-.38;this.box(g,0,0,0,5.2,3.2,.23,this.sampleMaterial(s));this.box(g,3.34,0,0,1.25,3.2,.055,this.paper);this.decal(g,labelCanvas(s.name),3.34,.97,.033,1.20,.65);this.interactive(g,s);});
+  foamWeb(x0,x1,y0,y1,b0,b1,t0,t1){
+    const points=[x0,y0,b0,x1,y0,b0,x1,y0,b1,x0,y0,b1,x0,y1,t0,x1,y1,t0,x1,y1,t1,x0,y1,t1];
+    const shape=new THREE.BufferGeometry();shape.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+    shape.setIndex([0,1,2,0,2,3,4,6,5,4,7,6,3,2,6,3,6,7,0,4,5,0,5,1,0,3,7,0,7,4,1,5,6,1,6,2]);
+    const geometry=shape.toNonIndexed();shape.dispose();geometry.computeVertexNormals();
+    const uv=[];const p=geometry.attributes.position;for(let i=0;i<p.count;i++)uv.push(p.getX(i)/7.5,p.getZ(i)/12.5);geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    const mesh=new THREE.Mesh(geometry,this.foam);mesh.castShadow=mesh.receiveShadow=true;this.content.add(mesh);return mesh;
+  }
+  buildSlanted(){
+    const list=this.visibleSamples(),theta=-.38,centerY=2.15,bottom=.56,top=1.65;
+    const c=Math.cos(theta),s=Math.sin(theta),slope=Math.tan(theta),positions=list.map((_,i)=>(i-(list.length-1)/2)*1.05);
+    this.slots=[];this.box(this.content,0,bottom/2,0,7.5,bottom,12.5,this.foam);
+    const bands=[{x0:-3.295,x1:1.995,thickness:.23},{x0:2.025,x1:3.355,thickness:.055}];
+    for(const [x0,x1] of [[-3.75,bands[0].x0],[bands[0].x1,bands[1].x0],[bands[1].x1,3.75]])this.box(this.content,(x0+x1)/2,(bottom+top)/2,0,x1-x0,top-bottom,12.5,this.foam);
+    // Each groove follows the panel's normal, including the thinner side card.
+    for(const band of bands){let lower=-6.25,upper=-6.25;const half=band.thickness/(2*c)+.035;
+      for(const z of positions){const low=z+slope*(bottom-centerY),high=z+slope*(top-centerY);
+        this.foamWeb(band.x0,band.x1,bottom,top,lower,low-half,upper,high-half);
+        this.slots.push({...band,z,centerY,bottom,top,theta,half});lower=low+half;upper=high+half;
+      }
+      this.foamWeb(band.x0,band.x1,bottom,top,lower,6.25,upper,6.25);
+    }
+    list.forEach((sample,i)=>{const g=this.group(this.content,-.65,centerY,positions[i]);g.rotation.x=theta;
+      this.box(g,0,0,0,5.2,3.2,.23,this.sampleMaterial(sample));this.box(g,3.34,0,0,1.25,3.2,.055,this.paper);
+      this.decal(g,labelCanvas(sample.name),3.34,.97,.033,1.20,.65);
+      const item=this.interactive(g,sample);item.slide=new THREE.Vector3(0,c,s);item.lift=.85;
+    });
   }
   buildBlocks(){const list=this.visibleSamples();this.box(this.content,0,.35,0,7.5,.70,12.5,this.foam);const xs=[-2.5,0,2.5],zs=[-4.4,-1.47,1.47,4.4];const holes=xs.flatMap(x=>zs.map(z=>({x,z})));for(const x of [-3.7,-1.25,1.25,3.7])this.box(this.content,x,1.04,0,x===-3.7||x===3.7?.10:.45,.68,12.5,this.foam);for(const z of [-6.15,-2.94,0,2.94,6.15])this.box(this.content,0,1.04,z,7.5,.68,Math.abs(z)>6?.2:.62,this.foam);
     list.forEach((s,i)=>{const {x,z}=holes[i],g=this.group(this.content,x,1.40,z);this.box(g,0,0,0,1.95,.88,2.25,this.sampleMaterial(s));this.decal(g,labelCanvas(s.name,{small:true}),0,.447,.65,1.8,.26,true);this.interactive(g,s);});
   }
   buildBinder(){this.box(this.content,0,.68,0,7.45,1.36,12.5,this.foam);for(const z of [-3.05,3.05])this.box(this.content,0,1.45,z,7,.12,5.7,this.cloth);this.box(this.content,0,1.45,0,7,.12,.46,this.cloth);this.box(this.content,0,1.55,0,5.8,.08,.27,this.metal);
     for(const x of [-2.3,0,2.3]){const ring=new THREE.Mesh(new THREE.TorusGeometry(.47,.035,10,48),this.metal);ring.position.set(x,1.98,0);ring.rotation.y=Math.PI/2;ring.castShadow=true;this.content.add(ring);}
-    const start=Math.floor(this.index/4)*4,leaves=Math.min(4,this.count()-start);this.binderStart=start;
+    const start=0,leaves=Math.min(5,this.count());this.binderStart=start;
     for(let i=0;i<leaves;i++){const g=this.group(this.content,0,1.63+(leaves-1-i)*.19,0);this.box(g,0,0,2.75,6.65,.045,5.5,this.paper);const list=this.samples.slice((start+i)*6,(start+i+1)*6);for(const x of [-2.3,0,2.3]){const hole=new THREE.Mesh(new THREE.TorusGeometry(.065,.018,6,20),this.metal);hole.rotation.x=Math.PI/2;hole.position.set(x,.025,.20);g.add(hole);}
       list.forEach((s,j)=>{const x=(j%3-1)*2.05,z=1.65+Math.floor(j/3)*2.25;const sw=this.group(g,x,.11,z);this.box(sw,0,0,0,1.80,.13,1.65,this.sampleMaterial(s));this.decal(sw,labelCanvas(s.name,{small:true}),0,.01,1.02,1.8,.25,true);for(const dx of [-.65,.65])for(const dz of [-.55,.55]){const stud=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.035,12),this.metal);stud.position.set(x+dx,-.045,z+dz);g.add(stud);}const entry=this.interactive(sw,s);entry.page=start+i;});
       this.box(g,2.85,.025,5.59,.35,.035,.25,this.cloth);this.decal(g,labelCanvas(String(start+i+1),{light:true,small:true}),2.85,.045,5.59,.30,.10,true);this.sheets.push({group:g,page:start+i,baseY:g.position.y,turnedY:1.75+i*.19});g.rotation.x=start+i<this.index?-Math.PI:0;
@@ -64,7 +89,12 @@ export class MaterialRoom {
   bind(){this.canvas.addEventListener('contextmenu',e=>e.preventDefault());this.canvas.addEventListener('pointerdown',e=>{if(e.button!==0&&e.button!==2)return;this.drag={x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,rotate:this.orbit||e.button===2||e.pointerType!=='touch'};if(this.drag.rotate)this.canvas.setPointerCapture(e.pointerId);});this.canvas.addEventListener('pointermove',e=>{if(this.drag){const dx=e.clientX-this.drag.lastX,dy=e.clientY-this.drag.lastY;this.drag.lastX=e.clientX;this.drag.lastY=e.clientY;if(Math.hypot(e.clientX-this.drag.x,e.clientY-this.drag.y)>5)this.drag.moved=true;if(this.drag.rotate&&this.drag.moved){this.yaw-=dx*.006;this.pitch=THREE.MathUtils.clamp(this.pitch+dy*.005,.15,1.35);this.canvas.classList.add('dragging');this.hovered=null;this.callbacks.hover(null);this.invalidate();return;}}if(e.pointerType==='mouse'){const hit=this.sampleHit(e);this.hovered=hit?.sample?.id||null;this.canvas.style.cursor=this.orbit?'grab':hit?'pointer':'grab';this.callbacks.hover(hit?.sample||null);this.invalidate();}});const end=e=>{if(this.drag&&!this.drag.moved){const hit=this.sampleHit(e);if(hit?.sample)this.callbacks.inspect(hit.sample.id);else if(hit?.drawer!==undefined)this.callbacks.onBrowse({category:hit.drawer});}this.drag=null;this.canvas.classList.remove('dragging');};this.canvas.addEventListener('pointerup',end);this.canvas.addEventListener('pointercancel',()=>{this.drag=null;this.canvas.classList.remove('dragging');});this.canvas.addEventListener('pointerleave',()=>{if(!this.drag){this.hovered=null;this.callbacks.hover(null);this.invalidate();}});addEventListener('resize',()=>this.resize());this.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.callbacks.onBrowse({lost:true});});this.reduced.addEventListener('change',()=>this.invalidate());}
   animate(time){if(document.hidden)return;const dt=Math.min(.05,(time-(this.time||time-16))/1000);this.time=time;const a=this.reduced.matches?1:1-Math.exp(-dt*9);let moving=false;const lerp=(o,key,v)=>{if(Math.abs(o[key]-v)>.0005){o[key]+= (v-o[key])*a;moving=true;}else o[key]=v;};lerp(this,'position',this.index);
     const cat=this.category;this.drawers.forEach((g,i)=>lerp(g.position,'z',i===cat?(cat===0?8.5-(this.position-(this.rackStart||0)-(this.rackCenter||0))*.48:13.3):0));
-    for(const entry of this.items){const {group,sample,base}=entry;let y=base.y;if(cat===0){const distance=entry.i-this.position;y+=1.55*Math.exp(-distance*distance/2.6);group.rotation.x=-.10*Math.exp(-distance*distance/3);}if(sample.id===this.hovered&&(entry.page===undefined||entry.page===Math.round(this.index)))y+=cat===0?.35:cat===1?.25:.65;lerp(group.position,'y',y);}
+    for(const entry of this.items){const {group,sample,base}=entry;let y=base.y,z=base.z;
+      if(cat===0){const distance=entry.i-this.position;y+=1.55*Math.exp(-distance*distance/2.6);group.rotation.x=-.10*Math.exp(-distance*distance/3);}
+      const hovered=sample.id===this.hovered&&(entry.page===undefined||entry.page===Math.round(this.index));
+      if(entry.slide){lerp(entry,'hover',hovered?entry.lift:0);y+=entry.slide.y*entry.hover;z+=entry.slide.z*entry.hover;group.position.set(base.x,y,z);}
+      else{if(hovered)y+=cat===0?.35:cat===1?.25:.65;lerp(group.position,'y',y);}
+    }
     for(const leaf of this.sheets){const turned=leaf.page<Math.round(this.index);lerp(leaf.group.rotation,'x',turned?-Math.PI:0);lerp(leaf.group.position,'y',turned?leaf.turnedY:leaf.baseY);}
     const target=new THREE.Vector3(0,cat<0?13:this.levels[cat]+[3.5,1.9,2.7,1.4][cat],cat<0?2:cat===0?8.8:13.6);if(this.focus.distanceTo(target)>.001){this.focus.lerp(target,a);moving=true;}const offset=new THREE.Vector3(Math.sin(this.yaw)*Math.cos(this.pitch),Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch)).multiplyScalar(48);this.camera.position.copy(this.focus).add(offset);this.camera.lookAt(this.focus);
     if(moving||this.frames>0){this.renderer.render(this.scene,this.camera);this.frames=Math.max(0,this.frames-1);}
