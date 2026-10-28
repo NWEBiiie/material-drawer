@@ -1,5 +1,6 @@
 /* Physical collection formats: tall shelving, a sample case and a ring binder. */
 .drawer-level{transform:translateZ(var(--level-z,0px))}
+.active-drawer.is-open{transform:translate3d(0,var(--focus-travel,0px),0)}
 .drawer-level.is-open{translate:0 var(--drawer-extension,1480px)}
 .drawer-level:not(.is-open) .binder-content,.drawer-level:not(.is-open) .naked-content,.drawer-level:not(.is-open) .sample-box-lid,.drawer-level:not(.is-open) .block-slot{visibility:hidden;pointer-events:none}
 .cabinet-shelf>.box-face{background-color:#a18a68}.cabinet-shelf>.box-top{background-color:#b9a581}
@@ -9,12 +10,12 @@
 .sample-box-lid{position:absolute;left:0;top:24px;width:800px;height:620px;transform-origin:50% 0;transform:translateZ(360px) rotateX(75deg);transform-style:preserve-3d;pointer-events:none}
 .lid-lining{position:absolute;inset:25px;background:#c0c3b6;transform:translateZ(12px);box-shadow:inset 0 0 0 7px #e7e6da}
 .sample-box-insert{position:absolute;inset:55px 35px;background:repeating-linear-gradient(0deg,#3d4438 0 10px,#59614f 12px 20px,#3d4438 23px 155px);transform:translateZ(95px);box-shadow:inset 0 0 0 14px #343b31}
-.naked-sample{position:absolute;left:90px;top:var(--sample-y);width:620px;height:320px;margin:-160px 0 0;padding:0;border:0;background:none;transform:translateZ(300px) rotateX(-68deg);transform-style:preserve-3d;pointer-events:auto;cursor:pointer}
+.naked-sample{position:absolute;left:60px;top:var(--sample-y);width:520px;height:320px;margin:-160px 0 0;padding:0;border:0;background:none;transform:translateZ(300px) rotateX(-68deg);transform-style:preserve-3d;pointer-events:auto;cursor:pointer}
 .naked-lift{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.2,.7,.2,1)}
 .naked-sample:hover .naked-lift,.naked-sample:focus-visible .naked-lift{transform:translateY(-100px) translateZ(16px)}
 .bare-face{position:absolute;inset:0;background-color:var(--sample-tone);background-image:var(--material-image);background-size:var(--material-size,cover);box-shadow:0 0 0 1px #484e3d66,inset 0 0 0 2px #f2eed82e;transform:translateZ(12px)}
 .bare-edge{position:absolute;left:0;right:0;height:24px;bottom:-12px;background:var(--sample-tone);filter:brightness(.72);transform:rotateX(-90deg)}
-.sample-name-card{position:absolute;right:20px;top:-48px;width:270px;height:80px;background:#f0eddf;color:#515b49;text-align:left;padding:16px 22px;font:23px/1.1 Georgia,serif;transform:translateZ(17px);box-shadow:2px 3px 0 #bbbca8,5px 8px 10px #17231022;box-sizing:border-box}
+.sample-name-card{position:absolute;left:calc(100% + 8px);top:10px;width:135px;min-height:170px;background:#f0eddf;color:#515b49;text-align:left;padding:16px 12px;font:21px/1.15 Georgia,serif;transform:translateZ(17px);box-shadow:2px 3px 0 #bbbca8,5px 8px 10px #17231022;box-sizing:border-box}
 .sample-name-card small{display:block;font:13px/1.5 Arial,sans-serif;letter-spacing:1px;margin-top:6px;color:#7c8272}
 .binder-cover{position:absolute;left:65px;top:80px;width:690px;height:1160px;background:#78816a;transform:translateZ(325px);box-shadow:0 0 0 12px #626e57,6px 9px 0 #505c46}
 .binder-spine{position:absolute;left:65px;top:95px;width:55px;height:1130px;background:linear-gradient(90deg,#8d9380,#c3c8b7 45%,#747d68);transform:translateZ(346px)}
@@ -37,5 +38,11 @@
 body[data-drawer=binder] .material-peek{bottom:90px}
 .file-card{transition:translate .35s}.file-card:hover,.file-card:focus-visible{translate:0 -35px}
 @media(max-width:760px){.binder-pager{right:16px;bottom:18px;gap:9px}.material-peek{right:64px;bottom:18px;max-width:180px;padding:13px 16px}.material-peek strong{font-size:19px}}
-@media(prefers-reduced-motion:reduce){.naked-lift,.binder-sheet,.swatch-lift,.block-lift,.file-card{transition:none}}.bare-side{position:absolute;top:0;width:24px;height:320px;background:var(--sample-tone);filter:brightness(.8);backface-visibility:hidden}.bare-side.side-left{left:-12px;transform:rotateY(-90deg)}.bare-side.side-right{right:-12px;transform:rotateY(90deg)}.bare-top{position:absolute;top:-12px;left:0;width:620px;height:24px;background:var(--sample-tone);filter:brightness(.95);transform:rotateX(90deg)}
+@media(prefers-reduced-motion:reduce){.naked-lift,.binder-sheet,.swatch-lift,.block-lift,.file-card{transition:none}}.bare-side{position:absolute;top:0;width:24px;height:320px;background:var(--sample-tone);filter:brightness(.8);backface-visibility:hidden}.bare-side.side-left{left:-12px;transform:rotateY(-90deg)}.bare-side.side-right{right:-12px;transform:rotateY(90deg)}.bare-top{position:absolute;top:-12px;left:0;width:520px;height:24px;background:var(--sample-tone);filter:brightness(.95);transform:rotateX(90deg)}
 .naked-sample:focus-visible,.binder-swatch:focus-visible,.block-slot:focus-visible{outline:2px solid #597448;outline-offset:5px}
+
+/* Rotate the complete book across its case, keeping the rings and page hinge together. */
+.binder-content{transform-origin:400px 660px;transform:translateZ(150px) rotateZ(-90deg) scale3d(.6,.6,.6)}
+.acrylic-etch{position:absolute;right:22px;top:18px;max-width:70%;font:18px/1.1 Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;text-align:right;color:#eef2e1;text-shadow:-1px -1px 0 #53614d99,1px 1px 0 #fff8;transform:translateZ(2px);pointer-events:none}
+.block-etch{position:absolute;left:14px;right:12px;bottom:16px;font:16px/1.15 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:color-mix(in srgb,var(--block-tone) 25%,#263022);text-shadow:0 1px 0 #ffffc86b,0 -1px 1px #1c241c42;transform:translateZ(.6px);text-align:left;pointer-events:none}
+.material-block>.box-top{transform-style:preserve-3d}
