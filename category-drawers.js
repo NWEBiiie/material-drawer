@@ -2,14 +2,14 @@
 'use strict';
 const faces=['top','bottom','left','right','near','far'];
 const box=(kind,x,y,z,w,h,d,extra='')=>`<div class="case-box ${kind}" style="--bx:${x}px;--by:${y}px;--bz:${z}px;--bw:${w}px;--bh:${h}px;--bd:${d}px;${extra}">${faces.map(f=>`<span class="box-face box-${f}"></span>`).join('')}</div>`;
-const world=document.querySelector('#drawerWorld'),extension=1480,heights=[440,390,360,190],elevations=[0,760,1520,2280];
+const world=document.querySelector('#drawerWorld'),extension=1480,heights=[440,260,360,190],elevations=[0,760,1520,2280];
 document.documentElement.style.setProperty('--drawer-extension',`${extension}px`);
 function casing(kind,height,front=height){return [box(`${kind} category-floor`,400,660,-9,800,1320,18),box(`${kind} category-wall`,400,9,height/2,764,18,height),box(`${kind} category-wall`,9,660,height/2,18,1320,height),box(`${kind} category-wall`,791,660,height/2,18,1320,height),box(`${kind} category-front`,400,1311,front/2,764,18,front)].join('');}
 const active=document.createElement('div');active.className='drawer-level active-drawer';
 while(world.firstChild)active.append(world.firstChild);world.append(active);
 active.querySelectorAll('.drawer-wall').forEach(p=>{p.style.setProperty('--bz','220px');p.style.setProperty('--bd','440px');});
 active.querySelectorAll('.case-metal').forEach(p=>p.style.setProperty('--bz','220px'));
-const binder=document.createElement('div');binder.className='drawer-level category-drawer binder-drawer';binder.innerHTML=casing('case-ivory',390,230)+'<div class="binder-content"></div>';world.append(binder);
+const binder=document.createElement('div');binder.className='drawer-level category-drawer binder-drawer';binder.innerHTML=casing('case-ivory',260,140)+'<div class="binder-content"></div>';world.append(binder);
 const sampleBox=document.createElement('div');sampleBox.className='drawer-level category-drawer naked-drawer';sampleBox.innerHTML=casing('case-ivory',360,170)+`<div class="sample-box-lid">${box('case-ivory lid-panel',400,310,0,800,620,22)}<span class="lid-lining"></span></div><div class="naked-content"></div>`;world.append(sampleBox);
 const foam=document.createElement('div');foam.className='drawer-level category-drawer foam-drawer';
 let insert=box('foam-piece foam-bed',400,660,25,764,1284,50);
@@ -25,7 +25,7 @@ cabinet.innerHTML=[box('case-timber cabinet-panel',400,660,-32,860,1400,28),box(
 const icons=['<rect x="5" y="4" width="10" height="14"/><path d="M9 7h10v13H9"/>','<path d="M5 4h15v16H5zM8 4v16M3 8h4m-4 4h4m-4 4h4"/>','<path d="m3 10 9-4 9 4v10H3zM3 10l9 4 9-4M5 9V3h14v6"/>','<path d="m4 8 8-4 8 4v9l-8 4-8-4zM4 8l8 4 8-4m-8 4v9"/>'];
 const picker=document.createElement('nav');picker.className='category-picker';picker.setAttribute('aria-label','Sample collections');picker.innerHTML=[3,2,1,0].map(i=>`<button class="round-control category-choice" data-category="${i}" aria-label="Open ${names[i]}" title="${names[i]}" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[i]}</svg></button>`).join('');document.body.append(picker);
 let selected=-1;document.body.dataset.drawer='closed';
-function frame(index,open){const z=elevations[index]+(open?[455,450,430,115][index]:heights[index]/2),y=open?extension:675;document.documentElement.style.setProperty('--camera-x',`${y/Math.sqrt(2)}px`);document.documentElement.style.setProperty('--camera-y',`${z*Math.sqrt(2/3)-y/Math.sqrt(6)}px`);}
+function frame(index,open){const z=elevations[index]+(open?[455,230,330,115][index]:heights[index]/2),y=open?extension:675;document.documentElement.style.setProperty('--camera-x',`${y/Math.sqrt(2)}px`);document.documentElement.style.setProperty('--camera-y',`${z*Math.sqrt(2/3)-y/Math.sqrt(6)}px`);}
 function select(index){const next=index===selected?-1:index;selected=next;frame(index,next>=0);levels.forEach((l,i)=>{l.classList.toggle('is-open',i===next);l.querySelector('.drawer-pull').setAttribute('aria-expanded',String(i===next));l.querySelectorAll('button:not(.drawer-pull)').forEach(b=>b.tabIndex=i===next?0:-1);});picker.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.category)===next)));document.body.dataset.drawer=next<0?'closed':['files','binder','box','blocks'][next];window.dispatchEvent(new CustomEvent('drawer-category-change',{detail:{index:next}}));}
 levels.forEach((l,i)=>{const pull=document.createElement('button');pull.className='drawer-pull';pull.setAttribute('aria-label',`Open or close ${names[i]}`);pull.setAttribute('aria-expanded','false');pull.style.setProperty('--handle-z',`${heights[i]/2}px`);pull.onclick=()=>select(i);if(i>0&&i<3)l.insertAdjacentHTML('beforeend',box('case-strap',400,1330,heights[i]/2,150,20,42));l.append(pull);});picker.addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(b)select(Number(b.dataset.category));});
 window.DrawerCabinet={select,get index(){return selected;},track(value){active.style.setProperty('--focus-travel',`${value}px`);}};
