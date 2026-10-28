@@ -1,32 +1,32 @@
 (() => {
-  'use strict';
-  const faces=['top','bottom','left','right','near','far'];
-  const box=(kind,x,y,z,w,h,d,extra='')=>`<div class="case-box ${kind}" style="--bx:${x}px;--by:${y}px;--bz:${z}px;--bw:${w}px;--bh:${h}px;--bd:${d}px;${extra}">${faces.map(f=>`<span class="box-face box-${f}"></span>`).join('')}</div>`;
-  function casing(height){return [box('case-timber category-case',400,660,-9,800,1320,18),box('case-timber category-case',400,9,height/2,764,18,height),box('case-timber category-case',9,660,height/2,18,1320,height),box('case-timber category-case',791,660,height/2,18,1320,height),box('case-timber category-case',400,1311,height/2,764,18,height),box('case-metal category-handle',260,1340,height/2,18,40,18),box('case-metal category-handle',540,1340,height/2,18,40,18),box('case-metal category-handle',400,1360,height/2,310,18,18)].join('');}
-  const world=document.querySelector('#drawerWorld');
-  // Clear the 1360px cabinet front even at the -552px end of sample travel.
-  const extension=2000;
-  document.documentElement.style.setProperty('--drawer-extension',`${extension}px`);
-  const active=document.createElement('div');active.className='drawer-level active-drawer';
-  while(world.firstChild)active.append(world.firstChild);world.append(active);
-  const categories=[{name:'Timber and textiles',z:430},{name:'Stone and finishes',z:860}];
-  for(const category of categories){const level=document.createElement('div');level.className='drawer-level category-drawer file-category';level.dataset.category=category.name;level.style.setProperty('--level-z',`${category.z}px`);level.innerHTML=casing(190);world.append(level);}
-  const foam=document.createElement('div');foam.className='drawer-level category-drawer foam-drawer';foam.dataset.category='Solid material blocks';foam.style.setProperty('--level-z','1290px');
-  let insert=box('foam-piece foam-bed',400,660,25,764,1284,50);
-  // Continuous foam webs form twelve actual recessed pockets above the solid bed.
-  for(const [a,b] of [[18,56],[256,300],[500,544],[744,782]])insert+=box('foam-piece foam-web',(a+b)/2,660,75,b-a,1284,50);
-  for(const [a,b] of [[18,54],[294,378],[618,702],[942,1026],[1266,1302]])insert+=box('foam-piece foam-web',400,(a+b)/2,75,764,b-a,50);
-  const blocks=[['block-stone','#c6bfae',72],['block-wood','#9d8261',100],['block-concrete','#92978c',88],['block-cork','#b5a077',64],['block-stone','#ddd8c9',118],['block-metal','#8f9a98',78],['block-wood','#6d5c48',110],['block-concrete','#bbc0b4',68],['block-stone','#a5ae9c',96],['block-metal','#b5ac8c',72],['block-cork','#988263',90],['block-concrete','#787f75',106]];
-  blocks.forEach(([kind,tone,depth],i)=>{insert+=box(`material-block ${kind}`,156+(i%3)*244,174+Math.floor(i/3)*324,53+depth/2,176,216,depth,`--block-tone:${tone}`);});
-  foam.innerHTML=casing(130)+insert;world.append(foam);
-  const cabinet=document.createElement('div');cabinet.className='cabinet-shell';cabinet.setAttribute('aria-hidden','true');
-  cabinet.innerHTML=[box('case-timber cabinet-panel',400,660,-32,860,1400,28),box('case-timber cabinet-panel',400,660,1614,860,1400,28),box('case-timber cabinet-panel',-16,660,791,28,1400,1618),box('case-timber cabinet-panel',816,660,791,28,1400,1618),box('case-timber cabinet-panel',400,-26,791,804,28,1618),box('case-timber cabinet-stile',-16,1345,791,28,30,1618),box('case-timber cabinet-stile',816,1345,791,28,30,1618),...[[240,430],[620,860],[1050,1290],[1420,1600]].map(([a,b])=>box('case-timber cabinet-apron',400,1333,(a+b)/2,804,18,b-a))].join('');world.prepend(cabinet);
-  const levels=[active,...world.querySelectorAll('.category-drawer')],names=['Acrylic collection','Timber and textiles','Stone and finishes','Solid material blocks'];
-  const icons=['<rect x="5" y="4" width="10" height="14"/><path d="M9 7h10v13H9"/>','<path d="M5 5h14v14H5zM8 5v14m4-14v14m4-14v14"/>','<path d="m12 3 9 8-9 10-9-10zM3 11h18M12 3v18"/>','<path d="m4 8 8-4 8 4v9l-8 4-8-4zM4 8l8 4 8-4m-8 4v9"/>'];
-  const picker=document.createElement('nav');picker.className='category-picker';picker.setAttribute('aria-label','Drawer categories');picker.innerHTML=[3,2,1,0].map(i=>`<button class="round-control category-choice" data-category="${i}" aria-label="Open ${names[i]}" title="${names[i]}" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[i]}</svg></button>`).join('');document.body.append(picker);
-  let selected=-1;document.body.dataset.drawer='closed';
-  function frame(index,open){const z=[0,430,860,1290][index]+(open?(index===3?100:410):[120,95,95,65][index]),y=open?extension:675;document.documentElement.style.setProperty('--camera-x',`${y/Math.sqrt(2)}px`);document.documentElement.style.setProperty('--camera-y',`${z*Math.sqrt(2/3)-y/Math.sqrt(6)}px`);}
-  function select(index){const next=index===selected?-1:index;selected=next;frame(index,next>=0);levels.forEach((level,i)=>{level.classList.toggle('is-open',i===next);level.style.setProperty('--focus-travel','0px');level.querySelector('.drawer-pull').setAttribute('aria-expanded',String(i===next));});picker.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.category)===next)));document.body.dataset.drawer=next<0?'closed':next===3?'blocks':'files';window.dispatchEvent(new CustomEvent('drawer-category-change',{detail:{index:next}}));}
-  levels.forEach((level,i)=>{const pull=document.createElement('button');pull.className='drawer-pull';pull.setAttribute('aria-label',`Open or close ${names[i]} drawer`);pull.setAttribute('aria-expanded','false');pull.style.setProperty('--handle-z',`${[120,95,95,65][i]}px`);pull.onclick=()=>select(i);level.append(pull);});picker.addEventListener('click',e=>{const button=e.target.closest('[data-category]');if(button)select(Number(button.dataset.category));});
-  window.DrawerCabinet={select,get index(){return selected;},track(value){if(selected>=0&&selected<3)levels[selected].style.setProperty('--focus-travel',`${value}px`);}};
+'use strict';
+const faces=['top','bottom','left','right','near','far'];
+const box=(kind,x,y,z,w,h,d,extra='')=>`<div class="case-box ${kind}" style="--bx:${x}px;--by:${y}px;--bz:${z}px;--bw:${w}px;--bh:${h}px;--bd:${d}px;${extra}">${faces.map(f=>`<span class="box-face box-${f}"></span>`).join('')}</div>`;
+const world=document.querySelector('#drawerWorld'),extension=1480,heights=[440,390,360,190],elevations=[0,760,1520,2280];
+document.documentElement.style.setProperty('--drawer-extension',`${extension}px`);
+function casing(kind,height,front=height){return [box(`${kind} category-floor`,400,660,-9,800,1320,18),box(`${kind} category-wall`,400,9,height/2,764,18,height),box(`${kind} category-wall`,9,660,height/2,18,1320,height),box(`${kind} category-wall`,791,660,height/2,18,1320,height),box(`${kind} category-front`,400,1311,front/2,764,18,front)].join('');}
+const active=document.createElement('div');active.className='drawer-level active-drawer';
+while(world.firstChild)active.append(world.firstChild);world.append(active);
+active.querySelectorAll('.drawer-wall').forEach(p=>{p.style.setProperty('--bz','220px');p.style.setProperty('--bd','440px');});
+active.querySelectorAll('.case-metal').forEach(p=>p.style.setProperty('--bz','220px'));
+const binder=document.createElement('div');binder.className='drawer-level category-drawer binder-drawer';binder.innerHTML=casing('case-ivory',390,230)+'<div class="binder-content"></div>';world.append(binder);
+const sampleBox=document.createElement('div');sampleBox.className='drawer-level category-drawer naked-drawer';sampleBox.innerHTML=casing('case-ivory',360,170)+`<div class="sample-box-lid">${box('case-ivory lid-panel',400,310,0,800,620,22)}<span class="lid-lining"></span></div><div class="naked-content"></div>`;world.append(sampleBox);
+const foam=document.createElement('div');foam.className='drawer-level category-drawer foam-drawer';
+let insert=box('foam-piece foam-bed',400,660,25,764,1284,50);
+for(const [a,b] of [[18,56],[256,300],[500,544],[744,782]])insert+=box('foam-piece foam-web',(a+b)/2,660,75,b-a,1284,50);
+for(const [a,b] of [[18,54],[294,378],[618,702],[942,1026],[1266,1302]])insert+=box('foam-piece foam-web',400,(a+b)/2,75,764,b-a,50);
+const blocks=[['block-stone','#c6bfae',72,'SR-08'],['block-wood','#9d8261',100,'SR-01'],['block-concrete','#92978c',88,'SR-21'],['block-cork','#b5a077',64,'SR-05'],['block-stone','#ddd8c9',118,'SR-07'],['block-metal','#8f9a98',78,'SR-20'],['block-wood','#6d5c48',110,'SR-12'],['block-concrete','#bbc0b4',68,'SR-11'],['block-stone','#a5ae9c',96,'SR-10'],['block-metal','#b5ac8c',72,'SR-19'],['block-cork','#988263',90,'SR-05'],['block-concrete','#787f75',106,'SR-22']];
+blocks.forEach(([kind,tone,depth,id],i)=>{insert+=`<button class="block-slot" data-sample="${id}" style="left:${156+(i%3)*244}px;top:${174+Math.floor(i/3)*324}px" aria-label="Inspect material block"><span class="block-lift">${box(`material-block ${kind}`,0,0,53+depth/2,176,216,depth,`--block-tone:${tone}`)}</span></button>`;});
+foam.innerHTML=casing('case-timber',190)+insert;world.append(foam);
+const levels=[active,binder,sampleBox,foam],names=['Acrylic collection','Sample binder','Bare material box','Solid material blocks'];
+levels.forEach((l,i)=>{l.dataset.category=names[i];l.style.setProperty('--level-z',`${elevations[i]}px`);});
+const cabinet=document.createElement('div');cabinet.className='cabinet-shell';cabinet.setAttribute('aria-hidden','true');
+cabinet.innerHTML=[box('case-timber cabinet-panel',400,660,-32,860,1400,28),box('case-timber cabinet-panel',400,660,2780,860,1400,28),box('case-timber cabinet-panel',-16,660,1374,28,1400,2784),box('case-timber cabinet-panel',816,660,1374,28,1400,2784),box('case-timber cabinet-panel',400,-26,1374,804,28,2784),...elevations.slice(1).map(z=>box('case-timber cabinet-shelf',400,660,z-36,804,1380,28)),...elevations.map((z,i)=>box('case-timber cabinet-apron',400,1333,z+heights[i]+42,804,18,56))].join('');world.prepend(cabinet);
+const icons=['<rect x="5" y="4" width="10" height="14"/><path d="M9 7h10v13H9"/>','<path d="M5 4h15v16H5zM8 4v16M3 8h4m-4 4h4m-4 4h4"/>','<path d="m3 10 9-4 9 4v10H3zM3 10l9 4 9-4M5 9V3h14v6"/>','<path d="m4 8 8-4 8 4v9l-8 4-8-4zM4 8l8 4 8-4m-8 4v9"/>'];
+const picker=document.createElement('nav');picker.className='category-picker';picker.setAttribute('aria-label','Sample collections');picker.innerHTML=[3,2,1,0].map(i=>`<button class="round-control category-choice" data-category="${i}" aria-label="Open ${names[i]}" title="${names[i]}" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[i]}</svg></button>`).join('');document.body.append(picker);
+let selected=-1;document.body.dataset.drawer='closed';
+function frame(index,open){const z=elevations[index]+(open?[455,450,430,115][index]:heights[index]/2),y=open?extension:675;document.documentElement.style.setProperty('--camera-x',`${y/Math.sqrt(2)}px`);document.documentElement.style.setProperty('--camera-y',`${z*Math.sqrt(2/3)-y/Math.sqrt(6)}px`);}
+function select(index){const next=index===selected?-1:index;selected=next;frame(index,next>=0);levels.forEach((l,i)=>{l.classList.toggle('is-open',i===next);l.querySelector('.drawer-pull').setAttribute('aria-expanded',String(i===next));l.querySelectorAll('button:not(.drawer-pull)').forEach(b=>b.tabIndex=i===next?0:-1);});picker.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.category)===next)));document.body.dataset.drawer=next<0?'closed':['files','binder','box','blocks'][next];window.dispatchEvent(new CustomEvent('drawer-category-change',{detail:{index:next}}));}
+levels.forEach((l,i)=>{const pull=document.createElement('button');pull.className='drawer-pull';pull.setAttribute('aria-label',`Open or close ${names[i]}`);pull.setAttribute('aria-expanded','false');pull.style.setProperty('--handle-z',`${heights[i]/2}px`);pull.onclick=()=>select(i);if(i>0&&i<3)l.insertAdjacentHTML('beforeend',box('case-strap',400,1330,heights[i]/2,150,20,42));l.append(pull);});picker.addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(b)select(Number(b.dataset.category));});
+window.DrawerCabinet={select,get index(){return selected;},track(value){document.querySelector('#files').style.transform=`translateY(${value}px)`;}};
 })();

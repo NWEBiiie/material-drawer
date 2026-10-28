@@ -46,7 +46,7 @@
     frame=0;const dt=Math.min(40,Math.max(1,time-(lastTime||time-16)));lastTime=time;const before=position;
     position=reduced.matches?target:position+(target-position)*(1-Math.exp(-dt/105));velocity=reduced.matches?0:(position-before)/dt;
     if(Math.abs(target-position)<.0005){position=target;velocity=0;}
-    slots.forEach((slot,i)=>{const p=pose(i,position,velocity,reduced.matches);slot.style.transform=`translate3d(${p.x}px,${p.y}px,${p.z}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`;});
+    slots.forEach((slot,i)=>{const p=pose(i,position,velocity,reduced.matches);slot.style.visibility=Math.abs(p.y+track(position))<550?'visible':'hidden';slot.style.transform=`translate3d(${p.x}px,${p.y}px,${p.z}px) rotateX(${p.rx}deg) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`;});
     window.DrawerCabinet.track(track(position));
     updateCurrent();if(Math.abs(target-position)>.0005)requestDraw();
   }
@@ -55,7 +55,7 @@
   function resize(){step=innerWidth<=760?115:140;$('#scrollTrack').style.setProperty('--track-height',`${innerHeight+(visibleSamples.length-1)*step}px`);const scale=Math.min(1.02,(innerWidth-84)/1100,(innerHeight-70)/820);document.documentElement.style.setProperty('--drawer-scale',Math.max(.42,scale));syncScroll();}
   function goTo(index,focus=false){index=clamp(index,0,visibleSamples.length-1);window.scrollTo({top:index*step,behavior:'instant'});target=index;requestDraw();if(focus)slots[index].querySelector('button').focus({preventScroll:true});}
   function renderFiles(){$('#files').innerHTML=visibleSamples.map(fileMarkup).join('');slots=[...document.querySelectorAll('.file-slot')];currentIndex=-1;resize();position=target=Math.floor((visibleSamples.length-1)/2);window.scrollTo({top:position*step,behavior:'instant'});draw(performance.now());}
-  addEventListener('drawer-category-change',e=>{const index=e.detail.index;if(index<0||index===3)return;visibleSamples=index===1?samples.filter(s=>s.family==='timber'||s.family==='textiles'):index===2?samples.filter(s=>s.family==='stone'||s.family==='finishes'):samples;const level=document.querySelectorAll('.drawer-level')[index];level.append($('#files'));renderFiles();});
+  addEventListener('drawer-category-change',e=>{if(e.detail.index===0)renderFiles();});
   addEventListener('scroll',syncScroll,{passive:true});addEventListener('resize',resize);reduced.addEventListener('change',requestDraw);
   $('#previousFile').onclick=()=>goTo(currentIndex-1);$('#nextFile').onclick=()=>goTo(currentIndex+1);
   addEventListener('keydown',e=>{if(document.body.dataset.drawer!=='files'||document.querySelector('dialog[open]')||e.altKey||e.ctrlKey||e.metaKey)return;const indices={ArrowDown:currentIndex+1,ArrowUp:currentIndex-1,PageDown:currentIndex+4,PageUp:currentIndex-4,Home:0,End:visibleSamples.length-1};if(e.key in indices){e.preventDefault();goTo(indices[e.key],!!e.target.closest('.file-card'));}});
@@ -82,5 +82,6 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><title>The Sample Room — Your material board</title><defs>${defs}</defs><rect width="100%" height="100%" fill="#f2efe8"/><text x="48" y="65" font-family="Georgia,serif" font-size="35" fill="#323b30">A material story.</text><text x="49" y="98" font-family="Arial,sans-serif" font-size="11" fill="#77796f">THE SAMPLE ROOM / ${selected.length} MATERIAL STUDIES</text>${cards}<text x="48" y="${height-20}" font-family="Arial,sans-serif" font-size="10" fill="#77796f">Illustrative digital textures and colours. Confirm with physical samples.</text></svg>`;
   }
   $('#downloadBoard').onclick=()=>{if(!saved.size)return;const url=URL.createObjectURL(new Blob([boardSvg()],{type:'image/svg+xml'})),a=document.createElement('a');a.href=url;a.download='the-sample-room-board.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Your material story, ready to keep.');};
+  window.MaterialLibrary={samples,inspect};
   renderFiles();updateBoard();window.DrawerCabinet.select(0);
 })();
