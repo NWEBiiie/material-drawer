@@ -46,11 +46,12 @@ export function createSampleInspection({renderer,scene,camera,controls,onChange,
 
   function destinationZoom(){
     const rect=renderer.domElement.getBoundingClientRect(),desired=Math.min(440,rect.width*.72);
-    return (inspectionCamera.right-inspectionCamera.left)/(held.record.cut[0]*.0254)*desired/rect.width;
+    const width=held.object.userData.inspection_width_inches||held.record.cut[0];
+    return (inspectionCamera.right-inspectionCamera.left)/(width*.0254)*desired/rect.width;
   }
   function pose(p){
     const h=held,move=smooth((p-.18)/.82),lift=smooth(p/.22),end=h.destination;
-    h.object.position.copy(h.homeWorld).addScaledVector(new THREE.Vector3(0,1,0),.055*lift);
+    h.object.position.copy(h.homeWorld).addScaledVector(h.liftVector,h.liftDistance*lift);
     h.object.position.lerp(end,move);
     h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.27)/.73));
     inspectionCamera.zoom=THREE.MathUtils.lerp(h.baseZoom,destinationZoom(),smooth((p-.12)/.88));inspectionCamera.updateProjectionMatrix();
@@ -67,6 +68,8 @@ export function createSampleInspection({renderer,scene,camera,controls,onChange,
     const back=view.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2));
     held={object,record,home,homeWorld:object.position.clone(),homeWorldRotation:object.quaternion.clone(),
       destination:controls.target.clone().addScaledVector(normal,.22),baseZoom:camera.zoom,front,back,faceRotation:back.clone(),
+      liftVector:object.userData.extraction_axis?new THREE.Vector3(...object.userData.extraction_axis).applyQuaternion(object.quaternion).normalize():new THREE.Vector3(0,1,0),
+      liftDistance:object.userData.extraction_distance||.055,
       progress:0,phase:'lifting',face:'back',flip:null};
     controls.enabled=false;audio.click('detach');onChange?.(held);return true;
   }

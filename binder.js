@@ -1,7 +1,7 @@
 import * as THREE from './three.module.min.js';
 import { GLTFLoader } from './binder-loader.js';
 import { OrbitControls } from './binder-orbit.js';
-import { createSampleInspection } from './binder-inspection.js?v=2';
+import { createSampleInspection } from './binder-inspection.js?v=3';
 
 const $=id=>document.getElementById(id), canvas=$('binderScene');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
