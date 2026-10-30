@@ -5,15 +5,14 @@ const canvas=document.querySelector('#shelfScene'),links=[...document.querySelec
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 // GLBs are in metres. Keep every model at the same physical scale.
 const studies=[
- {id:'binder',file:'binder-model.glb?v=4',x:-.40,y:.385,z:.055,label:[-.40,.35,.245]},
- {id:'case',file:'case-model.glb?v=3',x:-.59,y:.775,z:0,label:[-.59,.74,.245]},
- {id:'pockets',file:'pockets-model.glb?v=3',x:-.23,y:.775,z:.01,label:[-.23,.74,.245]},
- {id:'wave',file:'wave-model.glb?v=3',x:.38,y:.145,z:.045,label:[.38,.10,.18]}
+ {id:'binder',file:'binder-model.glb?v=4',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
+ {id:'case',file:'case-model.glb?v=3',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
+ {id:'pockets',file:'pockets-model.glb?v=3',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
+ {id:'wave',file:'wave-model.glb?v=3',x:.38,y:.05,z:.045,label:[.38,.015,.18]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];
 const wood=new THREE.MeshStandardMaterial({color:'#d5c6ad',roughness:.8});
-const inner=new THREE.MeshStandardMaterial({color:'#e6e2d7',roughness:.95});
 const edge=new THREE.MeshStandardMaterial({color:'#b9bdad',roughness:.9});
 const group=new THREE.Group();
 function slab(size,position,material=wood){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.position.set(...position);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
@@ -21,8 +20,8 @@ function project(point){const v=point.clone().project(camera);return{x:(v.x+1)*i
 function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}}
 function frame(){
  const w=innerWidth,h=innerHeight,aspect=w/h;renderer.setSize(w,h,false);
- const span=Math.max(1.55,1.9/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
- const center=new THREE.Vector3(-.03,.55,.02);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
+ const span=Math.max(1.12,1.82/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
+ const center=new THREE.Vector3(-.03,.29,.02);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
 }
 function active(id){hover=id;for(const a of links)a.classList.toggle('active',a.dataset.model===id);canvas.style.cursor=id?'pointer':'default';}
 function hit(e){pointer.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);ray.setFromCamera(pointer,camera);return ray.intersectObjects(hitboxes)[0]?.object.userData.study;}
@@ -40,16 +39,17 @@ async function boot(){try{
  renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setClearColor('#eeeae2');renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-1,1,1,-1,.01,20);scene.add(group);scene.add(new THREE.HemisphereLight(0xffffff,0xa6aa99,2.5));
  const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(-1.2,3,3);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-1.5,right:1.5,top:2,bottom:-1,near:.1,far:8});key.shadow.normalBias=.003;scene.add(key);const fill=new THREE.DirectionalLight(0xe7edff,1.1);fill.position.set(3,1,-1);scene.add(fill);
- // Two open shelves hold the binder and portable cases. The wave drawer
- // retains its own modeled cabinet beside them, with its full travel clear.
- for(const x of [-.80,0])slab([.022,1.12,.49],[x,.58,0]);
- for(const y of [.37,.76])slab([.82,.03,.49],[-.40,y,0]);
- slab([.78,1.10,.018],[-.40,.58,-.245],inner);
- slab([.83,.045,.49],[-.40,.03,0],edge);
+ // Compact open rack: 18 mm boards and 14 mm uprights. The cases sit
+ // above the frame; the binder has just enough clearance to open below.
+ for(const y of [.061,.256])slab([.724,.018,.49],[-.38,y,0]);
+ for(const x of [-.728,-.032])for(const z of [-.228,.228]){
+  slab([.014,.26,.014],[x,.135,z],wood);
+  slab([.019,.012,.019],[x,.006,z],edge);
+ }
  // A separate low plinth supports only the fixed drawer cabinet; the open
  // runner projects freely from it rather than sitting in a shelf cubby.
- slab([.335,.13,.16],[.235,.065,.045],wood);
- slab([.35,.015,.18],[.235,.1375,.045],edge);
+ slab([.335,.035,.16],[.235,.0175,.045],wood);
+ slab([.35,.015,.18],[.235,.0425,.045],edge);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
  frame();requestAnimationFrame(tick);
  const loader=new GLTFLoader();
