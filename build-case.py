@@ -112,7 +112,8 @@ for i,s in enumerate(data['materials']):
     sample=samples[id];sample.parent=board;sample.location=(0,m(.075),m(bt/2+.018+t/2));sample.name='Swatch_'+id
     del sample['material_id'];sample['sample_id']=id
     # Small visible retaining rivets at the lower corners of the carrier.
-    for sx in [-bw/2+.12,bw/2-.12]:cylinder('Carrier_rivet_'+id,(sx,-bh/2+.18,bt/2+.007),.045,.015,nickel,board)
+    for sx in [-bw/2+.12,bw/2-.12]:
+        for sy in [-bh/2+.18,bh/2-.12]:cylinder('Carrier_rivet_'+id,(sx,sy,bt/2+.007),.045,.015,nickel,board)
     tag=cube('Name_tag_'+id,(0,bh/2-.235,bt/2+.009),(bw-.16,.36,.014),paper,board,.015)
     tx=-bw/2+.16
     text('Front_ID_'+id,id,(tx,bh/2-.265,bt/2+.019),.14,board)
