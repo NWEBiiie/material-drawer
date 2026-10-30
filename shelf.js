@@ -8,7 +8,7 @@ const studies=[
  {id:'binder',file:'binder-model.glb?v=4',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
  {id:'case',file:'case-model.glb?v=3',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
  {id:'pockets',file:'pockets-model.glb?v=3',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'wave-model.glb?v=3',x:.38,y:.05,z:.045,label:[.38,.015,.18]}
+ {id:'wave',file:'wave-model.glb?v=3',x:.19,y:.05,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];
@@ -20,8 +20,8 @@ function project(point){const v=point.clone().project(camera);return{x:(v.x+1)*i
 function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}}
 function frame(){
  const w=innerWidth,h=innerHeight,aspect=w/h;renderer.setSize(w,h,false);
- const span=Math.max(1.12,1.82/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
- const center=new THREE.Vector3(-.03,.29,.02);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
+ const span=Math.max(1.12,1.5/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
+ const center=new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
 }
 function active(id){hover=id;for(const a of links)a.classList.toggle('active',a.dataset.model===id);canvas.style.cursor=id?'pointer':'default';}
 function hit(e){pointer.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);ray.setFromCamera(pointer,camera);return ray.intersectObjects(hitboxes)[0]?.object.userData.study;}
@@ -48,15 +48,14 @@ async function boot(){try{
  }
  // A separate low plinth supports only the fixed drawer cabinet; the open
  // runner projects freely from it rather than sitting in a shelf cubby.
- slab([.335,.035,.16],[.235,.0175,.045],wood);
- slab([.35,.015,.18],[.235,.0425,.045],edge);
+ slab([.16,.035,.335],[.19,.0175,-.10],wood);
+ slab([.18,.015,.35],[.19,.0425,-.10],edge);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
  frame();requestAnimationFrame(tick);
  const loader=new GLTFLoader();
  await Promise.all(studies.map(async s=>{
   const gltf=await loader.loadAsync(s.file),model=gltf.scene;
-  if(s.id==='wave')model.rotation.y=Math.PI/2;
-  if(s.id==='case')model.rotation.y=-.12;
+  // Keep the cases square to the rack and the drawer opening toward its front.
   if(gltf.animations[0]){const mixer=new THREE.AnimationMixer(model),action=mixer.clipAction(gltf.animations[0]);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();const duration=s.id==='wave'?2:gltf.animations[0].duration;mixer.setTime(s.id==='binder'?0:duration);}
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat?.map)mat.map.anisotropy=4;}if(o.userData.tether_rest)o.visible=false;});
   const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());
