@@ -166,16 +166,36 @@ def soft_pull(name,y,z,width,parent,hidden=False):
    seam=box(name+'_seam',(x,y-.05,z+dz),(.15,.008,.012),stitch,parent,.003)
    if hidden:cutaway(seam)
 
+def carry_handle(parent):
+ # A raised luggage grip runs along the case depth, with reinforced sewn feet.
+ roof=H+.16;span=4.4;vertices=[];faces=[];edges=[[],[]];count=64
+ for j in range(count+1):
+  u=j/count;y=(u-.5)*span;z=roof+.04+.92*math.sin(math.pi*u)**.55
+  for k,x in enumerate([-.32,.32]):
+   vertices.append((m(x),m(y),m(z)));edges[k].append((x,y,z+.025))
+ for j in range(count):faces.append((2*j,2*j+1,2*j+3,2*j+2))
+ mesh=bpy.data.meshes.new('Carry_handle_webbing');mesh.from_pydata(vertices,[],faces);mesh.update()
+ o=bpy.data.objects.new('Carry_handle_webbing',mesh);scene.collection.objects.link(o);o.parent=parent;mesh.materials.append(webbing)
+ uv=mesh.uv_layers.new(name='Woven handle UV')
+ for face in mesh.polygons:
+  for i in face.loop_indices:
+   v=mesh.vertices[mesh.loops[i].vertex_index].co;uv.data[i].uv=(v.x/m(.65),v.y/m(.65))
+ mod=o.modifiers.new('Webbing thickness','SOLIDIFY');mod.thickness=m(.055)
+ mod=o.modifiers.new('Soft strap edges','BEVEL');mod.width=m(.018);mod.segments=3
+ for points in edges:sewn_edge('Carry_handle_binding',points,parent)
+ panel('Carry_handle_padded_grip',(0,0,roof+.92),(.82,1.6,.22),parent,material=binding)
+ for y in [-span/2,span/2]:
+  panel('Carry_handle_anchor',(0,y,roof+.035),(1.12,.72,.07),parent,material=webbing)
+  sewn_edge('Carry_handle_anchor_seam',[(-.46,y-.26,roof+.08),(.46,y-.26,roof+.08),(.46,y+.26,roof+.08),(-.46,y+.26,roof+.08),(-.46,y-.26,roof+.08)],parent)
+  for sign in [-1,1]:tube('Carry_handle_anchor_cross',[(-.40,y-sign*.20,roof+.09),(.40,y+sign*.20,roof+.09)],.009,stitch,parent)
+
 panel('Cabinet_bottom',(0,0,.12),(W+.55,D+.6,.22),shell,material=binding)
 for x in [-(W+.43)/2,(W+.43)/2]:
- panel('Cabinet_side',(x,0,4.55),(.20,D+.6,9.1),shell,x>0)
- sewn_edge('Cabinet_sewn_perimeter',[(x,-D/2-.26,.12),(x,-D/2-.26,9.08),(x,D/2+.26,9.08),(x,D/2+.26,.12),(x,-D/2-.26,.12)],shell,x>0)
-panel('Cabinet_back',(0,D/2+.23,4.55),(W+.55,.20,9.1),shell)
-panel('Cabinet_shelf',(0,0,H),(W+.3,D+.6,.16),shell,material=lining)
-panel('Cabinet_top',(0,0,9.1),(W+.55,D+.6,.22),shell)
-panel('Closed_upper_drawer',(0,-D/2-.15,8.0),(W+.1,.24,2.0),shell)
-sewn_edge('Upper_sewn_edge',[(-1.78,-6.48,7.10),(-1.78,-6.48,8.90),(1.78,-6.48,8.90),(1.78,-6.48,7.10),(-1.78,-6.48,7.10)],shell)
-soft_pull('Upper_webbing_pull',-D/2-.31,8.0,1.45,shell)
+ panel('Cabinet_side',(x,0,3.5),(.20,D+.6,7.0),shell,x>0)
+ sewn_edge('Cabinet_sewn_perimeter',[(x,-D/2-.26,.12),(x,-D/2-.26,7.03),(x,D/2+.26,7.03),(x,D/2+.26,.12),(x,-D/2-.26,.12)],shell,x>0)
+panel('Cabinet_back',(0,D/2+.23,3.5),(W+.55,.20,7.0),shell)
+panel('Cabinet_top',(0,0,H+.05),(W+.55,D+.6,.22),shell)
+carry_handle(shell)
 panel('Drawer_bottom',(0,0,.40),(W,D,.16),drawer,material=lining)
 for x in [-W/2+.09,W/2-.09]:
  box('Lower_frame',(x,0,.73),(.12,D,.35),plastic,drawer,.04)
@@ -241,10 +261,10 @@ for frame in range(241):
    lift=cam_lift(theta,i);spring.location.z=m(3.09+lift);spring.scale.z=1.46-lift;spring.keyframe_insert(data_path='location',frame=frame);spring.keyframe_insert(data_path='scale',frame=frame)
 drawer.animation_data.action.name='Pull_drawer'
 assert 4.22+1.05+2*E < H-.10
-export('wave',drawer,records,{'case':[W+.55,D+.6,9.22],'travel':TRAVEL,'pitch':.64,'waveLift':2*E,'drawerDuration':2,'mechanism':{'type':'phased-eccentric-camshaft','cams':18,'phaseDegrees':20,'eccentricity':E,'camRadius':R,'rollerRadius':RR,'shaftHeight':ZC,'rollerBaseHeight':BASE,'stroke':2*E,'springFreeSpan':1.46,'springMinSpan':.46,'drive':'handwheel','sources':[{'title':'Carnegie Mellon: Cams','url':'https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt6.html'},{'title':'Phased cams generating traveling waves','url':'https://patents.google.com/patent/US10094367B2'}],'note':'Kinematic concept. Spring rates, torque, bearing fits, and fabrication tolerances are not sized.'}})
+export('wave',drawer,records,{'case':[W+.55,D+.6,8.10],'body':[W+.55,D+.6,7.06],'carryHandle':{'span':4.4,'rise':1.03,'type':'padded webbing'},'travel':TRAVEL,'pitch':.64,'waveLift':2*E,'drawerDuration':2,'mechanism':{'type':'phased-eccentric-camshaft','cams':18,'phaseDegrees':20,'eccentricity':E,'camRadius':R,'rollerRadius':RR,'shaftHeight':ZC,'rollerBaseHeight':BASE,'stroke':2*E,'springFreeSpan':1.46,'springMinSpan':.46,'drive':'handwheel','sources':[{'title':'Carnegie Mellon: Cams','url':'https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt6.html'},{'title':'Phased cams generating traveling waves','url':'https://patents.google.com/patent/US10094367B2'}],'note':'Kinematic concept. Spring rates, torque, bearing fits, and fabrication tolerances are not sized.'}})
 
 wave_data=json.loads((ROOT/'wave-data.json').read_text())
-wave_data['finish']={'shell':'padded textile sleeve over internal guides','panels':'opaque woven blue textile','edges':'sewn navy binding','pulls':'soft webbing','blue':'#004c97','accent':'#009ee2','source':'https://brand.utswmed.org/color-palette-and-typography/'}
+wave_data['finish']={'shell':'portable padded textile carry case over internal guides','panels':'opaque woven blue textile','edges':'sewn navy binding','pulls':'soft webbing','handle':'top luggage grip with reinforced sewn anchors','blue':'#004c97','accent':'#009ee2','source':'https://brand.utswmed.org/color-palette-and-typography/'}
 (ROOT/'wave-data.json').write_text(json.dumps(wave_data,separators=(',',':')))
 if len(sys.argv)>sys.argv.index('--')+2 and sys.argv[sys.argv.index('--')+2]=='wave':sys.exit(0)
 
