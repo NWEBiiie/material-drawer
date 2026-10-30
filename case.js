@@ -1,9 +1,9 @@
-import './study-nav.js?v=1';
-import {createRetractableTethers} from './retractable-tethers.js?v=1';
+import './study-nav.js?v=2';
+import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 import {OrbitControls} from './binder-orbit.js';
-import {createSampleInspection} from './binder-inspection.js?v=4';
+import {createSampleInspection} from './binder-inspection.js?v=5';
 const $=id=>document.getElementById(id),canvas=$('caseScene'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let tethers;
 let renderer,scene,camera,controls,model,mixer,action,clip,inspection,data,caseData,lid;

@@ -1,9 +1,9 @@
-import './study-nav.js?v=1';
-import {createRetractableTethers} from './retractable-tethers.js?v=1';
+import './study-nav.js?v=2';
+import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 import {OrbitControls} from './binder-orbit.js';
-import {createSampleInspection} from './binder-inspection.js?v=4';
+import {createSampleInspection} from './binder-inspection.js?v=5';
 
 const $=id=>document.getElementById(id),canvas=$('miniScene');
 const mode=new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave',wave=mode==='wave';

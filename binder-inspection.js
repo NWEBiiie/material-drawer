@@ -44,10 +44,26 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const audio=snapAudio();let held=null;
 
-  function destinationZoom(){
-    const rect=renderer.domElement.getBoundingClientRect(),desired=Math.min(440,rect.width*.72);
-    const width=held.object.userData.inspection_width_inches||held.record.cut[0];
-    return (inspectionCamera.right-inspectionCamera.left)/(width*.0254)*desired/rect.width;
+  function frameTether(){
+    const h=held,base=h.baseCamera,rect=renderer.domElement.getBoundingClientRect(),entry=tethers?.entries.get(h.record.id);
+    const bounds=new THREE.Box3(),inverse=base.quaternion.clone().invert();
+    const add=point=>bounds.expandByPoint(point.clone().applyQuaternion(inverse));
+    const box=new THREE.Box3().setFromObject(h.object),center=box.getCenter(new THREE.Vector3());
+    // A fixed sample radius keeps the camera still while the material flips.
+    const local=center.clone().applyQuaternion(inverse),r=h.frameRadius;
+    bounds.expandByPoint(local.clone().addScalar(r));bounds.expandByPoint(local.clone().addScalar(-r));
+    if(entry){
+      for(const node of [entry.anchor,entry.guide,entry.end])add(node.getWorldPosition(new THREE.Vector3()));
+      const reelBox=new THREE.Box3().setFromObject(entry.reel);
+      for(const x of [reelBox.min.x,reelBox.max.x])for(const y of [reelBox.min.y,reelBox.max.y])for(const z of [reelBox.min.z,reelBox.max.z])add(new THREE.Vector3(x,y,z));
+    }
+    const size=bounds.getSize(new THREE.Vector3()),focus=bounds.getCenter(new THREE.Vector3()).applyQuaternion(base.quaternion);
+    const usableHeight=rect.width<600?.49:.64,usableWidth=rect.width<600?.84:.76;
+    const zoom=Math.min((base.right-base.left)*usableWidth/(size.x+.025),(base.top-base.bottom)*usableHeight/(size.y+.025));
+    const normal=new THREE.Vector3(0,0,1).applyQuaternion(base.quaternion),progress=smooth((h.progress-.12)/.88);
+    const destination=focus.addScaledVector(normal,1.25);
+    inspectionCamera.position.copy(base.position).lerp(destination,progress);inspectionCamera.quaternion.copy(base.quaternion);
+    inspectionCamera.zoom=THREE.MathUtils.lerp(h.baseZoom,zoom,progress);inspectionCamera.updateProjectionMatrix();inspectionCamera.updateMatrixWorld(true);
   }
   function pose(p){
     const h=held,move=smooth((p-.18)/.82),lift=smooth(p/.22),end=h.destination;
@@ -55,8 +71,8 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
     h.object.position.lerp(end,move);
     h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.27)/.73));
     tethers?.constrain(h.object);
-    inspectionCamera.zoom=THREE.MathUtils.lerp(h.baseZoom,destinationZoom(),smooth((p-.12)/.88));inspectionCamera.updateProjectionMatrix();
-    veil.material.opacity=.48*smooth(p);
+    frameTether();
+    veil.material.opacity=.28*smooth(p);
   }
   function pick(object,record){
     if(held)return false;
@@ -67,8 +83,12 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
     const view=camera.quaternion.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(.06,-.14,0)));
     const front=view.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2));
     const back=view.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2));
+    const entry=tethers?.entries.get(record.id),anchor=entry?entry.anchor.getWorldPosition(new THREE.Vector3()):controls.target.clone();
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion),up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+    const width=object.userData.inspection_width_inches||record.cut[0],height=object.userData.board_height_inches||record.cut[1];
+    const radius=Math.max(width,height)*.0254*.68;
     held={object,record,home,homeWorld:object.position.clone(),homeWorldRotation:object.quaternion.clone(),
-      destination:controls.target.clone().addScaledVector(normal,.22),baseZoom:camera.zoom,front,back,faceRotation:back.clone(),
+      destination:anchor.addScaledVector(right,-Math.max(.105,radius*2.2)).addScaledVector(up,.045).addScaledVector(normal,.14),baseZoom:camera.zoom,baseCamera:camera.clone(),frameRadius:radius,front,back,faceRotation:back.clone(),
       liftVector:object.userData.extraction_axis?new THREE.Vector3(...object.userData.extraction_axis).applyQuaternion(object.quaternion).normalize():new THREE.Vector3(0,1,0),
       liftDistance:object.userData.extraction_distance||.055,
       progress:0,phase:'lifting',face:'back',flip:null};
@@ -95,12 +115,13 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
     }else if(held.flip){
       const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));tethers?.constrain(held.object);if(f.time===1)held.flip=null;
     }
+    if(held?.phase==='held')frameTether();
   }
   function render(){
     if(!held)return;
     renderer.autoClear=false;renderer.render(veilScene,veilCamera);renderer.clearDepth();renderer.render(overlay,inspectionCamera);renderer.autoClear=true;
   }
-  function resize(){if(!held)return;inspectionCamera.copy(camera);held.baseZoom=camera.zoom;inspectionCamera.zoom=THREE.MathUtils.lerp(held.baseZoom,destinationZoom(),smooth((held.progress-.12)/.88));inspectionCamera.updateProjectionMatrix();}
+  function resize(){if(!held)return;inspectionCamera.copy(camera);held.baseCamera.copy(camera);held.baseZoom=camera.zoom;frameTether();}
   function hit(event){if(!held)return false;const r=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,1-(event.clientY-r.top)/r.height*2);ray.setFromCamera(pointer,inspectionCamera);return ray.intersectObject(held.object,true).length>0;}
   return {pick,flip,putBack,update,render,resize,hit,audio,tethers,get active(){return !!held},get selection(){return held},get camera(){return inspectionCamera}};
 }

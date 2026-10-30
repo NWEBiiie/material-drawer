@@ -25,6 +25,7 @@ export function createRetractableTethers({model,scene}){
   model.updateMatrixWorld(true);
   for(const e of entries.values()){
    e.anchor.getWorldPosition(a);e.guide.getWorldPosition(b);e.end.getWorldPosition(c);
+   if(e.reelFocus){e.reel.updateWorldMatrix(true,false);e.reelFocus.matrix.copy(e.reel.matrixWorld);}
    const fixed=a.distanceTo(b),free=b.distanceTo(c),sag=Math.min(.003,free*.035),fixedSteps=8;
    previous.copy(a);e.length=0;
    for(let i=1;i<=segments;i++){
@@ -36,7 +37,13 @@ export function createRetractableTethers({model,scene}){
   }
  }
  function hold(object,overlay){
-  for(const e of entries.values()){const held=e.id===object?.userData.material_id;(held?overlay:scene).add(e.wire);e.held=held;}
+  for(const e of entries.values()){
+   const held=e.id===object?.userData.material_id;(held?overlay:scene).add(e.wire);e.held=held;
+   if(e.reelFocus){e.reelFocus.removeFromParent();e.reelFocus=null;}
+   // Reveal the selected recessed reel in place, along with its continuous cord.
+   // The real reel and all mounting anchors retain their original transforms.
+   if(held){e.reelFocus=e.reel.clone(true);e.reelFocus.name='Inspection_reel_'+e.id;e.reelFocus.matrixAutoUpdate=false;e.reel.updateWorldMatrix(true,false);e.reelFocus.matrix.copy(e.reel.matrixWorld);overlay.add(e.reelFocus);}
+  }
  }
  update();return {entries,update,constrain,hold,limit,radius};
 }
