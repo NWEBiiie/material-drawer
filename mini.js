@@ -1,11 +1,14 @@
+import './study-nav.js?v=1';
+import {createRetractableTethers} from './retractable-tethers.js?v=1';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 import {OrbitControls} from './binder-orbit.js';
-import {createSampleInspection} from './binder-inspection.js?v=3';
+import {createSampleInspection} from './binder-inspection.js?v=4';
 
 const $=id=>document.getElementById(id),canvas=$('miniScene');
 const mode=new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave',wave=mode==='wave';
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),I=.0254;
+let tethers;
 let renderer,scene,camera,controls,model,mixer,action,clip,inspection,data,moving;
 let ready=false,opened=0,target=1,last=performance.now(),selected=7,focus=7,focusTarget=7,hovered=null,queuedPick=null,queuedClose=false,lastWheel=0,shaft,playing=false,cutOpen=false;
 const followers=[],springs=[],panels=[];
@@ -70,7 +73,7 @@ function frame(now){
  }
  controls.update();inspection.update(dt);
  if(queuedPick&&opened>.999&&!inspection.active)pick(queuedPick);
- renderer.render(scene,camera);inspection.render();requestAnimationFrame(frame);
+ tethers?.update();renderer.render(scene,inspection?.active?inspection.camera:camera);inspection.render();requestAnimationFrame(frame);
 }
 function camLift(theta,index,m=data.mechanism){const a=theta-index*Math.PI*2/18,e=m.eccentricity,r=m.camRadius+m.rollerRadius;return e*Math.cos(a)+Math.sqrt(r*r-e*e*Math.sin(a)**2)-(r-e);}
 function mechanismView(value){cutOpen=value;panels.forEach(o=>o.visible=!value);$('mechanismToggle').setAttribute('aria-pressed',String(value));}
@@ -79,10 +82,11 @@ async function boot(){try{
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.65,right:.65,top:.7,bottom:-.65,near:.01,far:2});key.shadow.normalBias=.0005;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(mode+'-model.glb?v=2'),fetch(mode+'-data.json?v=2').then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
+ const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(mode+'-model.glb?v=3'),fetch(mode+'-data.json?v=3').then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
  data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
  clip=gltf.animations[0];if(carriers.length!==18||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
- inspection=createSampleInspection({renderer,scene,camera,controls,onChange:changed,onReturned(){if(queuedClose){queuedClose=false;setOpen(false);}}});
+ tethers=createRetractableTethers({model,scene});
+ inspection=createSampleInspection({renderer,scene,camera,controls,tethers,onChange:changed,onReturned(){if(queuedClose){queuedClose=false;setOpen(false);}}});
  $('flipSample').onclick=()=>inspection.flip();$('returnSample').onclick=()=>inspection.putBack();$('sampleInfo').onclick=()=>details(inspection.selection.record.id);$('soundToggle').onclick=()=>{inspection.audio.toggle();soundUI();};soundUI();
  $('lidToggle').onclick=()=>setOpen(!target);$('prev').onclick=()=>{select(selected-1);hovered=data.materials[selected].id;};$('next').onclick=()=>{select(selected+1);hovered=data.materials[selected].id;};$('pickCurrent').onclick=()=>pick(data.materials[selected].id);
  $('mechanismToggle').hidden=!wave;$('motionToggle').hidden=!wave;$('mechanismNotes').hidden=!wave;

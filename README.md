@@ -1,5 +1,15 @@
 # The Sample Room
 
+The homepage opens the dimensioned material binder. Four persistent buttons switch between the **Binder**, **Slanted case**, **Wave drawer**, and **Pocket box**. The archive icon opens the previous cabinet at `archive.html`, including its local material editing tools and saved collections.
+
+Each current study has eighteen square material cuts at their original thickness. Samples detach, flip to their information cards, and return to their saved mounting positions. The binder retains four corner snaps. Every sample is connected to a modeled retractable reel, with continuous cable extension during pickup and return. The wave drawer includes the phased camshaft, roller followers, return springs, and cutaway controls.
+
+Reel reference: [RUIWOR RW5101](https://www.ruiwor.com/rw5101-round-mini-anti-lost-recoiler-eyelet-terminal-with-ring-terminal-inner-hole-3mm-4mm-5mm-for-option-product/), Ø25.2 × 8.3 mm housing (27.2 mm including the outlet), 0.6 mm cable, 550 mm travel. This was the smallest suitable housing with published dimensions found in the comparison. See `tether-source.json`. Housing surface details, recesses and adapter brackets are design proposals, not manufacturer CAD; the return force takes up cable slack rather than hoisting the sample.
+
+Blender models, animated GLBs, and source packages are available through each study's information button. `build-tethers.py` adds hardware to the existing study models; the optional arguments after the checkout path select `binder`, `case`, `wave`, or `pockets`. The viewer uses the exported outlet and eyelet nodes to animate the cables. Dimensions and animations are retained by `compact-glb.cjs`, which only shares duplicate binary buffers.
+
+## Archived cabinet
+
 A minimal, real-time 3D material library in a wooden cabinet. Solid meshes, lighting, cast shadows and an orthographic camera replace the earlier CSS panel scene. Four independent pull-outs have their own sample counts and texture assignments. Only one collection opens at a time; the others remain still.
 
 The right-hand icons follow the physical shelf order, from top to bottom:
@@ -27,6 +37,6 @@ The browser opens the native file/folder picker. It cannot read arbitrary local 
 
 ## Running and hosting
 
-Serve this directory over HTTP(S); no build step required. GitHub Pages publishes `main` / repository root. The entry points are `index.html`, `room.js`, `scene-3d.js`, `cabinet-library.js`, `room-3d.css`, `materials.js` and `material-textures.js`. Three.js 0.180.0 is vendored locally in `three.module.min.js` and `three.core.min.js`; see `LICENSE-three.txt`. Runtime assets are self-contained, with no CDN or analytics requests. Older CSS scene files are retained as unused legacy sources.
+Serve this directory over HTTP(S); no build step required. GitHub Pages publishes `main` / repository root. Current entry points are `index.html` (also `binder.html`), `case.html`, and `mini.html?view=wave` or `mini.html?view=pockets`. The previous cabinet starts at `archive.html` and uses `room.js`, `scene-3d.js`, `cabinet-library.js`, `room-3d.css`, `materials.js` and `material-textures.js`. Three.js 0.180.0 is vendored locally in `three.module.min.js` and `three.core.min.js`; see `LICENSE-three.txt`. Runtime assets are self-contained, with no CDN or analytics requests. Older CSS scene files are retained as unused legacy sources.
 
 WebGL2 is required for the 3D scene. When unavailable, a gallery still supports material inspection and importing. Reduced motion removes animated transitions. Included procedural surfaces are illustrative studies; import material photos for your own collection.

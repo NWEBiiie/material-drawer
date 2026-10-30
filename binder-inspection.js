@@ -35,7 +35,7 @@ function snapAudio(){
   return {unlock,click,events,get muted(){return muted},get state(){return context?.state||'uninitialized'},toggle(){muted=!muted;try{localStorage.setItem('sample-binder-muted',String(muted));}catch{}if(!muted)unlock();return muted;}};
 }
 
-export function createSampleInspection({renderer,scene,camera,controls,onChange,onReturned}){
+export function createSampleInspection({renderer,scene,camera,controls,tethers,onChange,onReturned}){
   const overlay=new THREE.Scene(),inspectionCamera=camera.clone();
   // The actual Blender sample is reparented here, not duplicated or rescaled.
   scene.children.filter(o=>o.isLight).forEach(light=>{const copy=light.clone();copy.castShadow=false;overlay.add(copy);});
@@ -54,8 +54,9 @@ export function createSampleInspection({renderer,scene,camera,controls,onChange,
     h.object.position.copy(h.homeWorld).addScaledVector(h.liftVector,h.liftDistance*lift);
     h.object.position.lerp(end,move);
     h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.27)/.73));
+    tethers?.constrain(h.object);
     inspectionCamera.zoom=THREE.MathUtils.lerp(h.baseZoom,destinationZoom(),smooth((p-.12)/.88));inspectionCamera.updateProjectionMatrix();
-    veil.material.opacity=.72*smooth(p);
+    veil.material.opacity=.48*smooth(p);
   }
   function pick(object,record){
     if(held)return false;
@@ -71,7 +72,7 @@ export function createSampleInspection({renderer,scene,camera,controls,onChange,
       liftVector:object.userData.extraction_axis?new THREE.Vector3(...object.userData.extraction_axis).applyQuaternion(object.quaternion).normalize():new THREE.Vector3(0,1,0),
       liftDistance:object.userData.extraction_distance||.055,
       progress:0,phase:'lifting',face:'back',flip:null};
-    controls.enabled=false;audio.click('detach');onChange?.(held);return true;
+    tethers?.hold(object,overlay);controls.enabled=false;audio.click('detach');onChange?.(held);return true;
   }
   function flip(){
     if(!held||held.phase!=='held')return;
@@ -89,10 +90,10 @@ export function createSampleInspection({renderer,scene,camera,controls,onChange,
       const back=held.phase==='returning';held.progress=reduced.matches?(back?0:1):clamp(held.progress+(back?-1:1)*dt/.95);pose(held.progress);
       if(back&&held.progress===0){
         const h=held;h.home.parent.add(h.object);h.object.position.copy(h.home.position);h.object.quaternion.copy(h.home.quaternion);h.object.scale.copy(h.home.scale);h.object.updateMatrixWorld(true);
-        held=null;controls.enabled=true;audio.click('attach');onChange?.(null);onReturned?.(h.record.id);
+        held=null;tethers?.hold(null,overlay);controls.enabled=true;audio.click('attach');onChange?.(null);onReturned?.(h.record.id);
       }else if(!back&&held.progress===1){held.phase='held';onChange?.(held);}
     }else if(held.flip){
-      const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));if(f.time===1)held.flip=null;
+      const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));tethers?.constrain(held.object);if(f.time===1)held.flip=null;
     }
   }
   function render(){
@@ -101,5 +102,5 @@ export function createSampleInspection({renderer,scene,camera,controls,onChange,
   }
   function resize(){if(!held)return;inspectionCamera.copy(camera);held.baseZoom=camera.zoom;inspectionCamera.zoom=THREE.MathUtils.lerp(held.baseZoom,destinationZoom(),smooth((held.progress-.12)/.88));inspectionCamera.updateProjectionMatrix();}
   function hit(event){if(!held)return false;const r=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,1-(event.clientY-r.top)/r.height*2);ray.setFromCamera(pointer,inspectionCamera);return ray.intersectObject(held.object,true).length>0;}
-  return {pick,flip,putBack,update,render,resize,hit,audio,get active(){return !!held},get selection(){return held},get camera(){return inspectionCamera}};
+  return {pick,flip,putBack,update,render,resize,hit,audio,tethers,get active(){return !!held},get selection(){return held},get camera(){return inspectionCamera}};
 }

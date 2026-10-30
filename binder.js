@@ -1,10 +1,13 @@
+import './study-nav.js?v=1';
+import {createRetractableTethers} from './retractable-tethers.js?v=1';
 import * as THREE from './three.module.min.js';
 import { GLTFLoader } from './binder-loader.js';
 import { OrbitControls } from './binder-orbit.js';
-import { createSampleInspection } from './binder-inspection.js?v=3';
+import { createSampleInspection } from './binder-inspection.js?v=4';
 
 const $=id=>document.getElementById(id), canvas=$('binderScene');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+let tethers;
 let renderer,scene,camera,controls,model,mixer,clip,data,action,inspection;
 let pendingPage=null,pendingSample=null;
 let position=0,target=0,last=performance.now(),lastWheel=0,ready=false;
@@ -28,10 +31,10 @@ function inspectionChanged(selection){
 function updateSound(){const muted=inspection.audio.muted;$('soundToggle').setAttribute('aria-pressed',String(muted));$('soundToggle').setAttribute('aria-label',muted?'Enable snap sounds':'Mute snap sounds');}
 function updateUI(){const index=Math.min(target,3);$('pageNumber').textContent=target===4?'END':`${String(target+1).padStart(2,'0')} / 04`;$('pageTitle').textContent=target===4?'Back to the beginning':data.pages[index].title;$('prev').disabled=target===0;$('next').disabled=target===4;[...$('tabs').children].forEach((b,i)=>b.setAttribute('aria-current',String(i===target)));}
 function showSample(id){const s=data.materials.find(s=>s.id===id);if(!s)return;$('sampleImage').src=s.preview;$('sampleImage').alt=`${s.id}: ${s.color}`;$('sampleId').textContent=s.id;$('sampleName').textContent=s.color;$('sampleMaker').textContent=[s.manufacturer,s.series].filter(Boolean).join(' · ');$('sampleCut').textContent=size(s.cut);$('sampleOriginal').textContent=size(s.original);$('sampleThickness').textContent=fraction(s.cut[2])+'″ · unchanged';$('sampleStatus').textContent=statusNames[s.source.status]||'Reference texture';$('sampleNote').textContent=s.source.notes;$('sampleSource').href=s.source.pageURL;$('sampleSource').hidden=!s.source.pageURL;$('hover').hidden=true;if(!$('details').open)$('details').showModal();}
-function sampleHit(event){const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(model.children,true);if(!hits.length)return null;let o=hits[0].object;while(o&&!o.userData.material_id)o=o.parent;return o?.userData.material_id||null;}
+function sampleHit(event){const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(model.children,true).filter(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});if(!hits.length)return null;let o=hits[0].object;while(o&&!o.userData.material_id)o=o.parent;return o?.userData.material_id||null;}
 function reset(){const aspect=canvas.clientWidth/canvas.clientHeight;camera.zoom=aspect<.8?.84:1;camera.position.set(.50,.72,.66);controls.target.set(-.04,.018,0);camera.lookAt(controls.target);controls.update();resize();}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);const aspect=w/h,span=aspect<.8?.82/aspect:.62;camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();inspection?.resize();}
-function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!inspection?.active){if(!reduced.matches){const step=dt*1.12;position+=Math.sign(target-position)*Math.min(Math.abs(target-position),step);}else position=target;if(mixer){action.time=Math.min(clip.duration,position*clip.duration/4);mixer.update(0);}}controls.update();inspection?.update(dt);if(pendingSample&&!inspection.active&&Math.abs(position-target)<.001)pickSample(pendingSample);renderer.render(scene,camera);inspection?.render();requestAnimationFrame(animate);}
+function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!inspection?.active){if(!reduced.matches){const step=dt*1.12;position+=Math.sign(target-position)*Math.min(Math.abs(target-position),step);}else position=target;if(mixer){action.time=Math.min(clip.duration,position*clip.duration/4);mixer.update(0);}}controls.update();inspection?.update(dt);if(pendingSample&&!inspection.active&&Math.abs(position-target)<.001)pickSample(pendingSample);tethers?.update();renderer.render(scene,inspection?.active?inspection.camera:camera);inspection?.render();requestAnimationFrame(animate);}
 
 async function boot(){
  try{
@@ -41,10 +44,11 @@ async function boot(){
   const key=new THREE.DirectionalLight(0xfff9ed,3.2);key.position.set(.25,.9,.5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-.5;key.shadow.camera.right=.5;key.shadow.camera.top=.5;key.shadow.camera.bottom=-.5;key.shadow.camera.near=.01;key.shadow.camera.far=2;key.shadow.normalBias=.001;key.shadow.bias=-.0001;scene.add(key);
   const fill=new THREE.DirectionalLight(0xe6efff,1.5);fill.position.set(-.5,.4,-.5);scene.add(fill);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x405045,opacity:.15}));floor.rotation.x=-Math.PI/2;floor.position.y=-.006;floor.receiveShadow=true;scene.add(floor);
-  const results=await Promise.all([new GLTFLoader().loadAsync('binder-model.glb?v=3'),fetch('binder-data.json?v=3').then(r=>{if(!r.ok)throw Error('Missing schedule');return r.json();})]);
+  const results=await Promise.all([new GLTFLoader().loadAsync('binder-model.glb?v=4'),fetch('binder-data.json?v=4').then(r=>{if(!r.ok)throw Error('Missing schedule');return r.json();})]);
   const gltf=results[0];data=results[1];model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material?.map)o.material.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}if(o.userData.material_id)picks.push(o);});
   clip=gltf.animations[0];if(!clip||picks.length!==18)throw Error('Incomplete binder model');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
-  inspection=createSampleInspection({renderer,scene,camera,controls,onChange:inspectionChanged,onReturned(){if(pendingSample)go(data.materials.find(s=>s.id===pendingSample).page);else if(pendingPage!==null)go(pendingPage);pendingPage=null;}});
+  tethers=createRetractableTethers({model,scene});
+ inspection=createSampleInspection({renderer,scene,camera,controls,tethers,onChange:inspectionChanged,onReturned(){if(pendingSample)go(data.materials.find(s=>s.id===pendingSample).page);else if(pendingPage!==null)go(pendingPage);pendingPage=null;}});
   $('flipSample').onclick=()=>inspection.flip();$('returnSample').onclick=()=>inspection.putBack();$('sampleInfo').onclick=()=>{if(inspection.active)showSample(inspection.selection.record.id);};$('soundToggle').onclick=()=>{inspection.audio.toggle();updateSound();};updateSound();
   data.pages.forEach((p,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',p.title);b.onclick=()=>go(i);$('tabs').append(b);});
   data.materials.forEach(s=>{const b=document.createElement('button');b.textContent=s.id+' · '+s.color;b.onclick=()=>{$('about').close();pickSample(s.id);};$('materialIndex').append(b);});

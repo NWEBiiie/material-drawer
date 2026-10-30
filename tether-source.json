@@ -1,0 +1,18 @@
+{
+  "product": "RUIWOR RW5101",
+  "checked": "2026-10-30",
+  "source": "https://www.ruiwor.com/rw5101-round-mini-anti-lost-recoiler-eyelet-terminal-with-ring-terminal-inner-hole-3mm-4mm-5mm-for-option-product/",
+  "housingDiameterMM": 25.2,
+  "housingDepthMM": 8.3,
+  "envelopeIncludingOutletMM": [25.2, 27.2, 8.3],
+  "cableDiameterMM": 0.6,
+  "maximumCableMM": 550,
+  "returnForceLB": 0.125,
+  "eyeletHoleMM": 3,
+  "selection": "Smallest suitable housing with published dimensions found in this comparison; not a claim that it is the world's smallest.",
+  "compared": [
+    {"product":"Alplas 979ME","footprintMM":[28,28],"source":"https://www.alplas.com/product/mini-retractable-tether-with-eyelet/"},
+    {"product":"Se-Kure SK-4312 MicroMini","envelopeMM":[39.6875,39.6875,14.2875],"source":"https://se-kure.com/product/micromini-retractor/"}
+  ],
+  "modelNotes": "Published housing envelope, cable diameter and travel. Surface details, adapter saddles and fixture cavities are modeled design proposals, not manufacturer CAD. The reel takes up cable slack; it is not sized to hoist the samples. Sample thicknesses are unchanged."
+}
