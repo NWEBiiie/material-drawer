@@ -1,5 +1,5 @@
 """Small material studies: wave drawer and rectangular-pocket sample box.
-blender --background --python build-mini-studies.py -- REPO
+blender --background --python build-mini-studies.py -- REPO [wave]
 Uses the packed textures in binder-model.blend. Units below are inches.
 """
 import bpy, math, pathlib, sys, json, textwrap
@@ -75,26 +75,91 @@ def tube(name,points,r,material,parent=None):
  o=bpy.data.objects.new(name,c);scene.collection.objects.link(o);o.parent=parent;c.materials.append(material)
  bpy.context.view_layer.objects.active=o;o.select_set(True);bpy.ops.object.convert(target='MESH');o.select_set(False);return o
 def cutaway(o):o['cutaway']=True;return o
-box('Cabinet_bottom',(0,0,.08),(W+.55,D+.6,.2),wood,shell,.035)
-for x in [-(W+.3)/2,(W+.3)/2]:
- o=box('Cabinet_side',(x,0,4.55),(.25,D+.6,9.1),wood,shell,.035)
- if x>0:cutaway(o)
-box('Cabinet_back',(0,D/2+.17,4.55),(W+.55,.24,9.1),wood,shell,.03)
-box('Cabinet_shelf',(0,0,H),(W+.3,D+.6,.20),wood,shell,.025)
-box('Cabinet_top',(0,0,9.1),(W+.55,D+.6,.24),wood,shell,.035)
-box('Closed_upper_drawer',(0,-D/2-.15,8.0),(W+.1,.24,2.0),wood,shell,.035)
-box('Upper_handle',(0,-D/2-.32,8.0),(1.6,.18,.14),metal,shell,.05)
-box('Drawer_bottom',(0,0,.40),(W,D,.18),wood,drawer,.025)
+
+def linear_hex(value):
+ channels=[int(value[i:i+2],16)/255 for i in (1,3,5)]
+ return tuple(c/12.92 if c<=.04045 else ((c+.055)/1.055)**2.4 for c in channels)
+
+def fabric(name,hex_color):
+ color=linear_hex(hex_color);q=mat(name,color,rough=.94)
+ tex_color=tuple(int(hex_color[i:i+2],16)/255 for i in (1,3,5))
+ image=bpy.data.images.new(name+' weave',width=128,height=128)
+ pixels=[]
+ for y in range(128):
+  for x in range(128):
+   warp=(x%4)/3;weft=(y%4)/3
+   shade=.965+.05*math.sin(math.pi*(warp if (x//4+y//4)%2 else weft))
+   pixels.extend((*[c*shade for c in tex_color],1))
+ image.pixels.foreach_set(pixels);image.pack()
+ node=q.node_tree.nodes.new('ShaderNodeTexImage');node.image=image
+ q.node_tree.links.new(node.outputs['Color'],q.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
+ q['reference_hex']=hex_color;return q
+
+# Thin molded edges and woven panels keep the compact unit looking like
+# a portable sample organizer rather than a miniature timber cabinet.
+plastic=mat('Pearl polypropylene',linear_hex('#e9eef1'),rough=.48)
+edgePlastic=mat('Cool gray molded trim',linear_hex('#cbd6df'),rough=.58)
+blue=fabric('UTSW blue woven cover','#004c97')
+webbing=fabric('UTSW cyan webbing','#009ee2')
+stitch=mat('Pale blue seam thread',linear_hex('#bfd7e7'),rough=1)
+darkwood=mat('Slate polymer guides',linear_hex('#516879'),rough=.65)
+carrierMat=mat('Frosted polymer backing',linear_hex('#c1d0d7'),rough=.5)
+
+def panel(name,xyz,dims,parent,hidden=False):
+ o=box(name,xyz,dims,blue,parent,.045)
+ for uv in o.data.uv_layers.active.data:uv.uv*=32
+ o['finish']='woven blue cover over thin polymer panel'
+ return cutaway(o) if hidden else o
+
+def soft_pull(name,y,z,width,parent,hidden=False):
+ # A continuous bowed webbing strip with stitched-down ends, not a metal bar.
+ vertices=[];faces=[];count=32
+ for j in range(count+1):
+  u=j/count;x=(u-.5)*width;bow=.26*math.sin(math.pi*u)**2
+  vertices.extend([(m(x),m(y-bow),m(z-.14)),(m(x),m(y-bow),m(z+.14))])
+ for j in range(count):faces.append((2*j,2*j+1,2*j+3,2*j+2))
+ mesh=bpy.data.meshes.new(name);mesh.from_pydata(vertices,[],faces);mesh.update()
+ o=bpy.data.objects.new(name,mesh);scene.collection.objects.link(o);o.parent=parent;o.data.materials.append(webbing)
+ uv=o.data.uv_layers.new(name='Webbing UV')
+ for face in mesh.polygons:
+  for i in face.loop_indices:
+   v=mesh.vertices[mesh.loops[i].vertex_index].co;uv.data[i].uv=(v.x/m(.5),v.z/m(.3))
+ mod=o.modifiers.new('Woven strap thickness','SOLIDIFY');mod.thickness=m(.035)
+ mod=o.modifiers.new('Soft woven edge','BEVEL');mod.width=m(.012);mod.segments=3
+ if hidden:cutaway(o)
+ for x in [-width/2+.10,width/2-.10]:
+  patch=box(name+'_stitched_end',(x,y-.022,z),(.22,.045,.34),webbing,parent,.025)
+  if hidden:cutaway(patch)
+  for dz in [-.11,.11]:
+   seam=box(name+'_seam',(x,y-.05,z+dz),(.15,.008,.012),stitch,parent,.003)
+   if hidden:cutaway(seam)
+
+box('Cabinet_bottom',(0,0,.08),(W+.55,D+.6,.14),plastic,shell,.055)
+for x in [-(W+.43)/2,(W+.43)/2]:
+ panel('Cabinet_side',(x,0,4.55),(.12,D+.6,9.1),shell,x>0)
+ for y in [-D/2-.24,D/2+.24]:
+  o=box('Cabinet_corner_binding',(x,y,4.55),(.145,.12,9.1),plastic,shell,.055)
+  if x>0:cutaway(o)
+box('Cabinet_back',(0,D/2+.23,4.55),(W+.55,.12,9.1),plastic,shell,.05)
+box('Cabinet_shelf',(0,0,H),(W+.3,D+.6,.12),plastic,shell,.045)
+box('Cabinet_top',(0,0,9.1),(W+.55,D+.6,.16),plastic,shell,.065)
+panel('Closed_upper_drawer',(0,-D/2-.15,8.0),(W+.1,.12,2.0),shell)
+soft_pull('Upper_webbing_pull',-D/2-.23,8.0,1.45,shell)
+box('Drawer_bottom',(0,0,.40),(W,D,.12),plastic,drawer,.045)
 for x in [-W/2+.09,W/2-.09]:
- box('Lower_frame',(x,0,.73),(.18,D,.50),wood,drawer,.025)
- o=box('Drawer_side',(x,0,3.80),(.18,D,1.50),wood,drawer,.025)
+ box('Lower_frame',(x,0,.73),(.12,D,.35),plastic,drawer,.04)
+ o=panel('Drawer_side',(x,0,3.80),(.12,D,1.50),drawer)
+ if x>0:cutaway(o)
+ o=box('Drawer_soft_rim',(x,0,4.55),(.14,D,.10),edgePlastic,drawer,.04)
  if x>0:cutaway(o)
  o=box('Mechanism_window',(x,0,2.02),(.045,D-.35,2.05),glass,drawer,.015);o['window_panel']=True
  if x>0:cutaway(o)
-box('Drawer_back',(0,D/2-.09,3.5),(W,.18,6.1),wood,drawer,.025)
-front=box('Drawer_front',(0,-D/2-.1,3.50),(W+.1,.23,6.20),wood,drawer,.03);cutaway(front)
+box('Drawer_back',(0,D/2-.09,3.5),(W,.12,6.1),plastic,drawer,.045)
+front=panel('Drawer_front',(0,-D/2-.1,3.50),(W+.1,.12,6.20),drawer,True)
+for x in [-W/2,W/2]:cutaway(box('Front_edge_binding',(x,-D/2-.11,3.50),(.11,.15,6.20),plastic,drawer,.045))
+for z in [.45,6.55]:cutaway(box('Front_edge_binding',(0,-D/2-.11,z),(W,.15,.10),plastic,drawer,.04))
 hole=cyl('Shaft_hole',(0,-D/2-.1,ZC),.13,1,metal);hole.rotation_euler.x=math.pi/2;boolean(front,hole,'Handwheel spindle bore')
-cutaway(box('Drawer_handle',(0,-D/2-.32,4.8),(2.4,.22,.16),metal,drawer,.065))
+soft_pull('Drawer_webbing_pull',-D/2-.18,4.8,1.9,drawer,True)
 for x in [-W/2-.03,W/2+.03]:
  box('Fixed_slide',(x,0,.78),(.07,D-.4,.18),metal,shell,.015)
  box('Moving_slide',(x,0,.78),(.09,D-.4,.12),metal,drawer,.015)
@@ -151,6 +216,11 @@ for frame in range(241):
 drawer.animation_data.action.name='Pull_drawer'
 assert 4.22+1.05+2*E < H-.10
 export('wave',drawer,records,{'case':[W+.55,D+.6,9.22],'travel':12,'pitch':.64,'waveLift':2*E,'drawerDuration':2,'mechanism':{'type':'phased-eccentric-camshaft','cams':18,'phaseDegrees':20,'eccentricity':E,'camRadius':R,'rollerRadius':RR,'shaftHeight':ZC,'rollerBaseHeight':BASE,'stroke':2*E,'springFreeSpan':1.46,'springMinSpan':.46,'drive':'handwheel','sources':[{'title':'Carnegie Mellon: Cams','url':'https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt6.html'},{'title':'Phased cams generating traveling waves','url':'https://patents.google.com/patent/US10094367B2'}],'note':'Kinematic concept. Spring rates, torque, bearing fits, and fabrication tolerances are not sized.'}})
+
+wave_data=json.loads((ROOT/'wave-data.json').read_text())
+wave_data['finish']={'shell':'thin polypropylene','panels':'woven blue textile','pulls':'soft webbing','blue':'#004c97','accent':'#009ee2','source':'https://brand.utswmed.org/color-palette-and-typography/'}
+(ROOT/'wave-data.json').write_text(json.dumps(wave_data,separators=(',',':')))
+if len(sys.argv)>sys.argv.index('--')+2 and sys.argv[sys.argv.index('--')+2]=='wave':sys.exit(0)
 
 prepare()
 # Eighteen naked material cuts sit flat in rectangular pockets of individual depth.
