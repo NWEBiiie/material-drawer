@@ -62,6 +62,7 @@ prepare()
 # Circular eccentric cams on a common shaft, phased 20 degrees apart.
 # Follower travel uses the exact roller-circle contact solution, not a cosmetic wave.
 W,D,H=3.7,12.4,6.9
+TRAVEL=12.4  # Rear carrier and tether tab clear the cabinet mouth before pickup.
 E,R,RR,ZC=.5,.9,.15,1.95
 BASE=ZC+R+RR-E
 shell=empty('Cabinet');drawer=empty('Drawer');drawer['motion']='drawer'
@@ -81,35 +82,66 @@ def linear_hex(value):
  return tuple(c/12.92 if c<=.04045 else ((c+.055)/1.055)**2.4 for c in channels)
 
 def fabric(name,hex_color):
- color=linear_hex(hex_color);q=mat(name,color,rough=.94)
+ color=linear_hex(hex_color);q=mat(name,color,rough=1)
+ bsdf=q.node_tree.nodes.get('Principled BSDF');bsdf.inputs['Specular IOR Level'].default_value=.18;bsdf.inputs['Sheen Weight'].default_value=.22;bsdf.inputs['Sheen Roughness'].default_value=.85;bsdf.inputs['Sheen Tint'].default_value=(*color,1)
  tex_color=tuple(int(hex_color[i:i+2],16)/255 for i in (1,3,5))
  image=bpy.data.images.new(name+' weave',width=128,height=128)
- pixels=[]
+ pixels=[];normal_pixels=[]
  for y in range(128):
   for x in range(128):
    warp=(x%4)/3;weft=(y%4)/3
-   shade=.965+.05*math.sin(math.pi*(warp if (x//4+y//4)%2 else weft))
+   along=warp if (x//4+y//4)%2 else weft
+   shade=.86+.14*math.sin(math.pi*along)
    pixels.extend((*[c*shade for c in tex_color],1))
+   nx=.22*math.cos(math.pi*warp);ny=.22*math.cos(math.pi*weft);nz=math.sqrt(1-nx*nx-ny*ny)
+   normal_pixels.extend((nx*.5+.5,ny*.5+.5,nz*.5+.5,1))
  image.pixels.foreach_set(pixels);image.pack()
  node=q.node_tree.nodes.new('ShaderNodeTexImage');node.image=image
  q.node_tree.links.new(node.outputs['Color'],q.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
+ normal_image=bpy.data.images.new(name+' thread relief',width=128,height=128);normal_image.colorspace_settings.name='Non-Color';normal_image.pixels.foreach_set(normal_pixels);normal_image.pack()
+ normal_tex=q.node_tree.nodes.new('ShaderNodeTexImage');normal_tex.image=normal_image
+ normal=q.node_tree.nodes.new('ShaderNodeNormalMap');normal.inputs['Strength'].default_value=.55
+ q.node_tree.links.new(normal_tex.outputs['Color'],normal.inputs['Color']);q.node_tree.links.new(normal.outputs['Normal'],bsdf.inputs['Normal'])
  q['reference_hex']=hex_color;return q
 
-# Thin molded edges and woven panels keep the compact unit looking like
-# a portable sample organizer rather than a miniature timber cabinet.
+# A padded sewn sleeve wraps the hidden rigid guides. No transparent panels
+# overlap the contents in normal view; the cutaway reveals the mechanism.
 plastic=mat('Pearl polypropylene',linear_hex('#e9eef1'),rough=.48)
 edgePlastic=mat('Cool gray molded trim',linear_hex('#cbd6df'),rough=.58)
 blue=fabric('UTSW blue woven cover','#004c97')
 webbing=fabric('UTSW cyan webbing','#009ee2')
-stitch=mat('Pale blue seam thread',linear_hex('#bfd7e7'),rough=1)
+binding=fabric('Navy woven binding','#00355d')
+lining=fabric('Blue gray fabric lining','#69819a')
+stitch=mat('Blue seam thread',linear_hex('#8aaeca'),rough=1)
 darkwood=mat('Slate polymer guides',linear_hex('#516879'),rough=.65)
 carrierMat=mat('Frosted polymer backing',linear_hex('#c1d0d7'),rough=.5)
 
-def panel(name,xyz,dims,parent,hidden=False):
- o=box(name,xyz,dims,blue,parent,.045)
- for uv in o.data.uv_layers.active.data:uv.uv*=32
- o['finish']='woven blue cover over thin polymer panel'
+def panel(name,xyz,dims,parent,hidden=False,material=None):
+ o=box(name,xyz,dims,material or blue,parent,min(.12,min(dims)*.48))
+ # A consistent physical weave scale, independent of panel aspect ratio.
+ mesh=o.data
+ for face in mesh.polygons:
+  axis=max(range(3),key=lambda i:abs(face.normal[i]));axes=[i for i in range(3) if i!=axis]
+  for loop in face.loop_indices:
+   v=mesh.vertices[mesh.loops[loop].vertex_index].co
+   mesh.uv_layers.active.data[loop].uv=(v[axes[0]]/m(.65),v[axes[1]]/m(.65))
+ o['finish']='padded woven textile with sewn binding'
  return cutaway(o) if hidden else o
+
+def sewn_edge(name,points,parent,hidden=False):
+ o=tube(name,points,.035,binding,parent)
+ if hidden:cutaway(o)
+ curves=bpy.data.curves.new(name+'_thread','CURVE');curves.dimensions='3D';curves.bevel_depth=m(.006);curves.bevel_resolution=1
+ for i,(a,b) in enumerate(zip(points,points[1:])):
+  a=Vector(a);b=Vector(b);length=(b-a).length;count=max(1,int(length/.15))
+  for j in range(count):
+   start=a.lerp(b,(j+.15)/count);end=a.lerp(b,(j+.62)/count)
+   # Thread sits proud of the binding rather than sharing its surface.
+   offset=Vector((0,0,.033));spline=curves.splines.new('POLY');spline.points.add(1)
+   for p,v in zip(spline.points,[start+offset,end+offset]):p.co=(*[m(n) for n in v],1)
+ seam=bpy.data.objects.new(name+'_stitch',curves);scene.collection.objects.link(seam);seam.parent=parent;curves.materials.append(stitch)
+ bpy.context.view_layer.objects.active=seam;seam.select_set(True);bpy.ops.object.convert(target='MESH');seam.select_set(False)
+ if hidden:cutaway(seam)
 
 def soft_pull(name,y,z,width,parent,hidden=False):
  # A continuous bowed webbing strip with stitched-down ends, not a metal bar.
@@ -134,32 +166,26 @@ def soft_pull(name,y,z,width,parent,hidden=False):
    seam=box(name+'_seam',(x,y-.05,z+dz),(.15,.008,.012),stitch,parent,.003)
    if hidden:cutaway(seam)
 
-box('Cabinet_bottom',(0,0,.08),(W+.55,D+.6,.14),plastic,shell,.055)
+panel('Cabinet_bottom',(0,0,.12),(W+.55,D+.6,.22),shell,material=binding)
 for x in [-(W+.43)/2,(W+.43)/2]:
- panel('Cabinet_side',(x,0,4.55),(.12,D+.6,9.1),shell,x>0)
- for y in [-D/2-.24,D/2+.24]:
-  o=box('Cabinet_corner_binding',(x,y,4.55),(.145,.12,9.1),plastic,shell,.055)
-  if x>0:cutaway(o)
-box('Cabinet_back',(0,D/2+.23,4.55),(W+.55,.12,9.1),plastic,shell,.05)
-box('Cabinet_shelf',(0,0,H),(W+.3,D+.6,.12),plastic,shell,.045)
-box('Cabinet_top',(0,0,9.1),(W+.55,D+.6,.16),plastic,shell,.065)
-panel('Closed_upper_drawer',(0,-D/2-.15,8.0),(W+.1,.12,2.0),shell)
-soft_pull('Upper_webbing_pull',-D/2-.23,8.0,1.45,shell)
-box('Drawer_bottom',(0,0,.40),(W,D,.12),plastic,drawer,.045)
+ panel('Cabinet_side',(x,0,4.55),(.20,D+.6,9.1),shell,x>0)
+ sewn_edge('Cabinet_sewn_perimeter',[(x,-D/2-.26,.12),(x,-D/2-.26,9.08),(x,D/2+.26,9.08),(x,D/2+.26,.12),(x,-D/2-.26,.12)],shell,x>0)
+panel('Cabinet_back',(0,D/2+.23,4.55),(W+.55,.20,9.1),shell)
+panel('Cabinet_shelf',(0,0,H),(W+.3,D+.6,.16),shell,material=lining)
+panel('Cabinet_top',(0,0,9.1),(W+.55,D+.6,.22),shell)
+panel('Closed_upper_drawer',(0,-D/2-.15,8.0),(W+.1,.24,2.0),shell)
+sewn_edge('Upper_sewn_edge',[(-1.78,-6.48,7.10),(-1.78,-6.48,8.90),(1.78,-6.48,8.90),(1.78,-6.48,7.10),(-1.78,-6.48,7.10)],shell)
+soft_pull('Upper_webbing_pull',-D/2-.31,8.0,1.45,shell)
+panel('Drawer_bottom',(0,0,.40),(W,D,.16),drawer,material=lining)
 for x in [-W/2+.09,W/2-.09]:
  box('Lower_frame',(x,0,.73),(.12,D,.35),plastic,drawer,.04)
- o=panel('Drawer_side',(x,0,3.80),(.12,D,1.50),drawer)
- if x>0:cutaway(o)
- o=box('Drawer_soft_rim',(x,0,4.55),(.14,D,.10),edgePlastic,drawer,.04)
- if x>0:cutaway(o)
- o=box('Mechanism_window',(x,0,2.02),(.045,D-.35,2.05),glass,drawer,.015);o['window_panel']=True
- if x>0:cutaway(o)
-box('Drawer_back',(0,D/2-.09,3.5),(W,.12,6.1),plastic,drawer,.045)
-front=panel('Drawer_front',(0,-D/2-.1,3.50),(W+.1,.12,6.20),drawer,True)
-for x in [-W/2,W/2]:cutaway(box('Front_edge_binding',(x,-D/2-.11,3.50),(.11,.15,6.20),plastic,drawer,.045))
-for z in [.45,6.55]:cutaway(box('Front_edge_binding',(0,-D/2-.11,z),(W,.15,.10),plastic,drawer,.04))
+ panel('Drawer_side',(x,0,2.51),(.15,D,4.08),drawer,x>0)
+ sewn_edge('Drawer_sewn_rim',[(x,-6.12,.50),(x,-6.12,4.55),(x,6.12,4.55),(x,6.12,.50)],drawer,x>0)
+panel('Drawer_back',(0,D/2-.09,3.5),(W,.16,6.1),drawer,material=lining)
+front=panel('Drawer_front',(0,-D/2-.1,3.50),(W+.1,.24,6.20),drawer,True)
+sewn_edge('Front_sewn_edge',[(-1.78,-6.44,.50),(-1.78,-6.44,6.50),(1.78,-6.44,6.50),(1.78,-6.44,.50),(-1.78,-6.44,.50)],drawer,True)
 hole=cyl('Shaft_hole',(0,-D/2-.1,ZC),.13,1,metal);hole.rotation_euler.x=math.pi/2;boolean(front,hole,'Handwheel spindle bore')
-soft_pull('Drawer_webbing_pull',-D/2-.18,4.8,1.9,drawer,True)
+soft_pull('Drawer_webbing_pull',-D/2-.28,4.8,1.9,drawer,True)
 for x in [-W/2-.03,W/2+.03]:
  box('Fixed_slide',(x,0,.78),(.07,D-.4,.18),metal,shell,.015)
  box('Moving_slide',(x,0,.78),(.09,D-.4,.12),metal,drawer,.015)
@@ -195,7 +221,7 @@ for i,s in enumerate(data['materials']):
   spring=tube('Return_spring_'+id,[(xx+.08*math.cos(a*math.tau*8/128),y+.08*math.sin(a*math.tau*8/128),a/128) for a in range(129)],.018,metal,drawer)
   spring['wave_spring']=i;spring['spring_length_inches']=1.46;springs.append((spring,i))
  board=empty('Carrier_'+id,follower);board.location.z=m(4.22);board.rotation_euler.x=math.pi/2
- board['material_id']=id;board['inspection_width_inches']=1.85;board['extraction_axis']=[0,0,-1];board['extraction_distance']=m(1.2);board['index']=i
+ board['material_id']=id;board['inspection_width_inches']=1.85;board['extraction_axis']=[0,0,-1];board['extraction_distance']=m(4.4);board['inspection_clearance_path']=True;board['index']=i
  box('Acrylic_carrier_'+id,(0,0,0),(1.85,2.10,.075),carrierMat,board,.025)
  swatch=samples[id];swatch.parent=board;swatch.location=(0,m(.05),m(.055+t/2))
  box('Name_tag_'+id,(0,.89,.049),(1.68,.23,.015),paper,board,.01);text('ID_'+id,id,(-.77,.85,.06),.11,board);text('Name_'+id,s['color'][:22],(-.26,.86,.06),.052,board)
@@ -206,7 +232,7 @@ def cam_lift(theta,index):
  return E*math.cos(a)+math.sqrt((R+RR)**2-E**2*math.sin(a)**2)-(R+RR-E)
 scene.frame_end=240
 for frame in range(241):
- p=min(frame/48,1);smooth=p*p*(3-2*p);drawer.location.y=m(-12*smooth);drawer.keyframe_insert(data_path='location',frame=frame)
+ p=min(frame/48,1);smooth=p*p*(3-2*p);drawer.location.y=m(-TRAVEL*smooth);drawer.keyframe_insert(data_path='location',frame=frame)
  if frame%2==0:
   theta=7*math.tau/18+max(0,(frame-48)/192)*math.tau
   shaft.rotation_euler.y=theta;shaft.keyframe_insert(data_path='rotation_euler',frame=frame)
@@ -215,10 +241,10 @@ for frame in range(241):
    lift=cam_lift(theta,i);spring.location.z=m(3.09+lift);spring.scale.z=1.46-lift;spring.keyframe_insert(data_path='location',frame=frame);spring.keyframe_insert(data_path='scale',frame=frame)
 drawer.animation_data.action.name='Pull_drawer'
 assert 4.22+1.05+2*E < H-.10
-export('wave',drawer,records,{'case':[W+.55,D+.6,9.22],'travel':12,'pitch':.64,'waveLift':2*E,'drawerDuration':2,'mechanism':{'type':'phased-eccentric-camshaft','cams':18,'phaseDegrees':20,'eccentricity':E,'camRadius':R,'rollerRadius':RR,'shaftHeight':ZC,'rollerBaseHeight':BASE,'stroke':2*E,'springFreeSpan':1.46,'springMinSpan':.46,'drive':'handwheel','sources':[{'title':'Carnegie Mellon: Cams','url':'https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt6.html'},{'title':'Phased cams generating traveling waves','url':'https://patents.google.com/patent/US10094367B2'}],'note':'Kinematic concept. Spring rates, torque, bearing fits, and fabrication tolerances are not sized.'}})
+export('wave',drawer,records,{'case':[W+.55,D+.6,9.22],'travel':TRAVEL,'pitch':.64,'waveLift':2*E,'drawerDuration':2,'mechanism':{'type':'phased-eccentric-camshaft','cams':18,'phaseDegrees':20,'eccentricity':E,'camRadius':R,'rollerRadius':RR,'shaftHeight':ZC,'rollerBaseHeight':BASE,'stroke':2*E,'springFreeSpan':1.46,'springMinSpan':.46,'drive':'handwheel','sources':[{'title':'Carnegie Mellon: Cams','url':'https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt6.html'},{'title':'Phased cams generating traveling waves','url':'https://patents.google.com/patent/US10094367B2'}],'note':'Kinematic concept. Spring rates, torque, bearing fits, and fabrication tolerances are not sized.'}})
 
 wave_data=json.loads((ROOT/'wave-data.json').read_text())
-wave_data['finish']={'shell':'thin polypropylene','panels':'woven blue textile','pulls':'soft webbing','blue':'#004c97','accent':'#009ee2','source':'https://brand.utswmed.org/color-palette-and-typography/'}
+wave_data['finish']={'shell':'padded textile sleeve over internal guides','panels':'opaque woven blue textile','edges':'sewn navy binding','pulls':'soft webbing','blue':'#004c97','accent':'#009ee2','source':'https://brand.utswmed.org/color-palette-and-typography/'}
 (ROOT/'wave-data.json').write_text(json.dumps(wave_data,separators=(',',':')))
 if len(sys.argv)>sys.argv.index('--')+2 and sys.argv[sys.argv.index('--')+2]=='wave':sys.exit(0)
 

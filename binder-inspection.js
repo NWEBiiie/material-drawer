@@ -67,9 +67,18 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
   }
   function pose(p){
     const h=held,move=smooth((p-.18)/.82),lift=smooth(p/.22),end=h.destination;
-    h.object.position.copy(h.homeWorld).addScaledVector(h.liftVector,h.liftDistance*lift);
-    h.object.position.lerp(end,move);
-    h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.27)/.73));
+    if(h.clearancePath){
+      // Leave the slot vertically, clear the cabinet's front edge, then flip.
+      // Reverse the same path on return; never slide diagonally through a rim.
+      const rise=smooth(p/.42),out=smooth((p-.42)/.20),present=smooth((p-.62)/.38);
+      h.object.position.copy(h.homeWorld).addScaledVector(h.liftVector,h.liftDistance*rise).addScaledVector(h.outward,.046*out);
+      h.object.position.lerp(end,present);
+      h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,present);
+    }else{
+      h.object.position.copy(h.homeWorld).addScaledVector(h.liftVector,h.liftDistance*lift);
+      h.object.position.lerp(end,move);
+      h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.27)/.73));
+    }
     tethers?.constrain(h.object);
     frameTether();
     veil.material.opacity=.28*smooth(p);
@@ -92,6 +101,12 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
       liftVector:object.userData.extraction_axis?new THREE.Vector3(...object.userData.extraction_axis).applyQuaternion(object.quaternion).normalize():new THREE.Vector3(0,1,0),
       liftDistance:object.userData.extraction_distance||.055,
       progress:0,phase:'lifting',face:'back',flip:null};
+    if(object.userData.inspection_clearance_path){
+      held.clearancePath=true;held.outward=new THREE.Vector3(0,0,1).transformDirection(home.parent.matrixWorld);
+      // Parent coordinates in the exported drawer have +Z toward its opening.
+      held.destination.y=Math.max(held.destination.y,held.homeWorld.y+held.liftDistance);
+      held.destination.z=Math.max(held.destination.z,held.homeWorld.z+.046);
+    }
     tethers?.hold(object,overlay);controls.enabled=false;audio.click('detach');onChange?.(held);return true;
   }
   function flip(){
@@ -119,7 +134,10 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
   }
   function render(){
     if(!held)return;
-    renderer.autoClear=false;renderer.render(veilScene,veilCamera);renderer.clearDepth();renderer.render(overlay,inspectionCamera);renderer.autoClear=true;
+    renderer.autoClear=false;renderer.render(veilScene,veilCamera);
+    // The drawer must occlude a sample while it is still in its slot.
+    if(!held.clearancePath)renderer.clearDepth();
+    renderer.render(overlay,inspectionCamera);renderer.autoClear=true;
   }
   function resize(){if(!held)return;inspectionCamera.copy(camera);held.baseCamera.copy(camera);held.baseZoom=camera.zoom;frameTether();}
   function hit(event){if(!held)return false;const r=renderer.domElement.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,1-(event.clientY-r.top)/r.height*2);ray.setFromCamera(pointer,inspectionCamera);return ray.intersectObject(held.object,true).length>0;}
