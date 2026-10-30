@@ -8,20 +8,47 @@ const studies=[
  {id:'binder',file:'binder-model.glb?v=4',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
  {id:'case',file:'case-model.glb?v=3',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
  {id:'pockets',file:'pockets-model.glb?v=3',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'wave-model.glb?v=3',x:.19,y:.05,z:.045,label:[.19,.015,.42]}
+ {id:'wave',file:'wave-model.glb?v=3',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
+let figure,showFigure=true;
+const scaleToggle=document.querySelector('#scaleToggle'),scaleLabel=document.querySelector('#scaleLabel');
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];
 const wood=new THREE.MeshStandardMaterial({color:'#d5c6ad',roughness:.8});
 const edge=new THREE.MeshStandardMaterial({color:'#b9bdad',roughness:.9});
 const group=new THREE.Group();
 function slab(size,position,material=wood){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.position.set(...position);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function project(point){const v=point.clone().project(camera);return{x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2};}
-function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}}
+function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}const p=project(new THREE.Vector3(.60,0,.18));Object.assign(scaleLabel.style,{left:p.x+'px',top:p.y+'px'});scaleLabel.hidden=!showFigure;}
+function humanScale(){
+ const human=new THREE.Group();human.name='Human_scale_1_75m';human.userData.heightMetres=1.75;
+ const material=new THREE.MeshStandardMaterial({color:'#bab8af',roughness:1});
+ function ellipsoid(name,position,size){const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),material);m.name=name;m.position.set(...position);m.scale.set(...size);m.castShadow=true;m.receiveShadow=true;human.add(m);}
+ function limb(name,a,b,radius){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),direction=end.clone().sub(start);const m=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.001,direction.length()-2*radius),6,12),material);m.name=name;m.position.copy(start).add(end).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());m.castShadow=true;m.receiveShadow=true;human.add(m);}
+ ellipsoid('Head',[0,1.635,0],[.085,.115,.085]);
+ limb('Neck',[0,1.44,0],[0,1.55,0],.044);
+ ellipsoid('Torso',[0,1.245,0],[.178,.245,.095]);
+ ellipsoid('Pelvis',[0,1.015,0],[.14,.135,.10]);
+ for(const side of [-1,1]){
+  ellipsoid('Shoulder',[side*.145,1.425,0],[.065,.065,.065]);
+  limb('Upper_arm',[side*.16,1.435,0],[side*.235,1.16,.01],.043);
+  ellipsoid('Elbow',[side*.235,1.17,.01],[.035,.045,.035]);
+  limb('Forearm',[side*.235,1.18,.01],[side*.24,.955,.035],.033);
+  ellipsoid('Wrist',[side*.24,.96,.035],[.025,.035,.023]);
+  ellipsoid('Hand',[side*.24,.925,.035],[.031,.058,.021]);
+  limb('Thigh',[side*.075,1.04,0],[side*.095,.54,.015],.064);
+  ellipsoid('Knee',[side*.095,.55,.015],[.048,.063,.048]);
+  limb('Shin',[side*.095,.56,.015],[side*.105,.095,.005],.047);
+  ellipsoid('Ankle',[side*.105,.09,.005],[.033,.045,.033]);
+  ellipsoid('Foot',[side*.105,.035,.055],[.048,.035,.105]);
+ }
+ human.position.set(.60,0,-.12);human.rotation.y=-.16;scene.add(human);return human;
+}
 function frame(){
+ document.body.classList.toggle('human-scale',showFigure);
  const w=innerWidth,h=innerHeight,aspect=w/h;renderer.setSize(w,h,false);
- const span=Math.max(1.12,1.5/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
- const center=new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
+ const span=showFigure?Math.max(2.13,1.95/aspect):Math.max(1.12,1.5/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
+ const center=showFigure?new THREE.Vector3(.03,.82,.04):new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
 }
 function active(id){hover=id;for(const a of links)a.classList.toggle('active',a.dataset.model===id);canvas.style.cursor=id?'pointer':'default';}
 function hit(e){pointer.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);ray.setFromCamera(pointer,camera);return ray.intersectObjects(hitboxes)[0]?.object.userData.study;}
@@ -46,11 +73,8 @@ async function boot(){try{
   slab([.014,.26,.014],[x,.135,z],wood);
   slab([.019,.012,.019],[x,.006,z],edge);
  }
- // A separate low plinth supports only the fixed drawer cabinet; the open
- // runner projects freely from it rather than sitting in a shelf cubby.
- slab([.16,.035,.335],[.19,.0175,-.10],wood);
- slab([.18,.015,.35],[.19,.0425,-.10],edge);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+ figure=humanScale();
  frame();requestAnimationFrame(tick);
  const loader=new GLTFLoader();
  await Promise.all(studies.map(async s=>{
@@ -64,7 +88,8 @@ async function boot(){try{
  }));
  ready=true;document.querySelector('#loading').hidden=true;frame();
  canvas.addEventListener('pointermove',e=>{if(!transition)active(hit(e));});canvas.addEventListener('pointerleave',()=>active(null));canvas.addEventListener('click',e=>{if(!transition)open(hit(e));});
- window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project};
+ window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project,figure};
  }catch(error){console.error(error);document.querySelector('#loading').hidden=true;document.querySelector('#shelfError').hidden=false;document.body.classList.add('failed');}}
 for(const a of links){a.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();open(a.dataset.model);});a.addEventListener('mouseenter',()=>active(a.dataset.model));a.addEventListener('mouseleave',()=>active(null));a.addEventListener('focus',()=>active(a.dataset.model));a.addEventListener('blur',()=>active(null));}
+scaleToggle.addEventListener('click',()=>{if(!figure||transition)return;showFigure=!showFigure;figure.visible=showFigure;scaleToggle.setAttribute('aria-pressed',String(showFigure));frame();});
 addEventListener('resize',()=>{if(renderer&&!transition)frame();});addEventListener('pageshow',e=>{if(e.persisted){transition=null;document.body.classList.remove('opening');frame();}});boot();
