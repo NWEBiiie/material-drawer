@@ -11,34 +11,24 @@ const studies=[
  {id:'wave',file:'wave-model.glb?v=3',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
-let figure,showFigure=true;
-const scaleToggle=document.querySelector('#scaleToggle'),scaleLabel=document.querySelector('#scaleLabel');
+const scaleBar=document.querySelector('#scaleBar'),scaleValue=document.querySelector('#scaleValue');
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];
 const wood=new THREE.MeshStandardMaterial({color:'#d5c6ad',roughness:.8});
 const edge=new THREE.MeshStandardMaterial({color:'#b9bdad',roughness:.9});
 const group=new THREE.Group();
 function slab(size,position,material=wood){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.position.set(...position);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function project(point){const v=point.clone().project(camera);return{x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2};}
-function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}const p=project(new THREE.Vector3(.60,0,.18));Object.assign(scaleLabel.style,{left:p.x+'px',top:p.y+'px'});scaleLabel.hidden=!showFigure;}
-async function humanScale(loader){
- // Quaternius, "Man", CC0. Source and license: HUMAN-SCALE-LICENSE.txt.
- const gltf=await loader.loadAsync('human-scale.glb'),model=gltf.scene;
- const standing=gltf.animations.find(a=>a.name.endsWith('Man_Idle'));
- if(standing){const mixer=new THREE.AnimationMixer(model);mixer.clipAction(standing).play();mixer.setTime(.1);}
- const material=new THREE.MeshStandardMaterial({color:'#bab8af',roughness:1});
- model.updateMatrixWorld(true);
- model.traverse(o=>{if(o.isMesh){o.material=material;o.castShadow=true;o.receiveShadow=true;}if(o.isSkinnedMesh){o.skeleton.update();o.computeBoundingBox();}});
- let bounds=new THREE.Box3().setFromObject(model),height=bounds.max.y-bounds.min.y;
- model.scale.multiplyScalar(1.75/height);model.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(model);
- model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));
- const human=new THREE.Group();human.name='Quaternius_Man_1_75m';human.userData.heightMetres=1.75;human.add(model);
- human.position.set(.60,0,-.12);human.rotation.y=-.16;scene.add(human);return human;
+function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}}
+function scale(){
+ const pixelsPerFoot=innerHeight/(camera.top-camera.bottom)*camera.zoom*.3048;
+ const feet=[.25,.5,1,2,4].reduce((best,n)=>Math.abs(n*pixelsPerFoot-100)<Math.abs(best*pixelsPerFoot-100)?n:best,.25);
+ scaleBar.style.width=feet*pixelsPerFoot+'px';scaleBar.dataset.feet=feet;
+ scaleValue.textContent=feet<1?feet*12+' in':feet+' ft';
 }
 function frame(){
- document.body.classList.toggle('human-scale',showFigure);
  const w=innerWidth,h=innerHeight,aspect=w/h;renderer.setSize(w,h,false);
- const span=showFigure?Math.max(2.13,1.95/aspect):Math.max(1.12,1.5/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
- const center=showFigure?new THREE.Vector3(.03,.82,.04):new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
+ const span=Math.max(1.12,1.5/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
+ const center=new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();scale();
 }
 function active(id){hover=id;for(const a of links)a.classList.toggle('active',a.dataset.model===id);canvas.style.cursor=id?'pointer':'default';}
 function hit(e){pointer.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);ray.setFromCamera(pointer,camera);return ray.intersectObjects(hitboxes)[0]?.object.userData.study;}
@@ -65,7 +55,6 @@ async function boot(){try{
  }
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
  const loader=new GLTFLoader();
- try{figure=await humanScale(loader);}catch(error){console.warn('Human scale model unavailable',error);showFigure=false;scaleToggle.hidden=true;}
  frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
   const gltf=await loader.loadAsync(s.file),model=gltf.scene;
@@ -78,8 +67,7 @@ async function boot(){try{
  }));
  ready=true;document.querySelector('#loading').hidden=true;frame();
  canvas.addEventListener('pointermove',e=>{if(!transition)active(hit(e));});canvas.addEventListener('pointerleave',()=>active(null));canvas.addEventListener('click',e=>{if(!transition)open(hit(e));});
- window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project,figure};
+ window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project};
  }catch(error){console.error(error);document.querySelector('#loading').hidden=true;document.querySelector('#shelfError').hidden=false;document.body.classList.add('failed');}}
 for(const a of links){a.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();open(a.dataset.model);});a.addEventListener('mouseenter',()=>active(a.dataset.model));a.addEventListener('mouseleave',()=>active(null));a.addEventListener('focus',()=>active(a.dataset.model));a.addEventListener('blur',()=>active(null));}
-scaleToggle.addEventListener('click',()=>{if(!figure||transition)return;showFigure=!showFigure;figure.visible=showFigure;scaleToggle.setAttribute('aria-pressed',String(showFigure));frame();});
 addEventListener('resize',()=>{if(renderer&&!transition)frame();});addEventListener('pageshow',e=>{if(e.persisted){transition=null;document.body.classList.remove('opening');frame();}});boot();
