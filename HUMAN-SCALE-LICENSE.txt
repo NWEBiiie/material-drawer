@@ -1,0 +1,13 @@
+Human scale model
+
+Title: Man
+Creator: Quaternius
+Source: https://poly.pizza/m/HMnuH5geEG
+Original GLB: https://static.poly.pizza/3746be88-6799-4817-929b-6bc067c47caa.glb
+License: Creative Commons CC0 1.0 Universal (Public Domain)
+License text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+Source page checked: 2026-10-30
+
+The downloaded GLB is unmodified. The website selects its standing pose,
+scales it uniformly to 1.75 metres, and applies a neutral display material.
+The model is free to use. No payment or account was required to download it.

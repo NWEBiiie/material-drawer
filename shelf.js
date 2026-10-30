@@ -20,28 +20,18 @@ const group=new THREE.Group();
 function slab(size,position,material=wood){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.position.set(...position);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function project(point){const v=point.clone().project(camera);return{x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2};}
 function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}const p=project(new THREE.Vector3(.60,0,.18));Object.assign(scaleLabel.style,{left:p.x+'px',top:p.y+'px'});scaleLabel.hidden=!showFigure;}
-function humanScale(){
- const human=new THREE.Group();human.name='Human_scale_1_75m';human.userData.heightMetres=1.75;
+async function humanScale(loader){
+ // Quaternius, "Man", CC0. Source and license: HUMAN-SCALE-LICENSE.txt.
+ const gltf=await loader.loadAsync('human-scale.glb'),model=gltf.scene;
+ const standing=gltf.animations.find(a=>a.name.endsWith('Man_Idle'));
+ if(standing){const mixer=new THREE.AnimationMixer(model);mixer.clipAction(standing).play();mixer.setTime(.1);}
  const material=new THREE.MeshStandardMaterial({color:'#bab8af',roughness:1});
- function ellipsoid(name,position,size){const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),material);m.name=name;m.position.set(...position);m.scale.set(...size);m.castShadow=true;m.receiveShadow=true;human.add(m);}
- function limb(name,a,b,radius){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),direction=end.clone().sub(start);const m=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.001,direction.length()-2*radius),6,12),material);m.name=name;m.position.copy(start).add(end).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());m.castShadow=true;m.receiveShadow=true;human.add(m);}
- ellipsoid('Head',[0,1.635,0],[.085,.115,.085]);
- limb('Neck',[0,1.44,0],[0,1.55,0],.044);
- ellipsoid('Torso',[0,1.245,0],[.178,.245,.095]);
- ellipsoid('Pelvis',[0,1.015,0],[.14,.135,.10]);
- for(const side of [-1,1]){
-  ellipsoid('Shoulder',[side*.145,1.425,0],[.065,.065,.065]);
-  limb('Upper_arm',[side*.16,1.435,0],[side*.235,1.16,.01],.043);
-  ellipsoid('Elbow',[side*.235,1.17,.01],[.035,.045,.035]);
-  limb('Forearm',[side*.235,1.18,.01],[side*.24,.955,.035],.033);
-  ellipsoid('Wrist',[side*.24,.96,.035],[.025,.035,.023]);
-  ellipsoid('Hand',[side*.24,.925,.035],[.031,.058,.021]);
-  limb('Thigh',[side*.075,1.04,0],[side*.095,.54,.015],.064);
-  ellipsoid('Knee',[side*.095,.55,.015],[.048,.063,.048]);
-  limb('Shin',[side*.095,.56,.015],[side*.105,.095,.005],.047);
-  ellipsoid('Ankle',[side*.105,.09,.005],[.033,.045,.033]);
-  ellipsoid('Foot',[side*.105,.035,.055],[.048,.035,.105]);
- }
+ model.updateMatrixWorld(true);
+ model.traverse(o=>{if(o.isMesh){o.material=material;o.castShadow=true;o.receiveShadow=true;}if(o.isSkinnedMesh){o.skeleton.update();o.computeBoundingBox();}});
+ let bounds=new THREE.Box3().setFromObject(model),height=bounds.max.y-bounds.min.y;
+ model.scale.multiplyScalar(1.75/height);model.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(model);
+ model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));
+ const human=new THREE.Group();human.name='Quaternius_Man_1_75m';human.userData.heightMetres=1.75;human.add(model);
  human.position.set(.60,0,-.12);human.rotation.y=-.16;scene.add(human);return human;
 }
 function frame(){
@@ -74,9 +64,9 @@ async function boot(){try{
   slab([.019,.012,.019],[x,.006,z],edge);
  }
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
- figure=humanScale();
- frame();requestAnimationFrame(tick);
  const loader=new GLTFLoader();
+ try{figure=await humanScale(loader);}catch(error){console.warn('Human scale model unavailable',error);showFigure=false;scaleToggle.hidden=true;}
+ frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
   const gltf=await loader.loadAsync(s.file),model=gltf.scene;
   // Keep the cases square to the rack and the drawer opening toward its front.
