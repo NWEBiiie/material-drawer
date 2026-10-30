@@ -24,14 +24,14 @@ def boolean(target,cutter,name):
  bpy.context.view_layer.update();bpy.context.view_layer.objects.active=target;mod=target.modifiers.new(name,'BOOLEAN');mod.operation='DIFFERENCE';mod.object=cutter;bpy.ops.object.modifier_apply(modifier=mod.name);bpy.data.objects.remove(cutter,do_unlink=True)
 def frac(n):
  w=int(n);f=Fraction(n-w).limit_denominator(16);return (str(w)+' ' if w else '')+str(f) if f else str(w)
-def back_label(id,s,parent,z,width=2,height=1.5):
+def back_label(id,s,parent,z,width=1.5,height=1.5):
  tag=empty('Back_card_'+id,parent);tag.location=(0,0,m(z));tag.rotation_euler.x=math.pi
  box('Back_paper_'+id,(0,0,0),(width-.1,height-.1,.009),paper,tag,.015)
  left=-width/2+.12
  text('Back_ID_'+id,id,(left,height/2-.29,.006),.17,tag)
- for j,line in enumerate(textwrap.wrap(s['color'],width=26)[:2]):text('Back_color_'+id+str(j),line,(left,height/2-.47-.12*j,.006),.085,tag)
- text('Back_maker_'+id,s['manufacturer'],(left,-.18,.006),.077,tag)
- text('Back_cut_'+id,'2 x 1 1/2 in',(left,-.40,.006),.09,tag)
+ for j,line in enumerate(textwrap.wrap(s['color'],width=21)[:2]):text('Back_color_'+id+str(j),line,(left,height/2-.47-.12*j,.006),.071,tag)
+ text('Back_maker_'+id,s['manufacturer'],(left,-.18,.006),.064,tag)
+ text('Back_cut_'+id,'1 1/2 x 1 1/2 in',(left,-.40,.006),.075,tag)
  text('Back_thickness_'+id,frac(s['cut'][2])+' in thick',(left,-.57,.006),.085,tag)
 def prepare():
  global scene,data,samples,wood,darkwood,foam,paper,ink,metal,carrierMat
@@ -39,10 +39,10 @@ def prepare():
  for o in list(bpy.data.objects):
   if o not in samples.values():bpy.data.objects.remove(o,do_unlink=True)
  for s in data['materials']:
-  o=samples[s['id']];o.parent=None;o.location=(0,0,0);o.rotation_euler=(0,0,0);o.scale=(1,1,1);ow,oh,t=s['cut'];rx,ry=2/ow,1.5/oh
+  o=samples[s['id']];o.parent=None;o.location=(0,0,0);o.rotation_euler=(0,0,0);o.scale=(1,1,1);ow,oh,t=s['cut'];rx,ry=1.5/ow,1.5/oh
   for v in o.data.vertices:v.co.x*=rx;v.co.y*=ry
   for uv in o.data.uv_layers.active.data:uv.uv=((uv.uv.x-.5)*rx+.5,(uv.uv.y-.5)*ry+.5)
-  s['previousCut']=list(s['cut']);s['cut']=[2,1.5,t];o['cut_width_inches']=2;o['cut_height_inches']=1.5
+  s['previousCut']=list(s['cut']);s['cut']=[1.5,1.5,t];o['cut_width_inches']=1.5;o['cut_height_inches']=1.5
   assert rx<=1 and ry<=1 and abs(o.dimensions.z-m(t))<.000001
   del o['material_id'];o['sample_id']=s['id']
  wood=mat('Oiled ash',(.46,.32,.20));darkwood=mat('Ash edges',(.25,.16,.09));foam=mat('Graphite foam',(.024,.03,.027),rough=1);paper=mat('Ivory labels',(.81,.79,.71));ink=mat('Charcoal ink',(.025,.035,.028));metal=mat('Satin nickel',(.55,.58,.56),.9,.25);carrierMat=mat('Mist acrylic backing',(.39,.43,.40),rough=.45)
@@ -54,48 +54,107 @@ def export(mode,motion,records,extra):
   bpy.ops.object.light_add(type='AREA',location=tuple(m(a) for a in loc));o=bpy.context.object;o.data.energy=power;o.data.size=m(12);o.rotation_euler=(Vector((0,0,0))-o.location).to_track_quat('-Z','Y').to_euler()
  scene.frame_set(48);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(mode+'-model.blend')));scene.frame_set(0)
  bpy.ops.export_scene.gltf(filepath=str(ROOT/(mode+'-model.glb')),export_format='GLB',export_animations=True,export_extras=True,export_apply=True,export_cameras=False,export_lights=False,export_frame_range=True,export_force_sampling=True,export_animation_mode='SCENE',export_anim_scene_split_object=False)
- payload={'mode':mode,'units':'inches','materials':data['materials'],'samples':records,**extra,'validation':{'sampleCount':18,'allCuts':[2,1.5],'allThicknessesPreserved':True,'allCutsWithinPrevious':True}}
+ payload={'mode':mode,'units':'inches','materials':data['materials'],'samples':records,**extra,'validation':{'sampleCount':18,'allCuts':[1.5,1.5],'allThicknessesPreserved':True,'allCutsWithinPrevious':True}}
  (ROOT/(mode+'-data.json')).write_text(json.dumps(payload,separators=(',',':')))
  print(mode.upper()+'_VALIDATION',json.dumps(payload['validation']))
 
 prepare()
-# A real drawer slides on two runners. The upper compartment remains closed.
-W,D,H=3.3,12.4,3.15
+# Circular eccentric cams on a common shaft, phased 20 degrees apart.
+# Follower travel uses the exact roller-circle contact solution, not a cosmetic wave.
+W,D,H=3.7,12.4,6.9
+E,R,RR,ZC=.5,.9,.15,1.95
+BASE=ZC+R+RR-E
 shell=empty('Cabinet');drawer=empty('Drawer');drawer['motion']='drawer'
+glass=mat('Clear mechanism window',(.54,.62,.60),rough=.12)
+glass.diffuse_color=(.54,.62,.60,.18);glass.node_tree.nodes.get('Principled BSDF').inputs['Alpha'].default_value=.18
+brass=mat('Cam brass',(.48,.29,.085),metal=.75,rough=.32)
+def tube(name,points,r,material,parent=None):
+ c=bpy.data.curves.new(name,'CURVE');c.dimensions='3D';c.bevel_depth=m(r);c.bevel_resolution=2
+ s=c.splines.new('POLY');s.points.add(len(points)-1)
+ for p,xyz in zip(s.points,points):p.co=(*[m(a) for a in xyz],1)
+ o=bpy.data.objects.new(name,c);scene.collection.objects.link(o);o.parent=parent;c.materials.append(material)
+ bpy.context.view_layer.objects.active=o;o.select_set(True);bpy.ops.object.convert(target='MESH');o.select_set(False);return o
+def cutaway(o):o['cutaway']=True;return o
 box('Cabinet_bottom',(0,0,.08),(W+.55,D+.6,.2),wood,shell,.035)
-for x in [-(W+.3)/2,(W+.3)/2]:box('Cabinet_side',(x,0,2.75),(.25,D+.6,5.5),wood,shell,.035)
-box('Cabinet_back',(0,D/2+.17,2.75),(W+.55,.24,5.5),wood,shell,.03)
-box('Cabinet_shelf',(0,0,H+.15),(W+.3,D+.6,.20),wood,shell,.025)
-box('Cabinet_top',(0,0,5.5),(W+.55,D+.6,.24),wood,shell,.035)
-box('Closed_upper_drawer',(0,-D/2-.15,4.43),(W+.1,.24,2.1),wood,shell,.035)
-box('Upper_handle',(0,-D/2-.32,4.4),(1.6,.18,.14),metal,shell,.05)
+for x in [-(W+.3)/2,(W+.3)/2]:
+ o=box('Cabinet_side',(x,0,4.55),(.25,D+.6,9.1),wood,shell,.035)
+ if x>0:cutaway(o)
+box('Cabinet_back',(0,D/2+.17,4.55),(W+.55,.24,9.1),wood,shell,.03)
+box('Cabinet_shelf',(0,0,H),(W+.3,D+.6,.20),wood,shell,.025)
+box('Cabinet_top',(0,0,9.1),(W+.55,D+.6,.24),wood,shell,.035)
+box('Closed_upper_drawer',(0,-D/2-.15,8.0),(W+.1,.24,2.0),wood,shell,.035)
+box('Upper_handle',(0,-D/2-.32,8.0),(1.6,.18,.14),metal,shell,.05)
 box('Drawer_bottom',(0,0,.40),(W,D,.18),wood,drawer,.025)
-for x in [-W/2+.09,W/2-.09]:box('Drawer_side',(x,0,1.34),(.18,D,1.85),wood,drawer,.025)
-for y in [-D/2+.09,D/2-.09]:box('Drawer_end',(0,y,1.34),(W,.18,1.85),wood,drawer,.025)
-box('Drawer_front',(0,-D/2-.1,1.65),(W+.1,.23,2.9),wood,drawer,.03)
-box('Drawer_handle',(0,-D/2-.32,1.55),(2.4,.22,.16),metal,drawer,.065)
+for x in [-W/2+.09,W/2-.09]:
+ box('Lower_frame',(x,0,.73),(.18,D,.50),wood,drawer,.025)
+ o=box('Drawer_side',(x,0,3.80),(.18,D,1.50),wood,drawer,.025)
+ if x>0:cutaway(o)
+ o=box('Mechanism_window',(x,0,2.02),(.045,D-.35,2.05),glass,drawer,.015);o['window_panel']=True
+ if x>0:cutaway(o)
+box('Drawer_back',(0,D/2-.09,3.5),(W,.18,6.1),wood,drawer,.025)
+front=box('Drawer_front',(0,-D/2-.1,3.50),(W+.1,.23,6.20),wood,drawer,.03);cutaway(front)
+hole=cyl('Shaft_hole',(0,-D/2-.1,ZC),.13,1,metal);hole.rotation_euler.x=math.pi/2;boolean(front,hole,'Handwheel spindle bore')
+cutaway(box('Drawer_handle',(0,-D/2-.32,4.8),(2.4,.22,.16),metal,drawer,.065))
 for x in [-W/2-.03,W/2+.03]:
  box('Fixed_slide',(x,0,.78),(.07,D-.4,.18),metal,shell,.015)
  box('Moving_slide',(x,0,.78),(.09,D-.4,.12),metal,drawer,.015)
-insert=box('File_foam',(0,0,.72),(W-.4,D-.4,.45),foam,drawer)
-records=[]
+shaft=empty('Camshaft',drawer);shaft.location.z=m(ZC);shaft['wave_shaft']=True
+spindle=cyl('Steel_drive_shaft',(0,-.05,0),.10,12.8,metal,shaft);spindle.rotation_euler.x=math.pi/2
+for y in [-5.96,5.96]:
+ block=box('Bearing_pedestal',(0,y,1.11),(.65,.22,1.25),darkwood,drawer,.025)
+ bearing=cyl('Bearing',(0,y,ZC),.23,.28,metal,drawer);bearing.rotation_euler.x=math.pi/2
+ cutter=cyl('Bearing_bore',(0,y,ZC),.105,.8,metal);cutter.rotation_euler.x=math.pi/2;boolean(bearing,cutter,'Shaft bore')
+ box('Bearing_foot',(0,y,.53),(.95,.44,.1),metal,drawer,.02)
+wheel=tube('Handwheel_rim',[(.62*math.sin(a*math.tau/64),-6.52,.62*math.cos(a*math.tau/64)) for a in range(65)],.065,metal,shaft)
+wheel['drive_control']=True
+for a in [0,math.tau/3,math.tau*2/3]:tube('Handwheel_spoke',[(0,-6.52,0),(.60*math.sin(a),-6.52,.60*math.cos(a))],.04,metal,shaft)
+hub=cyl('Wheel_hub',(0,-6.52,0),.18,.20,brass,shaft);hub.rotation_euler.x=math.pi/2
+followers=[];springs=[];records=[]
 for i,s in enumerate(data['materials']):
- id=s['id'];t=s['cut'][2];y=-5.45+i*.64;board=empty('Carrier_'+id,drawer);board.location=(0,m(y),m(1.77));board.rotation_euler.x=math.pi/2
- board['material_id']=id;board['inspection_width_inches']=2.25;board['extraction_axis']=[0,0,-1];board['extraction_distance']=m(1.2);board['index']=i
- box('Acrylic_carrier_'+id,(0,0,0),(2.25,2.32,.075),carrierMat,board,.025)
+ id=s['id'];t=s['cut'][2];y=-5.45+i*.64;phase=empty('Cam_phase_'+id,shaft);phase.location.y=m(y);phase.rotation_euler.y=-i*math.tau/18
+ cam=cyl('Eccentric_cam_'+id,(0,0,E),R,.12,brass,phase);cam.rotation_euler.x=math.pi/2;cam['cam_index']=i
+ # The bore is concentric with the shaft, not the eccentric disc.
+ cutter=cyl('Cam_bore',(0,0,0),.105,.40,metal,phase);cutter.rotation_euler.x=math.pi/2;boolean(cam,cutter,'Keyed shaft bore')
+ follower=empty('Follower_'+id,drawer);follower.location.y=m(y);follower['wave_follower']=i;followers.append(follower)
+ roller=cyl('Roller_'+id,(0,0,BASE),RR,.20,metal,follower);roller.rotation_euler.x=math.pi/2;roller['roller_index']=i
+ axle=cyl('Roller_axle_'+id,(0,0,BASE),.048,.32,brass,follower);axle.rotation_euler.x=math.pi/2
+ for yy in [-.14,.14]:box('Roller_fork_'+id,(0,yy,BASE+.25),(.14,.065,.52),metal,follower,.015)
+ cyl('Pushrod_'+id,(0,0,2.80),.07,.45,metal,follower)
+ crosshead=box('Crosshead_'+id,(0,0,3.03),(2.80,.28,.12),metal,follower,.025)
+ box('Sample_seat_'+id,(0,0,3.12),(1.95,.22,.10),darkwood,follower,.025)
+ for yy in [-.065,.065]:box('Slot_lip_'+id,(0,yy,3.25),(1.95,.045,.16),darkwood,follower,.015)
+ for xx in [-1.3,1.3]:
+  cyl('Guide_pin_'+id,(xx,y,3.625),.035,2.05,metal,drawer)
+  cutter=cyl('Guide_bore',(xx,0,3.03),.042,.4,metal,follower);boolean(crosshead,cutter,'Guide bore')
+  box('Guide_anchor_'+id,(math.copysign(1.5,xx),y,4.56),(.55,.28,.12),darkwood,drawer,.025)
+  spring=tube('Return_spring_'+id,[(xx+.08*math.cos(a*math.tau*8/128),y+.08*math.sin(a*math.tau*8/128),a/128) for a in range(129)],.018,metal,drawer)
+  spring['wave_spring']=i;spring['spring_length_inches']=1.46;springs.append((spring,i))
+ board=empty('Carrier_'+id,follower);board.location.z=m(4.22);board.rotation_euler.x=math.pi/2
+ board['material_id']=id;board['inspection_width_inches']=1.85;board['extraction_axis']=[0,0,-1];board['extraction_distance']=m(1.2);board['index']=i
+ box('Acrylic_carrier_'+id,(0,0,0),(1.85,2.10,.075),carrierMat,board,.025)
  swatch=samples[id];swatch.parent=board;swatch.location=(0,m(.05),m(.055+t/2))
- box('Name_tag_'+id,(0,.98,.049),(2.08,.25,.015),paper,board,.01);text('ID_'+id,id,(-.97,.94,.06),.12,board);text('Name_'+id,s['color'][:23],(-.43,.95,.06),.063,board)
- back_label(id,s,board,-.043,2.25,2.0)
- cutter=box('Slot_cutter',(0,y,.8),(2.30,.13,1.2),foam,drawer);boolean(insert,cutter,'File slot '+id)
- records.append({'id':id,'index':i,'board':[2.25,2.32,.075],'cut':s['cut']})
-for frame in range(49):
- p=frame/48;s=p*p*(3-2*p);drawer.location.y=m(-12.0*s);drawer.keyframe_insert(data_path='location',frame=frame)
+ box('Name_tag_'+id,(0,.89,.049),(1.68,.23,.015),paper,board,.01);text('ID_'+id,id,(-.77,.85,.06),.11,board);text('Name_'+id,s['color'][:22],(-.26,.86,.06),.052,board)
+ back_label(id,s,board,-.043,1.75,1.75)
+ records.append({'id':id,'index':i,'board':[1.85,2.10,.075],'cut':s['cut'],'camPhaseDegrees':i*20})
+def cam_lift(theta,index):
+ a=theta-index*math.tau/18
+ return E*math.cos(a)+math.sqrt((R+RR)**2-E**2*math.sin(a)**2)-(R+RR-E)
+scene.frame_end=240
+for frame in range(241):
+ p=min(frame/48,1);smooth=p*p*(3-2*p);drawer.location.y=m(-12*smooth);drawer.keyframe_insert(data_path='location',frame=frame)
+ if frame%2==0:
+  theta=7*math.tau/18+max(0,(frame-48)/192)*math.tau
+  shaft.rotation_euler.y=theta;shaft.keyframe_insert(data_path='rotation_euler',frame=frame)
+  for i,follower in enumerate(followers):follower.location.z=m(cam_lift(theta,i));follower.keyframe_insert(data_path='location',frame=frame)
+  for spring,i in springs:
+   lift=cam_lift(theta,i);spring.location.z=m(3.09+lift);spring.scale.z=1.46-lift;spring.keyframe_insert(data_path='location',frame=frame);spring.keyframe_insert(data_path='scale',frame=frame)
 drawer.animation_data.action.name='Pull_drawer'
-export('wave',drawer,records,{'case':[W+.55,D+.6,5.62],'travel':12,'pitch':.64,'waveLift':1.35})
+assert 4.22+1.05+2*E < H-.10
+export('wave',drawer,records,{'case':[W+.55,D+.6,9.22],'travel':12,'pitch':.64,'waveLift':2*E,'drawerDuration':2,'mechanism':{'type':'phased-eccentric-camshaft','cams':18,'phaseDegrees':20,'eccentricity':E,'camRadius':R,'rollerRadius':RR,'shaftHeight':ZC,'rollerBaseHeight':BASE,'stroke':2*E,'springFreeSpan':1.46,'springMinSpan':.46,'drive':'handwheel','sources':[{'title':'Carnegie Mellon: Cams','url':'https://www.cs.cmu.edu/~rapidproto/mechanisms/chpt6.html'},{'title':'Phased cams generating traveling waves','url':'https://patents.google.com/patent/US10094367B2'}],'note':'Kinematic concept. Spring rates, torque, bearing fits, and fabrication tolerances are not sized.'}})
 
 prepare()
 # Eighteen naked material cuts sit flat in rectangular pockets of individual depth.
-W,D,H,LH=14.7,7.75,1.15,.65
+W,D,H,LH=11.7,7.75,1.15,.65
 base=empty('Pocket_case');lid=empty('Pocket_lid');lid.location=(0,m(D/2-.1),m(H));lid['motion']='lid'
 box('Case_base',(0,0,.11),(W,D,.22),wood,base,.045)
 for x in [-W/2+.11,W/2-.11]:box('Case_side',(x,0,H/2),(.22,D,H),wood,base,.025)
@@ -113,17 +172,17 @@ mark=empty('Lid_mark',lid);mark.location=(m(-2.7),m(-3.8),m(LH-.225));mark.rotat
 text('Brand','THE SAMPLE ROOM',(0,0,0),.30,mark);text('Subtitle','SMALL CUTS / 04',(0,-.45,0),.14,mark)
 records=[]
 for i,s in enumerate(data['materials']):
- id=s['id'];t=s['cut'][2];col=i%6;row=i//6;x=(col-2.5)*2.35;y=(row-1)*2.25
+ id=s['id'];t=s['cut'][2];col=i%6;row=i//6;x=(col-2.5)*1.85;y=(row-1)*2.25
  # 0.03 inch proud of the foam allows the original thin sheet samples to be seen.
  top=1.08;bottom=top-t
- cutter=box('Pocket_cut',(x,y,(bottom-.035+1.5)/2),(2.065,1.565,1.5-bottom+.035),foam);boolean(insert,cutter,'Rectangle '+id)
+ cutter=box('Pocket_cut',(x,y,(bottom-.035+1.5)/2),(1.565,1.565,1.5-bottom+.035),foam);boolean(insert,cutter,'Rectangle '+id)
  thumb=cyl('Finger_cut',(x,y-.83,.95),.20,.35,foam);boolean(insert,thumb,'Finger notch '+id)
- carrier=empty('Carrier_'+id,base);carrier.location=(m(x),m(y),m(top-t/2));carrier['material_id']=id;carrier['inspection_width_inches']=2;carrier['index']=i
+ carrier=empty('Carrier_'+id,base);carrier.location=(m(x),m(y),m(top-t/2));carrier['material_id']=id;carrier['inspection_width_inches']=1.5;carrier['index']=i
  swatch=samples[id];swatch.parent=carrier;swatch.location=(0,0,0)
  back_label(id,s,carrier,-t/2-.006)
- box('Name_tag_'+id,(x,y-1.04,1.057),(1.98,.21,.012),paper,base,.012)
- text('ID_'+id,id,(x-.91,y-1.07,1.065),.11,base);text('Name_'+id,s['color'][:20],(x-.39,y-1.055,1.065),.054,base)
- records.append({'id':id,'index':i,'board':None,'cut':s['cut'],'pocket':[2.065,1.565,t+.005]})
+ box('Name_tag_'+id,(x,y-1.04,1.057),(1.48,.21,.012),paper,base,.012)
+ text('ID_'+id,id,(x-.67,y-1.07,1.065),.09,base);text('Name_'+id,s['color'][:20],(x-.22,y-1.055,1.065),.042,base)
+ records.append({'id':id,'index':i,'board':None,'cut':s['cut'],'pocket':[1.565,1.565,t+.005]})
  assert top<H+LH-.225 and bottom-.035>.25
 for frame in range(49):
  p=frame/48;s=p*p*(3-2*p);lid.rotation_euler.x=-math.radians(112)*s;lid.keyframe_insert(data_path='rotation_euler',frame=frame)
