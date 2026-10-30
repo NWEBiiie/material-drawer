@@ -26,8 +26,9 @@ def box(name,dims,position,parent,mat):
 def ring(name,parent,position,outer=2.5,inner=1.5):
  bpy.ops.mesh.primitive_torus_add(major_segments=28,minor_segments=8,major_radius=(outer+inner)/2*MM,minor_radius=(outer-inner)/2*MM)
  o=bpy.context.object;o.name=name;o.parent=parent;o.location=position;o.data.materials.append(steel);return tag(o)
-def bore(target,position,radius,depth):
+def bore(target,position,radius,depth,rotation=None):
  cutter=cylinder('Tether mounting cavity',radius,depth,position,None,black)
+ if rotation:cutter.rotation_mode='QUATERNION';cutter.rotation_quaternion=rotation
  bpy.context.view_layer.update();bpy.context.view_layer.objects.active=target
  mod=target.modifiers.new('Reel recess','BOOLEAN');mod.operation='DIFFERENCE';mod.object=cutter
  bpy.ops.object.modifier_apply(modifier=mod.name);bpy.data.objects.remove(cutter,do_unlink=True)
@@ -73,7 +74,7 @@ for mode in MODES:
  scene.frame_set(0);bpy.context.view_layer.update()
  black=material('Reel black ABS',(.025,.029,.027));cap=material('Reel matte ABS cap',(.045,.052,.048));steel=material('Tether stainless steel',(.45,.50,.48),.85);adhesive=material('Reel adhesive pad',(.16,.17,.16))
  data=json.loads((ROOT/(mode+'-data.json')).read_text());materials=data.get('materials') or json.loads((ROOT/'binder-data.json').read_text())['materials'];byid={s['id']:s for s in materials}
- samples=[o for o in list(bpy.data.objects) if 'material_id' in o];cords=[];mounts=[]
+ samples=[o for o in list(bpy.data.objects) if 'material_id' in o];cords=[];mounts=[];case_clearances=[]
  for sample in samples:
   id=sample['material_id'];record=byid[id];w,h,t=record['cut'];p=sample.location.copy()
   if mode=='binder':
@@ -85,11 +86,32 @@ for mode in MODES:
    end=terminal(id,sample,(side*(w/2+.09)*I,0,(-t/2-.02)*I),(0,0,side*math.pi/2))
    guide=empty('Tether_guide_'+id,parent,(4.30*I-side*.56*I,p.y+side*.56*I,.17*I))
   elif mode=='case':
-   parent=bpy.data.objects['Sample_case'];center=(p.x,p.y,.45*I);root,anchor=reel(id,parent,center)
-   bh=sample['board_height_inches'];end=terminal(id,sample,(0,(-bh/2+.10)*I,-.06*I))
-   guide=empty('Tether_guide_'+id,parent,(p.x,p.y-.18*I,.76*I))
+   parent=bpy.data.objects['Sample_case'];bh=sample['board_height_inches']
+   orientation=sample.rotation_euler.to_quaternion()
+   along=orientation@Vector((0,1,0));normal=orientation@Vector((0,0,1))
+   lower_edge=sample.matrix_world@Vector((0,-bh/2*I,-.06*I))
+   # Match the carrier plane, with the cable outlet pointing up its slot.
+   rotation=(orientation.to_matrix()@Matrix.Rotation(math.pi,3,'Z')).to_quaternion()
+   center=lower_edge-along*(.75*I)
+   root,anchor=reel(id,parent,center,rotation)
+   root['parallel_to_slot']=True;root['angle_from_vertical_degrees']=25
+   end=terminal(id,sample,(0,(-bh/2+.10)*I,-.06*I))
+   guide=empty('Tether_guide_'+id,parent,lower_edge-along*(.08*I))
    foam=bpy.data.objects['Foam_insert' if sample['bank']==0 else 'Foam_insert.001']
-   bore(foam,(p.x,p.y,.73*I),.0133,.91*I)
+   bore(foam,center,.0133,.012,rotation)
+   channel=box('Cable_channel_cutter_'+id,(.006,.024,.012),lower_edge-along*(.27*I),None,black)
+   channel.rotation_mode='QUATERNION';channel.rotation_quaternion=orientation
+   bpy.context.view_layer.update();bpy.context.view_layer.objects.active=foam
+   cut=foam.modifiers.new('Cable path '+id,'BOOLEAN');cut.operation='DIFFERENCE';cut.object=channel
+   bpy.ops.object.modifier_apply(modifier=cut.name);bpy.data.objects.remove(channel,do_unlink=True)
+   bpy.context.view_layer.update()
+   assert abs((root.rotation_quaternion@Vector((0,0,1))).dot(normal)-1)<1e-6
+   vertices=[o.matrix_world@Vector(v) for o in root.children_recursive if o.type=='MESH' for v in o.bound_box]
+   assert min(v.z for v in vertices)>.28*I,'Reel hits case floor: '+id
+   assert all(abs(v.x)<(data['case'][0]/2-.24)*I and abs(v.y)<(data['case'][1]/2-.24)*I for v in vertices),'Reel hits case wall: '+id
+   clearance=min((lower_edge-v).dot(along) for v in vertices)
+   assert clearance>.002,'Reel intersects carrier bottom: '+id
+   case_clearances.append(clearance*1000)
   elif mode=='wave':
    parent=bpy.data.objects['Drawer'];index=sample['index'];yy=sample.parent.location.y
    rot=Matrix(((0,0,-1),(1,0,0),(0,-1,0))).to_quaternion()
@@ -104,7 +126,8 @@ for mode in MODES:
    foam=bpy.data.objects['Pocket_foam'];bore(foam,(p.x,p.y,.64*I),.0133,.70*I)
    bore(foam,(p.x,p.y-.66*I,.65*I),.0035,.55*I)
   guide['tether_guide']=id
-  ring('Cable_guide_'+id,parent,guide.location,1.3,.5)
+  guide_ring=ring('Cable_guide_'+id,parent,guide.location,1.3,.5)
+  if mode=='case':guide_ring.rotation_mode='QUATERNION';guide_ring.rotation_quaternion=along.to_track_quat('Z','Y')
   wires=[wire_segment(id,n,parent) for n in range(3)];cords.append((anchor,guide,end,parent,wires));mounts.append(root)
  bpy.context.view_layer.update()
  if mode=='wave':
@@ -117,6 +140,9 @@ for mode in MODES:
  for c in cords:update_cord(c)
  assert len(mounts)==18
  data['tether']={**spec,'count':18};data.setdefault('validation',{})['retractableTethers']=18
+ if mode=='case':
+  data['tether']['mounting']='Parallel to the inclined carrier slots, beneath each board; outlet points toward the slot.'
+  data['validation'].update({'parallelReels':18,'reelsInsideCase':True,'minimumReelToBoardClearanceMM':round(min(case_clearances),2)})
  (ROOT/(mode+'-data.json')).write_text(json.dumps(data,separators=(',',':')))
  scene.frame_set(0 if mode=='binder' else 48);bpy.context.view_layer.update()
  for c in cords:update_cord(c)

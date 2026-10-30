@@ -62,8 +62,9 @@ def frac(n):
     whole=int(n);f=Fraction(n-whole).limit_denominator(16)
     return ((str(whole)+' ') if whole else '')+str(f) if f else str(whole)
 
-W,D,H=8.35,11.7,1.5
+W,D,H=8.35,11.7,2.75
 lidH=3.10
+foam_bottom=.28;foam_top=H-.22
 case=empty('Sample_case')
 case['width_inches']=W;case['depth_inches']=D;case['closed_height_inches']=H+lidH
 cube('Base',(0,0,.12),(W,D,.24),birch,case,.055)
@@ -72,11 +73,11 @@ for y in [-D/2+.12,D/2-.12]:cube('Tray_end',(0,y,H/2),(W-.48,.24,H),birch,case,.
 cube('Tray_lining',(0,0,.255),(W-.5,D-.5,.035),ivory,case)
 # Two independent foam inserts make the center divider visible.
 blocks=[]
-for x in [-1.96,1.96]:blocks.append(cube('Foam_insert',(x,0,.78),(3.78,D-.68,1.0),foam,case))
-cube('Center_divider',(0,0,.80),(.13,D-.57,1.1),birch,case,.025)
+for x in [-1.96,1.96]:blocks.append(cube('Foam_insert',(x,0,(foam_bottom+foam_top)/2),(3.78,D-.68,foam_top-foam_bottom),foam,case))
+cube('Center_divider',(0,0,(foam_bottom+foam_top)/2),(.13,D-.57,foam_top-foam_bottom+.1),birch,case,.025)
 for x in [-2.9,2.9]:
-    latch=cube('Latch_base',(x,-D/2-.015,1.18),(.46,.09,.42),nickel,case,.035)
-    cube('Latch_inset',(x,-D/2-.065,1.18),(.22,.018,.22),edge,case,.02)
+    latch=cube('Latch_base',(x,-D/2-.015,H-.32),(.46,.09,.42),nickel,case,.035)
+    cube('Latch_inset',(x,-D/2-.065,H-.32),(.22,.018,.22),edge,case,.02)
 for x in [-3.5,3.5]:
     for y in [-5,5]:cube('Felt_foot',(x,y,-.025),(.6,.65,.07),foam,case,.07)
 
@@ -97,8 +98,9 @@ text('Case_count','18 SAMPLES  /  LVT - RT - SV - EF - CPT - RB',(0,-.72,0),.11,
 angle=math.radians(65);records=[]
 for i,s in enumerate(data['materials']):
     id=s['id'];cw,ch,t=s['cut'];bw,bh=cw+.40,ch+1.15;bt=.09
-    bank=i//9;slot=i%9;x=[-1.96,1.96][bank];y=-4.5+slot*1.02
-    board=empty('Carrier_'+id);board.location=(m(x),m(y),m(1.28-.48+bh/2*math.sin(angle)));board.rotation_euler.x=angle
+    # Leave room at the front for the inclined reel beneath the first slot.
+    bank=i//9;slot=i%9;x=[-1.96,1.96][bank];y=-4.0+slot*1.02
+    board=empty('Carrier_'+id);board.location=(m(x),m(y),m(foam_top-.48+bh/2*math.sin(angle)));board.rotation_euler.x=angle
     board['material_id']=id;board['inspection_width_inches']=bw
     board['extraction_axis']=[0,0,-1];board['extraction_distance']=m(2.0)
     board['bank']=bank;board['slot']=slot;board['board_width_inches']=bw;board['board_height_inches']=bh;board['board_thickness_inches']=bt
