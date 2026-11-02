@@ -1,4 +1,4 @@
-import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,readReview,writeReview} from './study-review-store.js?v=1';
+import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,readReview,writeReview} from './study-review-store.js?v=2';
 
 const path=location.pathname;
 const fixedModel=path.endsWith('binder.html')?'binder':path.endsWith('case.html')?'case':path.endsWith('mini.html')?(new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave'):null;

@@ -1,8 +1,8 @@
 export const MODELS = {binder:'Binder',case:'Slanted case',wave:'Wave drawer',pockets:'Pocket box'};
 export const CRITERIA = [
   ['portability','Portability'],['intuitiveness','Intuitiveness'],
-  ['visibility','Sample visibility'],['access','Ease of access'],
-  ['protection','Sample protection'],['durability','Durability'],['cleaning','Ease of cleaning']
+  ['visibility','Sample visibility'],['cost','Cost efficiency'],
+  ['compactness','Compact storage']
 ];
 export const LEVELS = ['Poor','Fair','Good','Very good','Excellent'];
 const PREFIX='sample-room-review-v1:';
