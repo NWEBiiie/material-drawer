@@ -1,0 +1,47 @@
+{
+  "source": "https://brand.utswmed.org/color-palette-and-typography/",
+  "palette": {
+    "blue": {"label": "UTSW blue", "hex": "#004c97"},
+    "navy": {"label": "UTSW navy", "hex": "#00355d"},
+    "cyan": {"label": "UTSW cyan", "hex": "#009ee2"},
+    "gray": {"label": "UTSW gray", "hex": "#636466"}
+  },
+  "models": {
+    "binder": {"label": "Binder", "finish": "cloth", "color": "navy"},
+    "case": {"label": "Slanted case", "finish": "wood", "color": "blue"},
+    "wave": {"label": "Wave drawer", "finish": "cloth", "color": "blue"},
+    "pockets": {"label": "Pocket box", "finish": "plastic", "color": "gray"}
+  },
+  "roles": {
+    "binder": [
+      ["shell", "^(Cover_left|Cover_right|Spine_3_in)$"],
+      ["lining", "^Inside_(left|right)$"],
+      ["mount", "^Mounting_page_"],
+      ["strap", "^Cover[ _]flexible[ _]hinge"],
+      ["ink", "^Inner_cover_"]
+    ],
+    "case": [
+      ["shell", "^(Base|Tray_(side|end)|Center_divider|Lid_(top|side|end))(\\.|$)"],
+      ["lining", "^(Tray_lining|Lid_lining)(\\.|$)"],
+      ["foam", "^Foam_insert"],
+      ["accent", "^Latch_inset"],
+      ["mount", "^Board_"],
+      ["ink", "^Case_(brand|subtitle|count)$"]
+    ],
+    "wave": [
+      ["thread", "(_stitch|_seam|anchor_cross)"],
+      ["shell", "^(Cabinet_(top|side|back)|Drawer_(front|side))(\\.|$)"],
+      ["lining", "^Drawer_(bottom|back)(\\.|$)"],
+      ["trim", "^(Cabinet_bottom|Cabinet_sewn|Drawer_sewn|Front_sewn|Carry_handle_binding|Carry_handle_padded_grip)"],
+      ["strap", "^(Carry_handle_(webbing|anchor)|Drawer_webbing_pull)"],
+      ["mount", "^(Lower_frame|Bearing_pedestal|Sample_seat_|Slot_lip_|Guide_anchor_)"],
+      ["acrylic", "^Acrylic_carrier_"]
+    ],
+    "pockets": [
+      ["shell", "^(Case_(base|side|end)|Lid_(top|side|end))(\\.|$)"],
+      ["lining", "^Lid_lining$"],
+      ["foam", "^Pocket_foam$"],
+      ["ink", "^(Brand|Subtitle)$"]
+    ]
+  }
+}

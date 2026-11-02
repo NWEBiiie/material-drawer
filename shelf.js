@@ -1,3 +1,4 @@
+import {createFinishPicker} from './case-finishes.js?v=1';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
@@ -6,10 +7,10 @@ const canvas=document.querySelector('#shelfScene'),links=[...document.querySelec
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 // GLBs are in metres. Keep every model at the same physical scale.
 const studies=[
- {id:'binder',file:'binder-model.glb?v=4',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
- {id:'case',file:'case-model.glb?v=4',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
- {id:'pockets',file:'pockets-model.glb?v=3',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'wave-model.glb?v=7',x:.19,y:0,z:.045,label:[.19,.015,.42]}
+ {id:'binder',file:'binder-model.glb?v=5',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
+ {id:'case',file:'case-model.glb?v=5',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
+ {id:'pockets',file:'pockets-model.glb?v=4',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
+ {id:'wave',file:'wave-model.glb?v=8',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
 const scaleBar=document.querySelector('#scaleBar'),scaleValue=document.querySelector('#scaleValue');
@@ -55,20 +56,21 @@ async function boot(){try{
   slab([.019,.012,.019],[x,.006,z],edge);
  }
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
- const loader=new GLTFLoader();
+ const loader=new GLTFLoader(),finishes=await createFinishPicker();
  frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
   const [gltf,data]=await Promise.all([loader.loadAsync(s.file),fetch(s.id+'-data.json?v='+(s.id==='wave'?7:6)).then(r=>r.json())]),model=gltf.scene;
   // Keep the cases square to the rack and the drawer opening toward its front.
   if(gltf.animations[0]){const mixer=new THREE.AnimationMixer(model),action=mixer.clipAction(gltf.animations[0]);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();const duration=s.id==='wave'?2:gltf.animations[0].duration;mixer.setTime(s.id==='binder'?0:duration);}
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat?.map)mat.map.anisotropy=4;}if(o.userData.tether_rest)o.visible=false;});
+  finishes.attach(model,s.id);
   const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());
   const mount=new THREE.Group();mount.add(model);model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));mount.position.set(s.x,s.y,s.z);group.add(mount);mount.updateMatrixWorld(true);s.bounds=new THREE.Box3().setFromObject(mount);s.model=mount;s.dimensions=size.toArray();models.push(mount);s.measurements=createStudyDimensions({model,camera,canvas,kind:s.id,data,compact:true});
   const hitbox=new THREE.Mesh(new THREE.BoxGeometry(size.x+.012,Math.max(size.y,.09),size.z+.012),new THREE.MeshBasicMaterial({visible:false}));hitbox.position.copy(s.bounds.getCenter(new THREE.Vector3()));hitbox.userData.study=s.id;scene.add(hitbox);hitboxes.push(hitbox);
  }));
  ready=true;document.querySelector('#loading').hidden=true;frame();
  canvas.addEventListener('pointermove',e=>{if(!transition)active(hit(e));});canvas.addEventListener('pointerleave',()=>active(null));canvas.addEventListener('click',e=>{if(!transition)open(hit(e));});
- window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project};
+ window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project,finishes};
  }catch(error){console.error(error);document.querySelector('#loading').hidden=true;document.querySelector('#shelfError').hidden=false;document.body.classList.add('failed');}}
 for(const a of links){a.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();open(a.dataset.model);});a.addEventListener('mouseenter',()=>active(a.dataset.model));a.addEventListener('mouseleave',()=>active(null));a.addEventListener('focus',()=>active(a.dataset.model));a.addEventListener('blur',()=>active(null));}
 addEventListener('resize',()=>{if(renderer&&!transition)frame();});addEventListener('pageshow',e=>{if(e.persisted){transition=null;document.body.classList.remove('opening');frame();}});boot();
