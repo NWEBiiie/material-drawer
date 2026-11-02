@@ -1,7 +1,7 @@
 import * as THREE from './three.module.min.js';
 
 const NS='http://www.w3.org/2000/svg', INCH=.0254;
-const inches=n=>Math.round(n/INCH)+'″';
+const inches=n=>Number((n/INCH).toFixed(2))+'″';
 function element(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;}
 
 // Use the container geometry only: lifted samples, tethers, and an open lid
@@ -16,7 +16,7 @@ export function createStudyDimensions({model,kind,camera,canvas,compact=false,da
  });
  if(box.isEmpty())throw Error('Missing dimension geometry: '+kind);
  if(kind==='case'||kind==='pockets')box.max.y=box.min.y+data.case[2]*INCH;
- const svg=element('svg',{'class':'study-dimensions'+(compact?' compact':''),'aria-label':kind+' outer dimensions rounded to whole inches'+(kind==='wave'?', excluding handle':''),role:'img','data-study':kind});
+ const svg=element('svg',{'class':'study-dimensions'+(compact?' compact':''),'aria-label':kind+' outer dimensions in inches'+(kind==='wave'?', excluding handle':''),role:'img','data-study':kind});
  Object.assign(svg.style,{position:'fixed',inset:'0',width:'100%',height:'100%',pointerEvents:'none',zIndex:'1',overflow:'hidden'});
  const style=element('style');style.textContent='.study-dimensions path{fill:none;stroke:#52665b;stroke-width:.85;opacity:.7;vector-effect:non-scaling-stroke}.study-dimensions text{fill:#344b40;stroke:#eeeae2;stroke-width:5px;stroke-linejoin:round;paint-order:stroke;font:11px Arial,Helvetica,sans-serif;text-anchor:middle;dominant-baseline:central;letter-spacing:.025em}.study-dimensions.compact text{font-size:10px}.study-dimensions[hidden]{display:none}@media(max-width:600px){.study-dimensions text{font-size:10px}.study-dimensions.compact text{font-size:9px}}';svg.append(style);
  const lengths=box.getSize(new THREE.Vector3());

@@ -115,8 +115,9 @@ for mode in MODES:
   elif mode=='wave':
    parent=bpy.data.objects['Drawer'];index=sample['index'];yy=sample.parent.location.y
    rot=Matrix(((0,0,-1),(1,0,0),(0,-1,0))).to_quaternion()
-   root,anchor=reel(id,parent,(1.52*I,yy,(1.00 if index%2==0 else 2.10)*I),rot)
-   box('Reel_mount_'+id,(.035*I,.99*I,.99*I),(1.70*I,yy,(1 if index%2==0 else 2.10)*I),parent,black)
+   mount_x=data.get('drawerWidth',3.7)/2-.15
+   root,anchor=reel(id,parent,((mount_x-.18)*I,yy,(1.00 if index%2==0 else 2.10)*I),rot)
+   box('Reel_mount_'+id,(.035*I,.99*I,.99*I),(mount_x*I,yy,(1 if index%2==0 else 2.10)*I),parent,black)
    end=terminal(id,sample,(1.01*I,-.83*I,-.06*I),(0,0,math.pi/2))
    guide=empty('Tether_guide_'+id,parent,(1.10*I,yy,2.72*I))
   else:
