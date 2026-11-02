@@ -10,7 +10,7 @@ The compact wave drawer has a single 7.06-inch-high padded blue fabric case, wit
 
 Blender models, animated GLBs, and source packages are available through each study's information button. `build-tethers.py` adds hardware to the existing study models; the optional arguments after the checkout path select `binder`, `case`, `wave`, or `pockets`. The viewer uses the exported outlet and eyelet nodes to animate the cables. Dimensions and animations are retained by `compact-glb.cjs`, which only shares duplicate binary buffers.
 
-Outer-edge dimension lines show inches on the shelf and in each close-up. They follow orbit and zoom, hide during sample inspection, and retain the container dimensions as samples or lids move. The binder labels its open width, depth and spine; cases label their closed height; the fabric carry case includes its raised handle in the overall height.
+Outer-edge dimension lines show measurements rounded to whole inches on the shelf and in each close-up. They follow orbit and zoom, hide during sample inspection, and retain the container dimensions as samples or lids move. The binder labels its open width, depth and spine; cases label their closed height; the fabric carry case measures its body only, excluding its raised handle.
 
 ## Archived cabinet
 

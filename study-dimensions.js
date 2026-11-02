@@ -1,7 +1,7 @@
 import * as THREE from './three.module.min.js';
 
 const NS='http://www.w3.org/2000/svg', INCH=.0254;
-const inches=n=>Number((n/INCH).toFixed(2))+'″';
+const inches=n=>Math.round(n/INCH)+'″';
 function element(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;}
 
 // Use the container geometry only: lifted samples, tethers, and an open lid
@@ -9,19 +9,18 @@ function element(tag,attrs={}){const e=document.createElementNS(NS,tag);for(cons
 export function createStudyDimensions({model,kind,camera,canvas,compact=false,data={}}){
  const patterns={binder:/^(Cover_left|Cover_right|Spine_3_in)$/,case:/^(Base|Tray_side|Tray_end)(\.|$)/,wave:/^Cabinet_(top|bottom|side|back)(\.|$)/,pockets:/^Case_(base|side|end)(\.|$)/};
  model.updateWorldMatrix(true,true);
- const inverse=model.matrixWorld.clone().invert(),box=new THREE.Box3(),spine=new THREE.Box3(),handle=new THREE.Box3();
- model.traverse(o=>{if(!o.isMesh)return;const match=patterns[kind].test(o.name),isSpine=o.name==='Spine_3_in',isHandle=o.name.startsWith('Carry_handle');if(!match&&!isHandle)return;
+ const inverse=model.matrixWorld.clone().invert(),box=new THREE.Box3(),spine=new THREE.Box3();
+ model.traverse(o=>{if(!o.isMesh)return;const match=patterns[kind].test(o.name),isSpine=o.name==='Spine_3_in';if(!match)return;
   o.geometry.computeBoundingBox();const b=o.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse,o.matrixWorld));
-  if(match)box.union(b);if(isSpine)spine.union(b);if(isHandle)handle.union(b);
+  box.union(b);if(isSpine)spine.union(b);
  });
  if(box.isEmpty())throw Error('Missing dimension geometry: '+kind);
  if(kind==='case'||kind==='pockets')box.max.y=box.min.y+data.case[2]*INCH;
- if(kind==='wave'&&!handle.isEmpty())box.max.y=handle.max.y;
- const svg=element('svg',{'class':'study-dimensions'+(compact?' compact':''),'aria-label':kind+' outer dimensions in inches',role:'img','data-study':kind});
+ const svg=element('svg',{'class':'study-dimensions'+(compact?' compact':''),'aria-label':kind+' outer dimensions rounded to whole inches'+(kind==='wave'?', excluding handle':''),role:'img','data-study':kind});
  Object.assign(svg.style,{position:'fixed',inset:'0',width:'100%',height:'100%',pointerEvents:'none',zIndex:'1',overflow:'hidden'});
  const style=element('style');style.textContent='.study-dimensions path{fill:none;stroke:#52665b;stroke-width:.85;opacity:.7;vector-effect:non-scaling-stroke}.study-dimensions text{fill:#344b40;stroke:#eeeae2;stroke-width:5px;stroke-linejoin:round;paint-order:stroke;font:11px Arial,Helvetica,sans-serif;text-anchor:middle;dominant-baseline:central;letter-spacing:.025em}.study-dimensions.compact text{font-size:10px}.study-dimensions[hidden]{display:none}@media(max-width:600px){.study-dimensions text{font-size:10px}.study-dimensions.compact text{font-size:9px}}';svg.append(style);
  const lengths=box.getSize(new THREE.Vector3());
- const labels=[inches(lengths.x)+(kind==='binder'?' open':''),inches(lengths.z),kind==='binder'?inches(spine.max.x-spine.min.x)+' spine':inches(lengths.y)+(['case','pockets'].includes(kind)?' closed':kind==='wave'?' incl. handle':'')];
+ const labels=[inches(lengths.x)+(kind==='binder'?' open':''),inches(lengths.z),kind==='binder'?inches(spine.max.x-spine.min.x)+' spine':inches(lengths.y)+(['case','pockets'].includes(kind)?' closed':'')];
  const items=labels.map((label,i)=>{const g=element('g',{'data-axis':['width','depth','height'][i]});const title=element('title');title.textContent=label;const path=element('path'),text=element('text');text.textContent=label;g.append(title,path,text);svg.append(g);return{g,path,text};});
  const title=element('title');title.textContent=labels.join(' × ');svg.prepend(title);document.body.append(svg);
  const v=(x,y,z)=>new THREE.Vector3(x,y,z),center=box.getCenter(new THREE.Vector3());
