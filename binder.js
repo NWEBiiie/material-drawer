@@ -1,3 +1,4 @@
+import {createStudyDimensions} from './study-dimensions.js?v=1';
 import './study-nav.js?v=2';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
@@ -7,7 +8,7 @@ import { createSampleInspection } from './binder-inspection.js?v=5';
 
 const $=id=>document.getElementById(id), canvas=$('binderScene');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-let tethers;
+let tethers,dimensions;
 let renderer,scene,camera,controls,model,mixer,clip,data,action,inspection;
 let pendingPage=null,pendingSample=null;
 let position=0,target=0,last=performance.now(),lastWheel=0,ready=false;
@@ -34,7 +35,7 @@ function showSample(id){const s=data.materials.find(s=>s.id===id);if(!s)return;$
 function sampleHit(event){const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(model.children,true).filter(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});if(!hits.length)return null;let o=hits[0].object;while(o&&!o.userData.material_id)o=o.parent;return o?.userData.material_id||null;}
 function reset(){const aspect=canvas.clientWidth/canvas.clientHeight;camera.zoom=aspect<.8?.84:1;camera.position.set(.50,.72,.66);controls.target.set(-.04,.018,0);camera.lookAt(controls.target);controls.update();resize();}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);const aspect=w/h,span=aspect<.8?.82/aspect:.62;camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();inspection?.resize();}
-function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!inspection?.active){if(!reduced.matches){const step=dt*1.12;position+=Math.sign(target-position)*Math.min(Math.abs(target-position),step);}else position=target;if(mixer){action.time=Math.min(clip.duration,position*clip.duration/4);mixer.update(0);}}controls.update();inspection?.update(dt);if(pendingSample&&!inspection.active&&Math.abs(position-target)<.001)pickSample(pendingSample);tethers?.update();renderer.render(scene,inspection?.active?inspection.camera:camera);inspection?.render();requestAnimationFrame(animate);}
+function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!inspection?.active){if(!reduced.matches){const step=dt*1.12;position+=Math.sign(target-position)*Math.min(Math.abs(target-position),step);}else position=target;if(mixer){action.time=Math.min(clip.duration,position*clip.duration/4);mixer.update(0);}}controls.update();inspection?.update(dt);if(pendingSample&&!inspection.active&&Math.abs(position-target)<.001)pickSample(pendingSample);tethers?.update();dimensions?.update(!inspection?.active);renderer.render(scene,inspection?.active?inspection.camera:camera);inspection?.render();requestAnimationFrame(animate);}
 
 async function boot(){
  try{
@@ -47,6 +48,7 @@ async function boot(){
   const results=await Promise.all([new GLTFLoader().loadAsync('binder-model.glb?v=4'),fetch('binder-data.json?v=4').then(r=>{if(!r.ok)throw Error('Missing schedule');return r.json();})]);
   const gltf=results[0];data=results[1];model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material?.map)o.material.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}if(o.userData.material_id)picks.push(o);});
   clip=gltf.animations[0];if(!clip||picks.length!==18)throw Error('Incomplete binder model');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
+  dimensions=createStudyDimensions({model,camera,canvas,kind:'binder',data});
   tethers=createRetractableTethers({model,scene});
  inspection=createSampleInspection({renderer,scene,camera,controls,tethers,onChange:inspectionChanged,onReturned(){if(pendingSample)go(data.materials.find(s=>s.id===pendingSample).page);else if(pendingPage!==null)go(pendingPage);pendingPage=null;}});
   $('flipSample').onclick=()=>inspection.flip();$('returnSample').onclick=()=>inspection.putBack();$('sampleInfo').onclick=()=>{if(inspection.active)showSample(inspection.selection.record.id);};$('soundToggle').onclick=()=>{inspection.audio.toggle();updateSound();};updateSound();
@@ -59,7 +61,7 @@ async function boot(){
   canvas.addEventListener('pointermove',e=>{if(inspection.active||down||Math.abs(position-target)>.02){$('hover').hidden=true;return;}const id=sampleHit(e);canvas.style.cursor=id?'pointer':'grab';$('hover').hidden=!id;if(id){const s=data.materials.find(s=>s.id===id);$('hover').querySelector('b').textContent=id+' · '+s.color;$('hover').querySelector('span').textContent='Pick up · '+fraction(s.cut[2])+'″ thick';$('hover').style.left=Math.min(innerWidth-250,e.clientX+16)+'px';$('hover').style.top=Math.min(innerHeight-70,e.clientY+16)+'px';}});canvas.addEventListener('pointerleave',()=>{$('hover').hidden=true;});
   reset();addEventListener('resize',resize);updateUI();$('loading').hidden=true;ready=true;requestAnimationFrame(animate);
   // Read-only diagnostics for geometry and animation QA.
-  window.binderStudy={get ready(){return ready},get position(){return position},get target(){return target},data,model,clip,renderer,camera,go,inspection};
+  window.binderStudy={get ready(){return ready},get position(){return position},get target(){return target},data,model,clip,renderer,camera,go,inspection,dimensions};
  }catch(err){console.error(err);$('loading').hidden=true;$('failure').hidden=false;}
 }
 $('info').onclick=()=>$('about').showModal();document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').onclick=()=>d.close();d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});});boot();

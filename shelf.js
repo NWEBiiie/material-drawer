@@ -1,3 +1,4 @@
+import {createStudyDimensions} from './study-dimensions.js?v=1';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 
@@ -40,7 +41,7 @@ function open(id){
 }
 function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;
  if(transition&&!transition.done){transition.time=Math.min(1,transition.time+dt/.46);const p=transition.time*transition.time*(3-2*transition.time);camera.position.copy(transition.from).lerp(transition.to,p);camera.zoom=THREE.MathUtils.lerp(transition.zoom,2.7,p);camera.updateProjectionMatrix();if(transition.time===1){transition.done=true;location.href=transition.url;}}
- renderer.render(scene,camera);requestAnimationFrame(tick);
+ for(const s of studies)s.measurements?.update(!transition);renderer.render(scene,camera);requestAnimationFrame(tick);
 }
 async function boot(){try{
  renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setClearColor('#eeeae2');renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -57,12 +58,12 @@ async function boot(){try{
  const loader=new GLTFLoader();
  frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
-  const gltf=await loader.loadAsync(s.file),model=gltf.scene;
+  const [gltf,data]=await Promise.all([loader.loadAsync(s.file),fetch(s.id+'-data.json?v=6').then(r=>r.json())]),model=gltf.scene;
   // Keep the cases square to the rack and the drawer opening toward its front.
   if(gltf.animations[0]){const mixer=new THREE.AnimationMixer(model),action=mixer.clipAction(gltf.animations[0]);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();const duration=s.id==='wave'?2:gltf.animations[0].duration;mixer.setTime(s.id==='binder'?0:duration);}
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat?.map)mat.map.anisotropy=4;}if(o.userData.tether_rest)o.visible=false;});
   const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());
-  const mount=new THREE.Group();mount.add(model);model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));mount.position.set(s.x,s.y,s.z);group.add(mount);mount.updateMatrixWorld(true);s.bounds=new THREE.Box3().setFromObject(mount);s.model=mount;s.dimensions=size.toArray();models.push(mount);
+  const mount=new THREE.Group();mount.add(model);model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));mount.position.set(s.x,s.y,s.z);group.add(mount);mount.updateMatrixWorld(true);s.bounds=new THREE.Box3().setFromObject(mount);s.model=mount;s.dimensions=size.toArray();models.push(mount);s.measurements=createStudyDimensions({model,camera,canvas,kind:s.id,data,compact:true});
   const hitbox=new THREE.Mesh(new THREE.BoxGeometry(size.x+.012,Math.max(size.y,.09),size.z+.012),new THREE.MeshBasicMaterial({visible:false}));hitbox.position.copy(s.bounds.getCenter(new THREE.Vector3()));hitbox.userData.study=s.id;scene.add(hitbox);hitboxes.push(hitbox);
  }));
  ready=true;document.querySelector('#loading').hidden=true;frame();

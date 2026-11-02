@@ -1,3 +1,4 @@
+import {createStudyDimensions} from './study-dimensions.js?v=1';
 import './study-nav.js?v=2';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
@@ -8,7 +9,7 @@ import {createSampleInspection} from './binder-inspection.js?v=6';
 const $=id=>document.getElementById(id),canvas=$('miniScene');
 const mode=new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave',wave=mode==='wave';
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),I=.0254;
-let tethers;
+let tethers,dimensions;
 let renderer,scene,camera,controls,model,mixer,action,clip,inspection,data,moving;
 let ready=false,opened=0,target=1,last=performance.now(),selected=7,focus=7,focusTarget=7,hovered=null,queuedPick=null,queuedClose=false,lastWheel=0,shaft,playing=false,cutOpen=false;
 const followers=[],springs=[],panels=[];
@@ -73,7 +74,7 @@ function frame(now){
  }
  controls.update();inspection.update(dt);
  if(queuedPick&&opened>.999&&!inspection.active)pick(queuedPick);
- tethers?.update();renderer.render(scene,inspection?.active?inspection.camera:camera);inspection.render();requestAnimationFrame(frame);
+ tethers?.update();dimensions?.update(!inspection?.active);renderer.render(scene,inspection?.active?inspection.camera:camera);inspection.render();requestAnimationFrame(frame);
 }
 function camLift(theta,index,m=data.mechanism){const a=theta-index*Math.PI*2/18,e=m.eccentricity,r=m.camRadius+m.rollerRadius;return e*Math.cos(a)+Math.sqrt(r*r-e*e*Math.sin(a)**2)-(r-e);}
 function mechanismView(value){cutOpen=value;panels.forEach(o=>o.visible=!value);$('mechanismToggle').setAttribute('aria-pressed',String(value));}
@@ -86,6 +87,7 @@ async function boot(){try{
  const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(mode+'-model.glb?v='+assetVersion),fetch(mode+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
  data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
  clip=gltf.animations[0];if(carriers.length!==18||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
+ dimensions=createStudyDimensions({model,camera,canvas,kind:mode,data});
  tethers=createRetractableTethers({model,scene});
  inspection=createSampleInspection({renderer,scene,camera,controls,tethers,onChange:changed,onReturned(){if(queuedClose){queuedClose=false;setOpen(false);}}});
  $('flipSample').onclick=()=>inspection.flip();$('returnSample').onclick=()=>inspection.putBack();$('sampleInfo').onclick=()=>details(inspection.selection.record.id);$('soundToggle').onclick=()=>{inspection.audio.toggle();soundUI();};soundUI();
@@ -99,6 +101,6 @@ async function boot(){try{
  canvas.addEventListener('pointermove',e=>{if(inspection.active||down){$('hover').hidden=true;return;}const h=hit(e);hovered=opened>.999?h?.id:null;canvas.style.cursor=(h?.id||h?.moving||h?.drive)?'pointer':'grab';$('hover').hidden=!hovered;if(hovered){select(data.materials.findIndex(s=>s.id===hovered));$('hover').querySelector('b').textContent=hovered+' · '+data.materials[selected].color;$('hover').querySelector('span').textContent='Lift sample';$('hover').style.left=Math.max(8,Math.min(innerWidth-255,e.clientX+15))+'px';$('hover').style.top=Math.min(innerHeight-80,e.clientY+15)+'px';}});canvas.addEventListener('pointerleave',()=>{hovered=null;$('hover').hidden=true;});
  addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(inspection.active){if(e.key==='Escape'){e.preventDefault();inspection.putBack();}if(e.key.toLowerCase()==='f')inspection.flip();return;}if(e.target.closest('button,a'))return;if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();select(selected+(e.key==='ArrowRight'?1:-1));hovered=data.materials[selected].id;}if(e.key==='Enter'){e.preventDefault();pick(data.materials[selected].id);}if(e.key===' '){e.preventDefault();setOpen(!target);}});
  reset();addEventListener('resize',resize);select(wave?7:0);setOpen(true);$('loading').hidden=true;ready=true;requestAnimationFrame(frame);
- window.miniStudy={get ready(){return ready},get opened(){return opened},get target(){return target},get selected(){return selected},get focus(){return focus},mode,model,carriers,homes,data,renderer,camera,inspection,moving,pick,setOpen,select,shaft,followers,springs,panels,camLift,mechanismView};
+ window.miniStudy={get ready(){return ready},get opened(){return opened},get target(){return target},get selected(){return selected},get focus(){return focus},mode,model,carriers,homes,data,renderer,camera,dimensions,inspection,moving,pick,setOpen,select,shaft,followers,springs,panels,camLift,mechanismView};
 }catch(e){console.error(e);$('loading').hidden=true;$('failure').hidden=false;}}
 document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').onclick=()=>d.close();d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});});boot();
