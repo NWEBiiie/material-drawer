@@ -1,6 +1,6 @@
 import {createFinishPicker} from './case-finishes.js?v=1';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
-import './study-nav.js?v=2';
+import './study-nav.js?v=3';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
 import { GLTFLoader } from './binder-loader.js';

@@ -60,3 +60,11 @@ New volumes use explicitly labeled approximate color textures. The schedule's ze
 
 Rebuild with `node build-material-volumes.cjs`, then Blender `--background --factory-startup --python build-volume-binders.py -- <repo>`. This leaves Volume 1 untouched. Run `compact-glb.cjs` on the five new GLBs, then `node check-material-volumes.cjs` to verify actual mesh dimensions, sample counts, pages, snaps, tethers, and spine capacity.
 
+All four formats now support `volume=1` through `volume=6`. The default is still the original 18 samples. Case and pocket spacing/depth accommodate the known thicker samples without scaling them. Build the new case, wave and pocket volumes with Blender `--background --factory-startup --python build-all-volumes.py -- <repo>`.
+
+`storage.html` shows all 24 closed volumes on a 36 × 18 × 72-inch shelf: six wave drawers, three two-high case stacks, two three-high binder stacks, and three two-high pocket-box stacks. The shelf reference is the HDX 5-shelf 36 × 18 × 72-inch unit, linked in the view. Storage envelopes use model dimensions; the binder envelope adds its two 0.16-inch covers to the 3-inch spine. Hardware and shelving are illustrative, not a load-rating evaluation. `node build-storage.cjs` checks clear width/depth, headroom and overlaps.
+
+The original cam wave remains unchanged. `mini.html?view=wave&drive=belt` is the alternative based on the supplied sketch: fixed-end flexible belt, translating transverse wooden dowel, roller followers and gravity return. Use the push/pull slider, arrows, scroll or play control. The cutaway reveals the belt and dowel. Pros/cons for the belt use their own saved review key. This is a kinematic concept; strip compliance, tension, friction and fatigue need physical prototyping. The corresponding Blender and GLB downloads are available for all six volumes.
+
+Build the alternatives with Blender `--background --factory-startup --python build-belt-alternative.py -- <repo>`, then run `compact-glb.cjs` on the generated GLBs. This losslessly shares identical buffers. Run `node check-collection.cjs` to check all 24 case/wave/pocket/belt files, sample dimensions, counts, tethers, wave clearances and fixed belt endpoints.
+

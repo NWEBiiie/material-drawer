@@ -1,4 +1,4 @@
-export const MODELS = {binder:'Binder',case:'Slanted case',wave:'Wave drawer',pockets:'Pocket box'};
+export const MODELS = {binder:'Binder',case:'Slanted case',wave:'Wave drawer',pockets:'Pocket box',belt:'Wave drawer · sliding belt'};
 export const CRITERIA = [
   ['portability','Portability'],['intuitiveness','Intuitiveness'],
   ['visibility','Sample visibility'],['cost','Cost efficiency'],

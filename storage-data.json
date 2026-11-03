@@ -1,0 +1,572 @@
+{
+  "rack": {
+    "width": 36,
+    "depth": 18,
+    "height": 72,
+    "clearWidth": 34,
+    "clearDepth": 17,
+    "shelfTops": [
+      4.5,
+      20.5,
+      36.5,
+      52.5,
+      68.5
+    ],
+    "source": "https://www.homedepot.ca/product/hdx-5-shelf-resin-storage-unit/1000425439"
+  },
+  "items": [
+    {
+      "kind": "wave",
+      "volume": 1,
+      "name": "Flooring",
+      "count": 18,
+      "dimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "originalDimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "position": [
+        -13.75,
+        8.515,
+        0
+      ],
+      "row": 0,
+      "url": "mini.html?view=wave&volume=1"
+    },
+    {
+      "kind": "wave",
+      "volume": 2,
+      "name": "Paint",
+      "count": 11,
+      "dimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "originalDimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "position": [
+        -8.25,
+        8.515,
+        0
+      ],
+      "row": 0,
+      "url": "mini.html?view=wave&volume=2"
+    },
+    {
+      "kind": "wave",
+      "volume": 3,
+      "name": "Tile & grout",
+      "count": 10,
+      "dimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "originalDimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "position": [
+        -2.75,
+        8.515,
+        0
+      ],
+      "row": 0,
+      "url": "mini.html?view=wave&volume=3"
+    },
+    {
+      "kind": "wave",
+      "volume": 4,
+      "name": "Surfaces",
+      "count": 16,
+      "dimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "originalDimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "position": [
+        2.75,
+        8.515,
+        0
+      ],
+      "row": 0,
+      "url": "mini.html?view=wave&volume=4"
+    },
+    {
+      "kind": "wave",
+      "volume": 5,
+      "name": "Wall protection",
+      "count": 7,
+      "dimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "originalDimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "position": [
+        8.25,
+        8.515,
+        0
+      ],
+      "row": 0,
+      "url": "mini.html?view=wave&volume=5"
+    },
+    {
+      "kind": "wave",
+      "volume": 6,
+      "name": "Specialties",
+      "count": 10,
+      "dimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "originalDimensions": [
+        5,
+        13,
+        8.03
+      ],
+      "position": [
+        13.75,
+        8.515,
+        0
+      ],
+      "row": 0,
+      "url": "mini.html?view=wave&volume=6"
+    },
+    {
+      "kind": "case",
+      "volume": 1,
+      "name": "Flooring",
+      "count": 18,
+      "dimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "originalDimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "position": [
+        -9,
+        23.425,
+        0
+      ],
+      "row": 1,
+      "url": "case.html?volume=1"
+    },
+    {
+      "kind": "case",
+      "volume": 2,
+      "name": "Paint",
+      "count": 11,
+      "dimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "originalDimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "position": [
+        -9,
+        29.355,
+        0
+      ],
+      "row": 1,
+      "url": "case.html?volume=2"
+    },
+    {
+      "kind": "case",
+      "volume": 3,
+      "name": "Tile & grout",
+      "count": 10,
+      "dimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "originalDimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "position": [
+        0,
+        23.425,
+        0
+      ],
+      "row": 1,
+      "url": "case.html?volume=3"
+    },
+    {
+      "kind": "case",
+      "volume": 4,
+      "name": "Surfaces",
+      "count": 16,
+      "dimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "originalDimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "position": [
+        0,
+        29.355,
+        0
+      ],
+      "row": 1,
+      "url": "case.html?volume=4"
+    },
+    {
+      "kind": "case",
+      "volume": 5,
+      "name": "Wall protection",
+      "count": 7,
+      "dimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "originalDimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "position": [
+        9,
+        23.425,
+        0
+      ],
+      "row": 1,
+      "url": "case.html?volume=5"
+    },
+    {
+      "kind": "case",
+      "volume": 6,
+      "name": "Specialties",
+      "count": 10,
+      "dimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "originalDimensions": [
+        8.35,
+        11.7,
+        5.85
+      ],
+      "position": [
+        9,
+        29.355,
+        0
+      ],
+      "row": 1,
+      "url": "case.html?volume=6"
+    },
+    {
+      "kind": "binder",
+      "volume": 1,
+      "name": "Flooring",
+      "count": 18,
+      "dimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "originalDimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "position": [
+        -5.825,
+        38.16,
+        0
+      ],
+      "row": 2,
+      "url": "binder.html?volume=1"
+    },
+    {
+      "kind": "binder",
+      "volume": 2,
+      "name": "Paint",
+      "count": 11,
+      "dimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "originalDimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "position": [
+        -5.825,
+        41.559999999999995,
+        0
+      ],
+      "row": 2,
+      "url": "binder.html?volume=2"
+    },
+    {
+      "kind": "binder",
+      "volume": 3,
+      "name": "Tile & grout",
+      "count": 10,
+      "dimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "originalDimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "position": [
+        -5.825,
+        44.959999999999994,
+        0
+      ],
+      "row": 2,
+      "url": "binder.html?volume=3"
+    },
+    {
+      "kind": "binder",
+      "volume": 4,
+      "name": "Surfaces",
+      "count": 16,
+      "dimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "originalDimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "position": [
+        5.825,
+        38.16,
+        0
+      ],
+      "row": 2,
+      "url": "binder.html?volume=4"
+    },
+    {
+      "kind": "binder",
+      "volume": 5,
+      "name": "Wall protection",
+      "count": 7,
+      "dimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "originalDimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "position": [
+        5.825,
+        41.559999999999995,
+        0
+      ],
+      "row": 2,
+      "url": "binder.html?volume=5"
+    },
+    {
+      "kind": "binder",
+      "volume": 6,
+      "name": "Specialties",
+      "count": 10,
+      "dimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "originalDimensions": [
+        11,
+        11.5,
+        3.32
+      ],
+      "position": [
+        5.825,
+        44.959999999999994,
+        0
+      ],
+      "row": 2,
+      "url": "binder.html?volume=6"
+    },
+    {
+      "kind": "pockets",
+      "volume": 1,
+      "name": "Flooring",
+      "count": 18,
+      "dimensions": [
+        7.75,
+        11.7,
+        1.7999999999999998
+      ],
+      "originalDimensions": [
+        11.7,
+        7.75,
+        1.7999999999999998
+      ],
+      "position": [
+        -8.4,
+        53.4,
+        0
+      ],
+      "row": 3,
+      "url": "mini.html?view=pockets&volume=1"
+    },
+    {
+      "kind": "pockets",
+      "volume": 2,
+      "name": "Paint",
+      "count": 11,
+      "dimensions": [
+        7.75,
+        11.7,
+        1.7999999999999998
+      ],
+      "originalDimensions": [
+        11.7,
+        7.75,
+        1.7999999999999998
+      ],
+      "position": [
+        -8.4,
+        55.279999999999994,
+        0
+      ],
+      "row": 3,
+      "url": "mini.html?view=pockets&volume=2"
+    },
+    {
+      "kind": "pockets",
+      "volume": 3,
+      "name": "Tile & grout",
+      "count": 10,
+      "dimensions": [
+        7.75,
+        11.7,
+        1.7999999999999998
+      ],
+      "originalDimensions": [
+        11.7,
+        7.75,
+        1.7999999999999998
+      ],
+      "position": [
+        0,
+        53.4,
+        0
+      ],
+      "row": 3,
+      "url": "mini.html?view=pockets&volume=3"
+    },
+    {
+      "kind": "pockets",
+      "volume": 4,
+      "name": "Surfaces",
+      "count": 16,
+      "dimensions": [
+        7.75,
+        11.7,
+        2.425
+      ],
+      "originalDimensions": [
+        11.7,
+        7.75,
+        2.425
+      ],
+      "position": [
+        0,
+        55.592499999999994,
+        0
+      ],
+      "row": 3,
+      "url": "mini.html?view=pockets&volume=4"
+    },
+    {
+      "kind": "pockets",
+      "volume": 5,
+      "name": "Wall protection",
+      "count": 7,
+      "dimensions": [
+        7.75,
+        11.7,
+        1.7999999999999998
+      ],
+      "originalDimensions": [
+        11.7,
+        7.75,
+        1.7999999999999998
+      ],
+      "position": [
+        8.4,
+        53.4,
+        0
+      ],
+      "row": 3,
+      "url": "mini.html?view=pockets&volume=5"
+    },
+    {
+      "kind": "pockets",
+      "volume": 6,
+      "name": "Specialties",
+      "count": 10,
+      "dimensions": [
+        7.75,
+        11.7,
+        2.425
+      ],
+      "originalDimensions": [
+        11.7,
+        7.75,
+        2.425
+      ],
+      "position": [
+        8.4,
+        55.592499999999994,
+        0
+      ],
+      "row": 3,
+      "url": "mini.html?view=pockets&volume=6"
+    }
+  ],
+  "notes": "Closed storage envelopes based on modeled case dimensions. Binder envelope includes two 0.16-inch covers around the 3-inch spine. Wave height includes the carry handle. Hardware details and shelf structure are illustrative; no load rating is asserted."
+}

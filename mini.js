@@ -1,6 +1,6 @@
 import {createFinishPicker} from './case-finishes.js?v=1';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
-import './study-nav.js?v=2';
+import './study-nav.js?v=3';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
@@ -9,22 +9,25 @@ import {createSampleInspection} from './binder-inspection.js?v=6';
 
 const $=id=>document.getElementById(id),canvas=$('miniScene');
 const mode=new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave',wave=mode==='wave';
+const params=new URLSearchParams(location.search),vp=Number(params.get('volume')),volume=Number.isInteger(vp)&&vp>=1&&vp<=6?vp:1,belt=wave&&params.get('drive')==='belt';
+const prefix=(belt?'belt':mode)+(volume===1?'':'-volume-'+volume);
+let beltMesh,dowel,beltBase,travelDirection=1,dowelInput;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),I=.0254;
 let tethers,dimensions,finishes;
 let renderer,scene,camera,controls,model,mixer,action,clip,inspection,data,moving;
 let ready=false,opened=0,target=1,last=performance.now(),selected=7,focus=7,focusTarget=7,hovered=null,queuedPick=null,queuedClose=false,lastWheel=0,shaft,playing=false,cutOpen=false;
 const followers=[],springs=[],panels=[];
 const carriers=[],homes=new Map(),ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
-const fraction=n=>{const w=Math.floor(n),num=Math.round((n-w)*16);if(!num)return String(w);let a=num,b=16;while(b)[a,b]=[b,a%b];return `${w?w+' ':''}${num/a}/${16/a}`;};
+const fraction=n=>{const w=Math.floor(n),num=Math.round((n-w)*32);if(!num)return String(w);let a=num,b=32;while(b)[a,b]=[b,a%b];return `${w?w+' ':''}${num/a}/${32/a}`;};
 const size=a=>a.slice(0,2).map(fraction).join(' × ')+'″';
-const heading=wave?'Wave drawer':'Pocket box';
+const heading=wave?(belt?'Belt wave drawer':'Wave drawer'):'Pocket box';
 document.title=heading+' — The Sample Room';$('studyTitle').innerHTML=heading+'<span>'+(wave?'03':'04')+'</span>';
 document.querySelector(`[data-mode=${mode}]`).setAttribute('aria-current','page');
 $('studyDescription').textContent=wave?'Padded blue fabric, stitched binding, and soft pull tabs. A handwheel lifts the samples in a wave.':'Small square samples sit in individual fitted foam pockets. Lift a piece to read its back label.';
-$('blendDownload').href=mode+'-model.blend';$('glbDownload').href=mode+'-model.glb';
+$('blendDownload').href=prefix+'-model.blend';$('glbDownload').href=prefix+'-model.glb';
 
 function paintSelection(){const s=data.materials[selected];$('caseCount').textContent=String(selected+1).padStart(2,'0')+' / '+carriers.length;$('caseName').textContent=s.id+' · '+s.color;}
-function select(i){playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';selected=((i%carriers.length)+carriers.length)%carriers.length;focusTarget+=(((selected-focusTarget)%18+27)%18)-9;paintSelection();}
+function select(i){playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';const n=carriers.length;selected=belt?Math.max(0,Math.min(n-1,i)):((i%n)+n)%n;focusTarget=belt?selected:focusTarget+(((selected-focusTarget)%n+n*1.5)%n)-n/2;paintSelection();}
 function setOpen(value){
  hovered=null;$('hover').hidden=true;
  if(!value&&inspection?.active){queuedClose=true;queuedPick=null;inspection.putBack();return;}
@@ -49,14 +52,14 @@ function changed(h){
 function soundUI(){const mute=inspection.audio.muted;$('soundToggle').setAttribute('aria-pressed',String(mute));$('soundToggle').setAttribute('aria-label',mute?'Enable snap sounds':'Mute snap sounds');}
 function details(id){
  const s=data.materials.find(s=>s.id===id),c=data.samples.find(s=>s.id===id);
- $('sampleId').textContent=id;$('sampleImage').src=s.preview;$('sampleImage').alt=s.color;$('sampleName').textContent=s.color;$('sampleMaker').textContent=[s.manufacturer,s.series].filter(Boolean).join(' · ');$('sampleCut').textContent=size(s.cut);$('sampleThickness').textContent=fraction(s.cut[2])+'″ · unchanged';
+ $('sampleId').textContent=id;$('sampleImage').src=s.preview;$('sampleImage').alt=s.color;$('sampleName').textContent=s.color;$('sampleMaker').textContent=[s.manufacturer,s.series].filter(Boolean).join(' · ');$('sampleCut').textContent=size(s.cut);$('sampleThickness').textContent=s.thicknessKnown===false?'Unknown · display proxy':fraction(s.cut[2])+'″ · unchanged';
  $('mountLabel').textContent=wave?'Carrier':'Pocket';$('sampleBoard').textContent=wave?size(c.board):'Fitted foam';
  $('sampleStatus').textContent=s.source.status==='illustrative-placeholder'?'Illustrative color placeholder':s.source.status==='manufacturer-color-reference'?'Manufacturer color reference':'Matching product texture';$('sampleNote').textContent=s.source.notes;$('sampleSource').href=s.source.pageURL;$('sampleSource').hidden=!s.source.pageURL;$('details').showModal();
 }
 function hit(e){
  const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);ray.setFromCamera(pointer,camera);
  const first=ray.intersectObject(model,true).find(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});if(!first)return null;
- let o=first.object;while(o){if(o.userData.material_id&&opened>.999)return {id:o.userData.material_id};if(o.userData.wave_shaft)return {drive:true};if(o===moving)return {moving:true};o=o.parent;}return null;
+ let o=first.object;while(o){if(o.userData.material_id&&opened>.999)return {id:o.userData.material_id};if(o.userData.wave_shaft||o.userData.belt_control)return {drive:true};if(o===moving)return {moving:true};o=o.parent;}return null;
 }
 function reset(){camera.zoom=1;camera.position.set(...(wave?[.50,.60,.85]:[.45,.65,.66]));controls.target.set(...(wave?[0,.12,.18]:[0,.075,-.035]));camera.lookAt(controls.target);controls.update();resize();}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight,a=w/h;renderer.setSize(w,h,false);const span=wave?(a<.8?.47/a:.68):(a<.8?.56/a:.60);camera.left=-span*a/2;camera.right=span*a/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();inspection?.resize();}
@@ -67,27 +70,37 @@ function frame(now){
   opened=reduced.matches?target:opened+Math.sign(target-opened)*Math.min(Math.abs(target-opened),dt/1.1);
   action.time=(data.drawerDuration||clip.duration)*opened;mixer.update(0);
   if(wave){
-   if(opened===1&&target===1){if(playing&&!reduced.matches)focusTarget+=dt*1.5;focus+=(focusTarget-focus)*blend;if(playing){selected=((Math.round(focus)%18)+18)%18;paintSelection();}}
-   const theta=focus*Math.PI*2/18,m=data.mechanism;shaft.rotation.set(0,0,-theta);
-   for(const f of followers){const lift=camLift(theta,f.userData.wave_follower,m);f.position.y=lift*I;}
-   for(const s of springs){const lift=camLift(theta,s.userData.wave_spring,m);s.position.y=(3.09+lift)*I;s.scale.y=m.springFreeSpan-lift;}
+   const n=carriers.length;
+   if(opened===1&&target===1){if(playing&&!reduced.matches){focusTarget+=dt*1.5*(belt?travelDirection:1);if(belt&&(focusTarget>=n-1||focusTarget<=0)){focusTarget=Math.max(0,Math.min(n-1,focusTarget));travelDirection*=-1;}}focus+=(focusTarget-focus)*blend;if(playing){selected=((Math.round(focus)%n)+n)%n;paintSelection();}}
+   const theta=focus*Math.PI*2/n,m=data.mechanism;
+   if(belt){const slots=data.slotPositions,lo=Math.max(0,Math.min(n-1,Math.floor(focus))),hi=Math.min(n-1,lo+1),c=THREE.MathUtils.lerp(slots[lo],slots[hi],Math.max(0,focus-lo));
+    dowel.position.z=-c*I;beltMesh.morphTargetInfluences?.fill(0);const p=beltMesh.geometry.attributes.position;
+    for(let j=0;j<p.count;j++)p.setY(j,beltBase[j*3+1]+beltLift(-beltBase[j*3+2]/I,c,m)*I);
+    p.needsUpdate=true;beltMesh.geometry.computeVertexNormals();beltMesh.geometry.computeBoundingSphere();
+    for(const f of followers)f.position.y=beltLift(slots[f.userData.wave_follower],c,m)*I;
+    if(dowelInput&&document.activeElement!==dowelInput)dowelInput.value=focus;
+   }else{shaft.rotation.set(0,0,-theta);
+    for(const f of followers){const lift=camLift(theta,f.userData.wave_follower,m);f.position.y=lift*I;}
+    for(const s of springs){const lift=camLift(theta,s.userData.wave_spring,m);s.position.y=(3.09+lift)*I;s.scale.y=m.springFreeSpan-lift;}
+   }
   }else for(const o of carriers){const home=homes.get(o.userData.material_id),lift=target===1&&opened>.999&&hovered===o.userData.material_id?.004:0;o.position.lerp(new THREE.Vector3(home.x,home.y+lift,home.z),blend);}
  }
  controls.update();inspection.update(dt);
  if(queuedPick&&opened>.999&&!inspection.active)pick(queuedPick);
  tethers?.update();dimensions?.update(!inspection?.active);finishes?.update(!inspection?.active);renderer.render(scene,inspection?.active?inspection.camera:camera);inspection.render();requestAnimationFrame(frame);
 }
-function camLift(theta,index,m=data.mechanism){const a=theta-index*Math.PI*2/18,e=m.eccentricity,r=m.camRadius+m.rollerRadius;return e*Math.cos(a)+Math.sqrt(r*r-e*e*Math.sin(a)**2)-(r-e);}
+function camLift(theta,index,m=data.mechanism){const a=theta-index*Math.PI*2/carriers.length,e=m.eccentricity,r=m.camRadius+m.rollerRadius;return e*Math.cos(a)+Math.sqrt(r*r-e*e*Math.sin(a)**2)-(r-e);}
+function beltLift(y,c,m){const width=Math.min(m.halfWidth,y<c?c-m.beltStart:m.beltEnd-c);return width>0&&Math.abs(y-c)<width?m.stroke*.5*(1+Math.cos(Math.PI*(y-c)/width)):0;}
 function mechanismView(value){cutOpen=value;panels.forEach(o=>o.visible=!value);$('mechanismToggle').setAttribute('aria-pressed',String(value));}
 async function boot(){try{
  renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor('#eeeae2');renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.65,right:.65,top:.7,bottom:-.65,near:.01,far:2});key.shadow.normalBias=.0005;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const assetVersion=wave?8:4;
- const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(mode+'-model.glb?v='+assetVersion),fetch(mode+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
- data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
- clip=gltf.animations[0];if(carriers.length!==18||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
+ const assetVersion=12;
+ const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v='+assetVersion),fetch(prefix+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
+ data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.sliding_belt){beltMesh=o;beltBase=o.geometry.attributes.position.array.slice();o.frustumCulled=false;}if(o.userData.belt_control)dowel=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
+ clip=gltf.animations[0];if(carriers.length!==data.materials.length||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
  finishes=await createFinishPicker({kind:mode});finishes.attach(model,mode);
  dimensions=createStudyDimensions({model,camera,canvas,kind:mode,data});
  tethers=createRetractableTethers({model,scene});
@@ -95,14 +108,19 @@ async function boot(){try{
  $('flipSample').onclick=()=>inspection.flip();$('returnSample').onclick=()=>inspection.putBack();$('sampleInfo').onclick=()=>details(inspection.selection.record.id);$('soundToggle').onclick=()=>{inspection.audio.toggle();soundUI();};soundUI();
  $('lidToggle').onclick=()=>setOpen(!target);$('prev').onclick=()=>{select(selected-1);hovered=data.materials[selected].id;};$('next').onclick=()=>{select(selected+1);hovered=data.materials[selected].id;};$('pickCurrent').onclick=()=>pick(data.materials[selected].id);
  $('mechanismToggle').hidden=!wave;$('motionToggle').hidden=!wave;$('mechanismNotes').hidden=!wave;
+ if(belt){if(!beltMesh||!dowel)throw Error('Missing belt mechanism');$('mechanismToggle').setAttribute('aria-label','Show belt and dowel cutaway');$('motionToggle').setAttribute('aria-label','Run sliding dowel demonstration');$('studyDescription').textContent='A fixed-end flexible belt bends over a sliding wooden dowel, lifting the sample row as you push it back and forth.';$('mechanismNotes').textContent=data.mechanism.note;dowelInput=document.querySelector('#dowelPosition');dowelInput.max=carriers.length-1;dowelInput.oninput=()=>{playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';focusTarget=Number(dowelInput.value);selected=Math.round(focusTarget);paintSelection();setOpen(true);};}
+ document.querySelector('#about dd').textContent=carriers.length;
+ if(volume>1){document.querySelector('#about dl dt:last-of-type').textContent='Known thicknesses';document.querySelector('#about dl dd:last-of-type').textContent='Preserved · unknown values use a 0.02″ display proxy';}
+ if(volume>1||belt)document.querySelector('#about a[href="mini-source.zip"]').hidden=true;
+ $('blendDownload').textContent='Blender ↓';$('glbDownload').textContent='GLB ↓';
  $('mechanismToggle').onclick=()=>mechanismView(!cutOpen);$('motionToggle').onclick=()=>{playing=!playing;$('motionToggle').setAttribute('aria-pressed',String(playing));$('motionToggle').textContent=playing?'Ⅱ':'▷';if(playing)setOpen(true);};
  $('zoomIn').onclick=()=>{camera.zoom=Math.min(2.3,camera.zoom*1.15);camera.updateProjectionMatrix();};$('zoomOut').onclick=()=>{camera.zoom=Math.max(.6,camera.zoom/1.15);camera.updateProjectionMatrix();};$('reset').onclick=reset;$('info').onclick=()=>$('about').showModal();
  data.materials.forEach(s=>{const b=document.createElement('button');b.textContent=s.id+' · '+s.color;b.onclick=()=>{$('about').close();pick(s.id);};$('materialIndex').append(b);});
  canvas.addEventListener('wheel',e=>{e.preventDefault();if(!inspection.active&&target===1&&Math.abs(e.deltaY)>3&&performance.now()-lastWheel>110){select(selected+Math.sign(e.deltaY));hovered=data.materials[selected].id;lastWheel=performance.now();}},{passive:false});
  let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointercancel',()=>{down=null;});canvas.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<6){if(inspection.active){inspection.hit(e)?inspection.flip():inspection.putBack();}else{const h=hit(e);if(h?.id)pick(h.id);else if(h?.drive)select(selected+1);else if(h?.moving)setOpen(!target);}}down=null;});
  canvas.addEventListener('pointermove',e=>{if(inspection.active||down){$('hover').hidden=true;return;}const h=hit(e);hovered=opened>.999?h?.id:null;canvas.style.cursor=(h?.id||h?.moving||h?.drive)?'pointer':'grab';$('hover').hidden=!hovered;if(hovered){select(data.materials.findIndex(s=>s.id===hovered));$('hover').querySelector('b').textContent=hovered+' · '+data.materials[selected].color;$('hover').querySelector('span').textContent='Lift sample';$('hover').style.left=Math.max(8,Math.min(innerWidth-255,e.clientX+15))+'px';$('hover').style.top=Math.min(innerHeight-80,e.clientY+15)+'px';}});canvas.addEventListener('pointerleave',()=>{hovered=null;$('hover').hidden=true;});
- addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(inspection.active){if(e.key==='Escape'){e.preventDefault();inspection.putBack();}if(e.key.toLowerCase()==='f')inspection.flip();return;}if(e.target.closest('button,a'))return;if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();select(selected+(e.key==='ArrowRight'?1:-1));hovered=data.materials[selected].id;}if(e.key==='Enter'){e.preventDefault();pick(data.materials[selected].id);}if(e.key===' '){e.preventDefault();setOpen(!target);}});
- reset();addEventListener('resize',resize);select(wave?7:0);setOpen(true);$('loading').hidden=true;ready=true;requestAnimationFrame(frame);
+ addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(inspection.active){if(e.key==='Escape'){e.preventDefault();inspection.putBack();}if(e.key.toLowerCase()==='f')inspection.flip();return;}if(e.target.closest('button,a,input,select'))return;if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();select(selected+(e.key==='ArrowRight'?1:-1));hovered=data.materials[selected].id;}if(e.key==='Enter'){e.preventDefault();pick(data.materials[selected].id);}if(e.key===' '){e.preventDefault();setOpen(!target);}});
+ reset();addEventListener('resize',resize);select(wave?Math.min(7,carriers.length-1):0);setOpen(true);$('loading').hidden=true;ready=true;requestAnimationFrame(frame);
  window.miniStudy={get ready(){return ready},get opened(){return opened},get target(){return target},get selected(){return selected},get focus(){return focus},mode,model,carriers,homes,data,renderer,camera,dimensions,finishes,inspection,moving,pick,setOpen,select,shaft,followers,springs,panels,camLift,mechanismView};
 }catch(e){console.error(e);$('loading').hidden=true;$('failure').hidden=false;}}
 document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').onclick=()=>d.close();d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});});boot();

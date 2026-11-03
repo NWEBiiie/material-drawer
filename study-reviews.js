@@ -1,7 +1,7 @@
-import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,readReview,writeReview} from './study-review-store.js?v=2';
+import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,readReview,writeReview} from './study-review-store.js?v=3';
 
 const path=location.pathname;
-const fixedModel=path.endsWith('binder.html')?'binder':path.endsWith('case.html')?'case':path.endsWith('mini.html')?(new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave'):null;
+const fixedModel=path.endsWith('binder.html')?'binder':path.endsWith('case.html')?'case':path.endsWith('mini.html')?(new URLSearchParams(location.search).get('view')==='pockets'?'pockets':new URLSearchParams(location.search).get('drive')==='belt'?'belt':'wave'):null;
 let selected=fixedModel||'binder',storage,readFailed=false;
 try{storage=localStorage;}catch{readFailed=true;}
 const drafts=new Map(),pending=new Map();
