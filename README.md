@@ -50,3 +50,13 @@ The browser opens the native file/folder picker. It cannot read arbitrary local 
 Serve this directory over HTTP(S); no build step required. GitHub Pages publishes `main` / repository root. `index.html` is the shelf overview; studies are `binder.html`, `case.html`, and `mini.html?view=wave` or `mini.html?view=pockets`. The previous cabinet starts at `archive.html` and uses `room.js`, `scene-3d.js`, `cabinet-library.js`, `room-3d.css`, `materials.js` and `material-textures.js`. Three.js 0.180.0 is vendored locally in `three.module.min.js` and `three.core.min.js`; see `LICENSE-three.txt`. Runtime assets are self-contained, with no CDN or analytics requests. Older CSS scene files are retained as unused legacy sources.
 
 WebGL2 is required for the 3D scene. When unavailable, a gallery still supports material inspection and importing. Reduced motion removes animated transitions. Included procedural surfaces are illustrative studies; import material photos for your own collection.
+# Material volumes and inventory
+
+`material-matrix.html` catalogs all 72 rows transcribed from the supplied Excel screenshot. The six groups follow the supplied red outlines: Flooring (18), Paint (11), Tile & grout (10), Surfaces (16), Wall protection (7), and Specialties (10). `binder.html` still opens the original 18 samples; `?volume=2` through `?volume=6` opens the additional Blender mockups.
+
+Reference-board question marks, web texture availability, and physical stock are independent. Physical stock starts unconfirmed and saves per item in this browser under `sample-room-inventory-v1:`. CSV export includes the entire schedule and saved stock choices. It is not a shared inventory service.
+
+New volumes use explicitly labeled approximate color textures. The schedule's zero or N/A thickness values remain unknown, with a 0.02-inch visual proxy only. Unknown plan dimensions use a 2.5-inch square proxy. Known thickness and original sample limits are preserved. PT-11's manufacturer conflict is flagged.
+
+Rebuild with `node build-material-volumes.cjs`, then Blender `--background --factory-startup --python build-volume-binders.py -- <repo>`. This leaves Volume 1 untouched. Run `compact-glb.cjs` on the five new GLBs, then `node check-material-volumes.cjs` to verify actual mesh dimensions, sample counts, pages, snaps, tethers, and spine capacity.
+

@@ -1,3 +1,4 @@
 # Editable binder inputs are distributed together in binder-source.zip.
 /binder/
 *.blend1
+/.volume-build/
