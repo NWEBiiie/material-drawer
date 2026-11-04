@@ -1,5 +1,5 @@
 """Small material studies: wave drawer and rectangular-pocket sample box.
-blender --background --python build-mini-studies.py -- REPO [wave]
+blender --background --python build-mini-studies.py -- REPO [wave|pockets]
 Uses the packed textures in binder-model.blend. Units below are inches.
 """
 import bpy, math, pathlib, sys, json, textwrap
@@ -57,6 +57,65 @@ def export(mode,motion,records,extra):
  payload={'mode':mode,'units':'inches','materials':data['materials'],'samples':records,**extra,'validation':{'sampleCount':18,'allCuts':[1.5,1.5],'allThicknessesPreserved':True,'allCutsWithinPrevious':True}}
  (ROOT/(mode+'-data.json')).write_text(json.dumps(payload,separators=(',',':')))
  print(mode.upper()+'_VALIDATION',json.dumps(payload['validation']))
+
+def build_pockets():
+ prepare()
+ W,D,H,LH=12.,8.,1.85,.65
+ rows,cols=3,6
+ foam_top,foam_base=1.75,.25
+ base=empty('Pocket_case');lid=empty('Pocket_lid');lid.location=(0,m(D/2-.1),m(H));lid['motion']='lid'
+ box('Case_base',(0,0,.11),(W,D,.22),wood,base,.045)
+ for x in [-W/2+.11,W/2-.11]:box('Case_side',(x,0,H/2),(.22,D,H),wood,base,.025)
+ box('Case_end',(0,D/2-.11,H/2),(W-.44,.22,H),wood,base,.025)
+ box('Case_end',(0,-D/2+.15,H/2),(W-.44,.14,H),wood,base,.025)
+ insert=box('Pocket_foam',(0,0,(foam_top+foam_base)/2),(W-.58,D-.58,foam_top-foam_base),foam,base)
+ box('Lid_top',(0,-D/2+.1,LH-.1),(W,D,.20),wood,lid,.035)
+ box('Lid_lining',(0,-D/2+.1,LH-.21),(W-.5,D-.5,.02),paper,lid)
+ for x in [-W/2+.1,W/2-.1]:box('Lid_side',(x,-D/2+.1,LH/2),(.2,D,LH),wood,lid,.025)
+ box('Lid_end',(0,0,LH/2),(W-.4,.2,LH),wood,lid,.025)
+ box('Lid_end',(0,-D+.24,LH/2),(W-.4,.12,LH),wood,lid,.025)
+ for x in [-4.8,4.8]:
+  h=cyl('Hinge',(x,D/2-.1,H),.075,.8,metal,base);h.rotation_euler.y=math.pi/2
+  box('Latch_base',(x,-D/2+.04,H-.16),(.5,.08,.3),metal,base,.025)
+  box('Latch_lid',(x,-D+.14,.12),(.5,.08,.24),metal,lid,.025)
+ mark=empty('Lid_mark',lid);mark.location=(m(-2.7),m(-3.8),m(LH-.225));mark.rotation_euler.x=math.pi
+ text('Brand','THE SAMPLE ROOM',(0,0,0),.30,mark);text('Subtitle','SMALL CUTS / 04',(0,-.45,0),.14,mark)
+ materials=data['materials'];records=[];slots=[]
+ assert len(materials)<=rows*cols
+ for i in range(rows*cols):
+  row,col=divmod(i,cols);x=(col-(cols-1)/2)*1.88;y=(row-(rows-1)/2)*2.30
+  sample=materials[i] if i<len(materials) else None
+  slot_id=sample['id'] if sample else 'Open_%02d'%(i+1)
+  t=sample['cut'][2] if sample else 0
+  top=foam_top+min(.03,t/2)
+  floor=top-t-.035 if sample else foam_top-.375
+  cut_top=foam_top+.12
+  cutter=box('Pocket_cut',(x,y,(floor+cut_top)/2),(1.565,1.565,cut_top-floor),foam)
+  boolean(insert,cutter,'Pocket '+slot_id)
+  notch_floor=min(foam_top-.22,floor-.12)
+  thumb=cyl('Finger_cut',(x,y-.83,(notch_floor+cut_top)/2),.20,cut_top-notch_floor,foam)
+  boolean(insert,thumb,'Finger notch '+slot_id)
+  slots.append({'center':[x,y],'floor':floor,'sample':sample['id'] if sample else None})
+  tag=box('Name_tag_'+slot_id,(x,y-1.08,foam_top+.007),(1.48,.20,.012),paper,base,.012)
+  tag['pocket_index']=i
+  if not sample:
+   text('Vacant_'+slot_id,'OPEN  /  %02d'%(i+1),(x-.66,y-1.11,foam_top+.015),.085,base)
+   continue
+  carrier=empty('Carrier_'+slot_id,base);carrier.location=(m(x),m(y),m(top-t/2));carrier['material_id']=slot_id;carrier['inspection_width_inches']=1.5;carrier['index']=i
+  swatch=samples[slot_id];swatch.parent=carrier;swatch.location=(0,0,0)
+  back_label(slot_id,sample,carrier,-t/2-.006)
+  text('ID_'+slot_id,slot_id,(x-.67,y-1.11,foam_top+.015),.09,base)
+  text('Name_'+slot_id,sample['color'][:20],(x-.22,y-1.095,foam_top+.015),.042,base)
+  records.append({'id':slot_id,'index':i,'board':None,'cut':sample['cut'],'pocket':[1.565,1.565,foam_top-floor]})
+  assert top<H+LH-.225 and floor>.64
+ for frame in range(49):
+  p=frame/48;s=p*p*(3-2*p);lid.rotation_euler.x=-math.radians(112)*s;lid.keyframe_insert(data_path='rotation_euler',frame=frame)
+ lid.animation_data.action.name='Open_pocket_case'
+ export('pockets',lid,records,{'case':[W,D,H+LH],'pockets':rows*cols,'pocketGrid':[rows,cols],'slots':slots,'foamTop':foam_top,'pocketClearance':.065,'lidClearance':H+LH-.225-max(foam_top+min(.03,s['cut'][2]/2) for s in materials)})
+
+if sys.argv[sys.argv.index('--')+2:]==['pockets']:
+ build_pockets()
+ sys.exit(0)
 
 prepare()
 # Circular eccentric cams on a common shaft, phased 20 degrees apart.
@@ -271,39 +330,4 @@ wave_data['finish']={'shell':'portable padded textile carry case over internal g
 (ROOT/'wave-data.json').write_text(json.dumps(wave_data,separators=(',',':')))
 if len(sys.argv)>sys.argv.index('--')+2 and sys.argv[sys.argv.index('--')+2]=='wave':sys.exit(0)
 
-prepare()
-# Eighteen naked material cuts sit flat in rectangular pockets of individual depth.
-W,D,H,LH=11.7,7.75,1.15,.65
-base=empty('Pocket_case');lid=empty('Pocket_lid');lid.location=(0,m(D/2-.1),m(H));lid['motion']='lid'
-box('Case_base',(0,0,.11),(W,D,.22),wood,base,.045)
-for x in [-W/2+.11,W/2-.11]:box('Case_side',(x,0,H/2),(.22,D,H),wood,base,.025)
-for y in [-D/2+.11,D/2-.11]:box('Case_end',(0,y,H/2),(W-.44,.22,H),wood,base,.025)
-insert=box('Pocket_foam',(0,0,.65),(W-.58,D-.58,.80),foam,base)
-box('Lid_top',(0,-D/2+.1,LH-.1),(W,D,.20),wood,lid,.035)
-box('Lid_lining',(0,-D/2+.1,LH-.21),(W-.5,D-.5,.02),paper,lid)
-for x in [-W/2+.1,W/2-.1]:box('Lid_side',(x,-D/2+.1,LH/2),(.2,D,LH),wood,lid,.025)
-for y in [-D+.2,0]:box('Lid_end',(0,y,LH/2),(W-.4,.2,LH),wood,lid,.025)
-for x in [-4.8,4.8]:
- h=cyl('Hinge',(x,D/2-.07,H),.08,.8,metal,base);h.rotation_euler.y=math.pi/2
- box('Latch_base',(x,-D/2-.04,.94),(.5,.08,.3),metal,base,.025)
- box('Latch_lid',(x,-D+.08,.12),(.5,.08,.24),metal,lid,.025)
-mark=empty('Lid_mark',lid);mark.location=(m(-2.7),m(-3.8),m(LH-.225));mark.rotation_euler.x=math.pi
-text('Brand','THE SAMPLE ROOM',(0,0,0),.30,mark);text('Subtitle','SMALL CUTS / 04',(0,-.45,0),.14,mark)
-records=[]
-for i,s in enumerate(data['materials']):
- id=s['id'];t=s['cut'][2];col=i%6;row=i//6;x=(col-2.5)*1.85;y=(row-1)*2.25
- # 0.03 inch proud of the foam allows the original thin sheet samples to be seen.
- top=1.08;bottom=top-t
- cutter=box('Pocket_cut',(x,y,(bottom-.035+1.5)/2),(1.565,1.565,1.5-bottom+.035),foam);boolean(insert,cutter,'Rectangle '+id)
- thumb=cyl('Finger_cut',(x,y-.83,.95),.20,.35,foam);boolean(insert,thumb,'Finger notch '+id)
- carrier=empty('Carrier_'+id,base);carrier.location=(m(x),m(y),m(top-t/2));carrier['material_id']=id;carrier['inspection_width_inches']=1.5;carrier['index']=i
- swatch=samples[id];swatch.parent=carrier;swatch.location=(0,0,0)
- back_label(id,s,carrier,-t/2-.006)
- box('Name_tag_'+id,(x,y-1.04,1.057),(1.48,.21,.012),paper,base,.012)
- text('ID_'+id,id,(x-.67,y-1.07,1.065),.09,base);text('Name_'+id,s['color'][:20],(x-.22,y-1.055,1.065),.042,base)
- records.append({'id':id,'index':i,'board':None,'cut':s['cut'],'pocket':[1.565,1.565,t+.005]})
- assert top<H+LH-.225 and bottom-.035>.25
-for frame in range(49):
- p=frame/48;s=p*p*(3-2*p);lid.rotation_euler.x=-math.radians(112)*s;lid.keyframe_insert(data_path='rotation_euler',frame=frame)
-lid.animation_data.action.name='Open_pocket_case'
-export('pockets',lid,records,{'case':[W,D,H+LH],'pockets':18,'pocketClearance':.065,'lidClearance':H+LH-.225-1.08})
+build_pockets()

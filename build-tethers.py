@@ -123,9 +123,14 @@ for mode in MODES:
   else:
    parent=sample.parent;root,anchor=reel(id,parent,(p.x,p.y,.45*I))
    end=terminal(id,sample,(0,-.82*I,(-t/2-.025)*I))
-   guide=empty('Tether_guide_'+id,parent,(p.x,p.y-.83*I,.78*I))
-   foam=bpy.data.objects['Pocket_foam'];bore(foam,(p.x,p.y,.64*I),.0133,.70*I)
-   bore(foam,(p.x,p.y-.66*I,.65*I),.0035,.55*I)
+   guide=empty('Tether_guide_'+id,parent,(p.x,p.y-.82*I-.0025,p.z-(t/2+.10)*I))
+   foam=bpy.data.objects['Pocket_foam'];bore(foam,(p.x,p.y,.45*I),.0133,.46*I)
+   bpy.context.view_layer.update()
+   # Clear the outlet nose and run a straight bore to the finger notch.
+   a=Vector((p.x,p.y-.47*I,.45*I));b=anchor.matrix_world.translation
+   bore(foam,(a+b)/2,.0024,(b-a).length+.003,(b-a).to_track_quat('Z','Y'))
+   path=guide.location-b
+   bore(foam,(guide.location+b)/2,.0019,path.length+.004,path.to_track_quat('Z','Y'))
   guide['tether_guide']=id
   guide_ring=ring('Cable_guide_'+id,parent,guide.location,1.3,.5)
   if mode=='case':guide_ring.rotation_mode='QUATERNION';guide_ring.rotation_quaternion=along.to_track_quat('Z','Y')
