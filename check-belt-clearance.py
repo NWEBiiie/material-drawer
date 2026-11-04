@@ -15,25 +15,39 @@ for volume in range(1,7):
     assert all(set(group)==set(ids) for group in (anchors,guides,ends,boards,reels))
     sockets=indexed('socket_index')
     assert len(sockets)==len(ids)
-    rails=[o for o in scene.objects if o.name.startswith('Socket_rail_lip')]
-    assert len(rails)==4
+    rails=[o for o in scene.objects if o.name.startswith('Clip_rail_ledge')]
+    assert len(rails)==2
     rail_top=max(o.location.z+o.dimensions.z/2 for o in rails)
     rail_under=min(o.location.z-o.dimensions.z/2 for o in rails)
     rail_inner=min(abs(o.location.x)-o.dimensions.x/2 for o in rails)
+    assert abs(rail_top/inch-4.43)<.0001
+    assert not any(o.name.startswith(('Clamp_screw_','Captive_nut_','Clamp_head_')) for o in scene.objects)
+    ribs=[o for o in scene.objects if o.name.startswith('Clip_index_rib') and o.location.x>0]
+    gaps=sorted((o.location.y-o.dimensions.y/2,o.location.y+o.dimensions.y/2) for o in ribs)
+    rib_bottom=min(o.location.z-o.dimensions.z/2 for o in ribs)
     for key in ids:
-        socket=sockets[boards[key]['index']]
-        assert len([o for o in socket.children if o.name.startswith('Clamp_screw_')])==2
+        index=boards[key]['index'];socket=sockets[index]
+        clips=[o for o in socket.children if 'clip_side' in o]
+        assert {o['clip_side'] for o in clips}=={-1,1} and len(clips)==2
+        for clip in clips:
+            # The narrow tooth clears the ledge but catches the indexing ribs.
+            tooth=[v.co for v in clip.data.vertices if abs(abs(v.co.y)/inch-.015)<.0001]
+            assert tooth and rib_bottom<clip.location.z+max(v.z for v in tooth)<rail_under
+            assert max(abs(clip.location.x+v.x) for v in tooth)>rail_inner+.03*inch
+            angle=math.radians(40)*clip['clip_side']
+            assert max(abs(clip.location.x+v.co.x*math.cos(angle)+v.co.z*math.sin(angle)) for v in clip.data.vertices)<rail_inner
+        for step in (-1,0,1):
+            if index+step<0 or index+step>=len(ids):continue
+            center=socket.location.y+step*data['mechanism']['socketAdjustment']*inch
+            assert any(abs((left[1]+right[0])/2-center)<.0001*inch and
+                       left[1]<center-.015*inch and center+.015*inch<right[0]
+                       for left,right in zip(gaps,gaps[1:])),(key,step)
         assert len([o for o in boards[key].children if o.name.startswith('Card_keeper_')])==2
         assert reels[key].parent==boards[key].parent
-        brackets=[o for o in socket.children if o.name.startswith('Rail_clamp_')]
+        brackets=[o for o in socket.children if o.name.startswith('Clip_bracket_')]
         assert len(brackets)==2
         for bracket in brackets:
             assert abs(bracket.location.z-bracket.dimensions.z/2-rail_top)<.00001
-        for o in socket.children:
-            if o.name.startswith('Clamp_head_'):
-                assert o.location.z-o.dimensions.z/2>=rail_top+.119*inch
-            if o.name.startswith('Captive_nut_'):
-                assert abs(o.location.z+o.dimensions.z/2-rail_under)<.00001
     # Each ray is one strand on the outside of a 0.6 mm cable.
     offsets=[Vector((0,0,0))]+[Vector((.00030*math.cos(i*math.pi/4),.00030*math.sin(i*math.pi/4),0)) for i in range(8)]
     shell=[o for o in scene.objects if o.type=='MESH' and not ('tether_rest' in o or o.name.startswith(('Ring_terminal_','Outlet_ferrule_','Reel_outlet_')))]
@@ -57,8 +71,8 @@ for volume in range(1,7):
             assert abs(reel.matrix_world.translation.x-roller.matrix_world.translation.x)<.001*inch
             assert roller.matrix_world.translation.z+.15*inch<reel.matrix_world.translation.z-.50*inch
             crosshead=bpy.data.objects['Crosshead_'+id]
-            bracket=next(o for o in sockets[board['index']].children if o.name.startswith('Rail_clamp_'))
-            assert crosshead.matrix_world.translation.z-crosshead.dimensions.z/2>bracket.matrix_world.translation.z+bracket.dimensions.z/2
+            bracket=next(o for o in sockets[board['index']].children if o.name.startswith('Clip_bracket_'))
+            assert crosshead.matrix_world.translation.z+crosshead.dimensions.z/2<bracket.matrix_world.translation.z-bracket.dimensions.z/2
             for moving in (crosshead,roller,reel):
                 extent=.50*inch if moving==reel else moving.dimensions.x/2
                 assert abs(moving.matrix_world.translation.x)+extent<rail_inner

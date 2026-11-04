@@ -12,7 +12,7 @@ const mode=new URLSearchParams(location.search).get('view')==='pockets'?'pockets
 const params=new URLSearchParams(location.search),vp=Number(params.get('volume')),volume=Number.isInteger(vp)&&vp>=1&&vp<=6?vp:1,belt=wave&&params.get('drive')==='belt';
 const prefix=(belt?'belt':mode)+(volume===1?'':'-volume-'+volume);
 let beltMesh,dowel,beltBase,travelDirection=1,dowelInput;
-let socketControl, socketChoice, nominalStations;
+let socketControl, socketChoice, nominalStations, socketMove;
 const sockets=[];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),I=.0254;
 let tethers,dimensions,finishes;
@@ -33,7 +33,8 @@ function showSocket(id){
  socketControl.firstChild.textContent=id+' socket ';
  socketChoice.options[0].disabled=selected===0;
  socketChoice.options[2].disabled=selected===carriers.length-1;
- socketChoice.value=String(Math.round((data.slotPositions[selected]-nominalStations[selected])/data.mechanism.socketAdjustment));
+ const desired=socketMove?.index===selected?socketMove.end:data.slotPositions[selected];
+ socketChoice.value=String(Math.round((desired-nominalStations[selected])/data.mechanism.socketAdjustment));
 }
 function setupSockets(){
  nominalStations=data.slotPositions.slice();
@@ -44,17 +45,31 @@ function setupSockets(){
  for(const [value,label] of [[-1,'Forward 1/16″'],[0,'Centered'],[1,'Back 1/16″']])socketChoice.add(new Option(label,String(value)));
  socketControl.append(socketChoice);dowelInput.closest('aside').append(socketControl);socketControl.hidden=true;
  const key='sample-room:belt-sockets:v1:'+volume;
- function setPosition(index,step){
-  const distance=nominalStations[index]+step*data.mechanism.socketAdjustment;
-  sockets[index].position.z=-distance*I;data.slotPositions[index]=distance;
- }
  function valid(step,i){return Number.isInteger(step)&&step>=-1&&step<=1&&!(i===0&&step<0)&&!(i===carriers.length-1&&step>0);}
- try{const saved=JSON.parse(localStorage.getItem(key));if(Array.isArray(saved))carriers.forEach((_,i)=>{if(valid(saved[i],i))setPosition(i,saved[i]);});}catch{}
+ const steps=nominalStations.map(()=>0);
+ try{const saved=JSON.parse(localStorage.getItem(key));if(Array.isArray(saved))carriers.forEach((_,i)=>{if(valid(saved[i],i)){steps[i]=saved[i];setSocketPosition(i,nominalStations[i]+steps[i]*data.mechanism.socketAdjustment);}});}catch{}
  socketChoice.onchange=()=>{
   const step=Number(socketChoice.value);if(!valid(step,selected))return;
-  setPosition(selected,step);select(selected);
-  try{localStorage.setItem(key,JSON.stringify(data.slotPositions.map((value,i)=>Math.round((value-nominalStations[i])/data.mechanism.socketAdjustment))));}catch{}
+  steps[selected]=step;
+  socketMove={index:selected,start:data.slotPositions[selected],end:nominalStations[selected]+step*data.mechanism.socketAdjustment,elapsed:0};
+  socketChoice.disabled=true;select(selected);
+  try{localStorage.setItem(key,JSON.stringify(steps));}catch{}
  };
+}
+function setSocketPosition(index,distance){
+ sockets[index].position.z=-distance*I;data.slotPositions[index]=distance;
+}
+function animateSocket(dt){
+ if(!socketMove)return;
+ const move=socketMove;
+ move.elapsed+=dt;
+ const t=reduced.matches?1:Math.min(1,move.elapsed/.65);
+ const release=Math.min(1,t/.3,(1-t)/.3);
+ for(const part of sockets[move.index].children){
+  if(part.userData.clip_side)part.rotation.z=-part.userData.clip_side*release*THREE.MathUtils.degToRad(40);
+ }
+ setSocketPosition(move.index,THREE.MathUtils.lerp(move.start,move.end,THREE.MathUtils.smoothstep(t,.3,.7)));
+ if(t===1){socketMove=null;socketChoice.disabled=false;}
 }
 function select(i){playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';const n=carriers.length;selected=belt?Math.max(0,Math.min(n-1,i)):((i%n)+n)%n;focusTarget=belt?selected:focusTarget+(((selected-focusTarget)%n+n*1.5)%n)-n/2;paintSelection();}
 function setOpen(value){
@@ -124,6 +139,7 @@ function reset(){camera.zoom=1;camera.position.set(...(belt?[.78,.42,.72]:wave?[
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight,a=w/h;renderer.setSize(w,h,false);const span=wave?(a<.8?.47/a:.68):(a<.8?.56/a:.60);camera.left=-span*a/2;camera.right=span*a/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();inspection?.resize();}
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
+ animateSocket(dt);
  if(!inspection.active){
   const blend=reduced.matches?1:1-Math.exp(-dt*11);
   opened=reduced.matches?target:opened+Math.sign(target-opened)*Math.min(Math.abs(target-opened),dt/1.1);
@@ -156,7 +172,7 @@ async function boot(){try{
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.65,right:.65,top:.7,bottom:-.65,near:.01,far:2});key.shadow.normalBias=.0005;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const assetVersion=belt?18:wave?12:16;
+ const assetVersion=belt?19:wave?12:16;
  const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v='+assetVersion),fetch(prefix+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
  data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.sliding_belt){beltMesh=o;beltBase=o.geometry.attributes.position.array.slice();o.frustumCulled=false;}if(o.userData.belt_control)dowel=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
  clip=gltf.animations[0];if(carriers.length!==data.materials.length||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
@@ -168,7 +184,7 @@ async function boot(){try{
  $('lidToggle').onclick=()=>setOpen(!target);$('prev').onclick=()=>{select(selected-1);hovered=data.materials[selected].id;};$('next').onclick=()=>{select(selected+1);hovered=data.materials[selected].id;};$('pickCurrent').onclick=()=>pick(data.materials[selected].id);
  $('mechanismToggle').hidden=!wave;$('motionToggle').hidden=!wave;$('mechanismNotes').hidden=!wave;
  if(belt){if(!beltMesh||!dowel)throw Error('Missing belt mechanism');$('mechanismToggle').setAttribute('aria-label','Show belt and dowel cutaway');$('motionToggle').setAttribute('aria-label','Run sliding dowel demonstration');$('studyDescription').textContent='Drag the wooden grip along the slot on the right side. Each sample has a reel directly beneath its slot. Lift and flip the sample to see the cord pay out through the carriage.';$('mechanismNotes').textContent=data.mechanism.note;dowelInput=document.querySelector('#dowelPosition');dowelInput.max=carriers.length-1;bindSidePull();document.querySelector('#caseFooter .hint').textContent='Drag side grip to browse · Click sample to lift';dowelInput.oninput=()=>{playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';focusTarget=Number(dowelInput.value);selected=Math.round(focusTarget);paintSelection();setOpen(true);};}
- if(belt){setupSockets();$('studyDescription').textContent='The gray brackets ride on rails underneath them. Each screw tightens from above into a captive nut. Open the cutaway and select a material to adjust its socket.';}
+ if(belt){setupSockets();$('studyDescription').textContent='The gray brackets snap onto rails near the drawer rim. In the cutaway, change a socket position to see its teal clips release, slide and catch the next notch.';}
  if(!wave)$('studyDescription').textContent=`Three rows of six pockets. ${carriers.length} filled · ${data.pockets-carriers.length} open. Lift any sample to inspect its reverse.`;
  document.querySelector('#about dd').textContent=carriers.length;
  if(volume>1){document.querySelector('#about dl dt:last-of-type').textContent='Known thicknesses';document.querySelector('#about dl dd:last-of-type').textContent='Preserved · unknown values use a 0.02″ display proxy';}
