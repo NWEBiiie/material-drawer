@@ -39,7 +39,7 @@ function showSocket(id){
  const clamp=clamps[selected];
  clampChoice.checked=clamp.tight;
  clampChoice.disabled=Boolean(socketMove)||!target;
- clampChoice.setAttribute('aria-label','Tighten side screws for '+id);
+ clampChoice.setAttribute('aria-label','Tighten side bolts for '+id);
  socketChoice.disabled=!target||Boolean(socketMove)||clamp.tight||clamp.turn>0;
 }
 function toggleClamp(index){
@@ -55,16 +55,16 @@ function setupSockets(){
  if(sockets.filter(Boolean).length!==carriers.length)throw Error('Incomplete drawer sockets');
  let savedClamps=[];try{const saved=JSON.parse(localStorage.getItem(clampKey));if(Array.isArray(saved))savedClamps=saved;}catch{}
  for(const [i,socket] of sockets.entries()){
-  const screws=socket.children.filter(o=>o.userData.thumbwheel_side).map(o=>({part:o,looseX:o.position.x}));
-  if(screws.length!==2)throw Error('Missing side thumbscrew');
+  const screws=socket.children.filter(o=>o.userData.bolt_side).map(o=>({part:o,looseX:o.position.x}));
+  if(screws.length!==2)throw Error('Missing panel bolt');
   clamps.push({screws,tight:savedClamps.includes(carriers[i].userData.material_id),turn:0});
  }
  socketControl=document.createElement('label');socketControl.append(document.createTextNode('Socket '));
- socketChoice=document.createElement('select');socketChoice.setAttribute('aria-label','Selected socket rail position');
+ socketChoice=document.createElement('select');socketChoice.setAttribute('aria-label','Holder position in the panel slots');
  for(const [value,label] of [[-1,'Forward 1/16″'],[0,'Centered'],[1,'Back 1/16″']])socketChoice.add(new Option(label,String(value)));
  socketControl.append(socketChoice);dowelInput.closest('aside').append(socketControl);socketControl.hidden=true;
  const label=document.createElement('label');clampChoice=document.createElement('input');clampChoice.type='checkbox';
- label.append(clampChoice,document.createTextNode(' Tighten side screws'));socketControl.after(label);
+ label.append(clampChoice,document.createTextNode(' Tighten side bolts'));socketControl.after(label);
  clampChoice.onchange=()=>toggleClamp(selected);
  const key='sample-room:belt-sockets:v1:'+volume;
  function valid(step,i){return Number.isInteger(step)&&step>=-1&&step<=1&&!(i===0&&step<0)&&!(i===carriers.length-1&&step>0);}
@@ -86,7 +86,7 @@ function animateSocket(dt){
   const goal=Number(clamp.tight);if(clamp.turn===goal)continue;
   clamp.turn+=Math.sign(goal-clamp.turn)*Math.min(Math.abs(goal-clamp.turn),reduced.matches?1:dt*3);
   for(const {part,looseX} of clamp.screws){
-   const side=part.userData.thumbwheel_side;
+   const side=part.userData.bolt_side;
    part.position.x=looseX-side*clamp.turn*data.mechanism.screwTravel*I;
    part.rotation.x=-side*clamp.turn*Math.PI*1.5;
   }
@@ -132,7 +132,7 @@ function details(id){
 function hit(e){
  const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);ray.setFromCamera(pointer,camera);
  const first=ray.intersectObject(model,true).find(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});if(!first)return null;
- let o=first.object;while(o){if(o.userData.thumbwheel_side&&opened>.999)return {clamp:o.parent.userData.socket_index};if(o.userData.side_pull)return {sidePull:first.point};if(o.userData.material_id&&opened>.999)return {id:o.userData.material_id};if(o.userData.wave_shaft||o.userData.belt_control)return {drive:true};if(o===moving)return {moving:true};o=o.parent;}return null;
+ let o=first.object;while(o){if(o.userData.bolt_side&&opened>.999)return {clamp:o.parent.userData.socket_index};if(o.userData.side_pull)return {sidePull:first.point};if(o.userData.material_id&&opened>.999)return {id:o.userData.material_id};if(o.userData.wave_shaft||o.userData.belt_control)return {drive:true};if(o===moving)return {moving:true};o=o.parent;}return null;
 }
 function bindSidePull(){
  const plane=new THREE.Plane(),point=new THREE.Vector3(),normal=new THREE.Vector3(1,0,0);
@@ -201,7 +201,7 @@ async function boot(){try{
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.65,right:.65,top:.7,bottom:-.65,near:.01,far:2});key.shadow.normalBias=.0005;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const assetVersion=belt?21:wave?12:16;
+ const assetVersion=belt?22:wave?12:16;
  const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v='+assetVersion),fetch(prefix+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
  data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.sliding_belt){beltMesh=o;beltBase=o.geometry.attributes.position.array.slice();o.frustumCulled=false;}if(o.userData.belt_control)dowel=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
  clip=gltf.animations[0];if(carriers.length!==data.materials.length||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
@@ -213,7 +213,7 @@ async function boot(){try{
  $('lidToggle').onclick=()=>setOpen(!target);$('prev').onclick=()=>{select(selected-1);hovered=data.materials[selected].id;};$('next').onclick=()=>{select(selected+1);hovered=data.materials[selected].id;};$('pickCurrent').onclick=()=>pick(data.materials[selected].id);
  $('mechanismToggle').hidden=!wave;$('motionToggle').hidden=!wave;$('mechanismNotes').hidden=!wave;
  if(belt){if(!beltMesh||!dowel)throw Error('Missing belt mechanism');$('mechanismToggle').setAttribute('aria-label','Show belt and dowel cutaway');$('motionToggle').setAttribute('aria-label','Run sliding dowel demonstration');$('studyDescription').textContent='Drag the wooden grip along the slot on the right side. Each sample has a reel directly beneath its slot. Lift and flip the sample to see the cord pay out through the carriage.';$('mechanismNotes').textContent=data.mechanism.note;dowelInput=document.querySelector('#dowelPosition');dowelInput.max=carriers.length-1;bindSidePull();document.querySelector('#caseFooter .hint').textContent='Drag side grip to browse · Click sample to lift';dowelInput.oninput=()=>{playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';focusTarget=Number(dowelInput.value);selected=Math.round(focusTarget);paintSelection();setOpen(true);};}
- if(belt){setupSockets();$('studyDescription').textContent='The teal hooks hang directly on the blue panels. Click a brass thumbwheel or use Tighten side screws to lock the selected holder. Loosen it to slide it in the cutaway.';}
+ if(belt){setupSockets();$('studyDescription').textContent='Each gray holder bolts through the slots at the top of the blue panels. Loosen its side bolts to adjust its position in the cutaway.';}
  if(!wave)$('studyDescription').textContent=`Three rows of six pockets. ${carriers.length} filled · ${data.pockets-carriers.length} open. Lift any sample to inspect its reverse.`;
  document.querySelector('#about dd').textContent=carriers.length;
  if(volume>1){document.querySelector('#about dl dt:last-of-type').textContent='Known thicknesses';document.querySelector('#about dl dd:last-of-type').textContent='Preserved · unknown values use a 0.02″ display proxy';}

@@ -16,8 +16,8 @@ def material(name,color,metal=0):
     return m
 def box(name,xyz,dims,mat,parent):
     bpy.ops.mesh.primitive_cube_add(size=1);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.dimensions=[n*I for n in dims];bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat);return o
-def cylinder(name,xyz,r,depth,mat,parent):
-    bpy.ops.mesh.primitive_cylinder_add(vertices=40,radius=r*I,depth=depth*I);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.rotation_euler.y=math.pi/2;o.data.materials.append(mat);return o
+def cylinder(name,xyz,r,depth,mat,parent,vertices=40):
+    bpy.ops.mesh.primitive_cylinder_add(vertices=vertices,radius=r*I,depth=depth*I);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.rotation_euler.y=math.pi/2;o.data.materials.append(mat);return o
 
 def aperture(part,tool):
     bpy.context.view_layer.update()
@@ -58,49 +58,41 @@ def under_sample_reel(board,reel,steel):
 INDEX_STEP=1/16
 SCREW_TRAVEL=.012
 
-def panel_hook(key,side,fixture,edge,finish,metal,pad):
+BOLT_RADIUS=.0625
+SLOT_RADIUS=.078125
+BOLT_DROP=.285
+
+def panel_bolt(key,side,fixture,edge,steel,fastener):
     inner,outer,top=edge
-    # A bent strap bears on the binding and returns down both panel faces.
-    jaw_inner=outer+.019
-    jaw_outer=jaw_inner+.030
-    width=.33
-    box('Panel_hook_crown_'+key,(side*(inner-.06+jaw_outer)/2,0,top+.032),
-        (jaw_outer-inner+.06,width,.064),finish,fixture)
-    box('Panel_hook_inner_'+key,(side*(inner-.043),0,top-.165),(.034,width,.33),finish,fixture)
-    box('Hook_lining_'+key,(side*(inner-.013),0,top-.215),(.026,width,.21),pad,fixture)
-    z=top-.245
-    cheek=box('Panel_hook_outer_'+key,(side*(jaw_inner+jaw_outer)/2,0,top-.19),
-              (jaw_outer-jaw_inner,width,.38),finish,fixture)
-    bore=cylinder('Side screw bore',(side*(jaw_inner+jaw_outer)/2,0,z),.032,.09,metal,fixture)
-    aperture(cheek,bore);bpy.data.objects.remove(bore,do_unlink=True)
+    z=top-BOLT_DROP
+    # The flat hanger folds over the rim. A bolt passes through the hanger
+    # and the long panel slot into a hex nut on the inner face.
+    cheek=.028
+    box('Hanger_crown_'+key,(side*(inner-.06+outer+cheek)/2,0,top+.032),
+        (outer+cheek-inner+.06,.34,.064),steel,fixture)
+    plate=box('Hanger_plate_'+key,(side*(outer+cheek/2),0,top-.22),
+              (cheek,.34,.44),steel,fixture)
+    washer=cylinder('Side_washer_'+key,(side*(outer+cheek+.007),0,z),.138,.014,fastener,fixture)
+    nut=cylinder('Captive_hex_nut_'+key,(side*(inner-.045),0,z),.136,.09,fastener,fixture,6)
+    bore=cylinder('Fastener bore',(side*(outer+inner)/2,0,z),BOLT_RADIUS+.001,.60,steel,fixture)
+    for part in (plate,washer,nut):
+        aperture(part,bore)
+    bpy.data.objects.remove(bore,do_unlink=True)
 
-    # The wide wheel is turned at its scalloped edge. Both wheel and shoe
-    # stay inside the sleeve even when fully backed off.
-    screw=bpy.data.objects.new('Side_thumbscrew_'+key,None)
-    bpy.context.scene.collection.objects.link(screw);screw.parent=fixture
-    screw.location=(side*(outer+SCREW_TRAVEL)*I,0,z*I)
-    screw['thumbwheel_side']=side
-    cylinder('Pressure_pad_'+key,(side*.003,0,0),.088,.006,pad,screw)
-    cylinder('Thumbwheel_shank_'+key,(side*.030,0,0),.030,.051,metal,screw)
-    verts=[];faces=[];n=72
-    for x in [.055,.083]:
-        for i in range(n):
-            a=math.tau*i/n;r=.165+.014*math.cos(12*a)
-            verts.append((side*x*I,r*math.cos(a)*I,r*math.sin(a)*I))
-    faces=[tuple(reversed(range(n))),tuple(range(n,2*n))]
-    faces.extend((i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n))
-    if side<0:faces=[tuple(reversed(face)) for face in faces]
-    mesh=bpy.data.meshes.new('Scalloped thumbwheel');mesh.from_pydata(verts,[],faces);mesh.update()
-    head=bpy.data.objects.new('Thumbwheel_head_'+key,mesh);bpy.context.scene.collection.objects.link(head)
-    head.parent=screw;mesh.materials.append(metal)
-    box('Thumbwheel_mark_'+key,(side*.084,.076,0),(.002,.095,.014),pad,screw)
+    bolt=bpy.data.objects.new('Side_bolt_'+key,None)
+    bpy.context.scene.collection.objects.link(bolt);bolt.parent=fixture
+    bolt.location=(side*(outer+cheek+.014+SCREW_TRAVEL)*I,0,z*I)
+    bolt['bolt_side']=side
+    length=outer-inner+cheek+.014+.12
+    cylinder('Bolt_shank_'+key,(-side*length/2,0,0),BOLT_RADIUS,length,fastener,bolt)
+    cylinder('Hex_bolt_head_'+key,(side*.022,0,0),.127,.044,fastener,bolt,6)
 
-def install_socket(board,drawer,steel,magnet,clip_finish,wheel_finish,panel_edges):
+def install_socket(board,drawer,steel,magnet,fastener,panel_edges):
     key=board['material_id'];index=board['index'];follower=board.parent;station=follower.location.y/I
     fixture=bpy.data.objects.new('Adjustable_socket_'+key,None)
     bpy.context.scene.collection.objects.link(fixture);fixture.parent=drawer
     fixture.location.y=station*I;fixture['socket_index']=index
-    # Each pair of guides hangs from the clip-on brackets near the drawer rim.
+    # Each pair of guides hangs from the bolted brackets near the drawer rim.
     anchors=[o for o in drawer.children if o.name.split('.')[0]=='Guide_anchor_'+key]
     for o in anchors:bpy.data.objects.remove(o,do_unlink=True)
     pins=[o for o in drawer.children if o.name.split('.')[0]=='Guide_pin_'+key]
@@ -112,7 +104,7 @@ def install_socket(board,drawer,steel,magnet,clip_finish,wheel_finish,panel_edge
     for side in [-1,1]:
         inner,_,top=panel_edges[side]
         box('Clip_bracket_'+key,(side*(1.24+inner-.055)/2,0,top+.032),(inner-.055-1.24,.26,.064),steel,fixture)
-        panel_hook(key,side,fixture,panel_edges[side],clip_finish,wheel_finish,magnet)
+        panel_bolt(key,side,fixture,panel_edges[side],steel,fastener)
         # Load travels around the reel, via the fork and the two cheeks.
         box('Socket_yoke_'+key,(side*.61,0,2.29),(.085,.15,1.40),steel,follower)
         # Magnetic contact at the bottom edge of the removable card.
@@ -136,11 +128,8 @@ def socket_outline(start,end,radius,z):
             points.append((center+radius*math.cos(a),z+radius*math.sin(a)))
     return points
 
-def cut_side_socket(panel,seams,start,end,z,open_front,trim):
-    radius=.28
-    path=socket_outline(start,end,radius,z)
+def slot_cutter(panel,path,xs):
     n=len(path)
-    xs=[1.75,2.85]
     mesh=bpy.data.meshes.new('Side slot tool')
     verts=[(x*I,y*I,h*I) for x in xs for y,h in path]
     faces=[tuple(reversed(range(n))),tuple(range(n,2*n))]
@@ -148,6 +137,12 @@ def cut_side_socket(panel,seams,start,end,z,open_front,trim):
     mesh.from_pydata(verts,[],faces);mesh.update()
     cutter=bpy.data.objects.new('Side slot tool',mesh);bpy.context.scene.collection.objects.link(cutter)
     cutter.parent=panel.parent
+    return cutter
+
+def cut_side_socket(panel,seams,start,end,z,open_front,trim):
+    radius=.28
+    path=socket_outline(start,end,radius,z)
+    cutter=slot_cutter(panel,path,[1.75,2.85])
     for obj in [panel,*seams]:
         bpy.ops.object.select_all(action='DESELECT');obj.select_set(True)
         bpy.context.view_layer.objects.active=obj
@@ -186,8 +181,7 @@ for v in range(1,7):
             else:o.rotation_euler=(0,math.pi/2,0)
     stripmat=material('Flexible blue belt',(.015,.13,.29));wood=material('Sliding beech dowel',(.62,.44,.25));steel=material('Guide track',(.26,.30,.33),.65)
     magnet=material('Dark magnetic steel',(.075,.09,.105),.8)
-    clip_finish=material('Teal spring clips',(.045,.38,.47),.45)
-    wheel_finish=material('Brass thumbwheels',(.67,.41,.13),.65)
+    fastener=material('Stainless steel fasteners',(.60,.65,.69),.80)
     panel_edges={}
     for panel in (o for o in drawer.children if o.name.startswith('Drawer_side')):
         side=1 if panel.location.x>0 else -1
@@ -195,11 +189,15 @@ for v in range(1,7):
         edge_top=max(p.z for p in rim_points if side*p.x>0)/I
         x=abs(panel.location.x)/I;half=panel.dimensions.x/(2*I)
         panel_edges[side]=(x-half,x+half,edge_top)
+        path=socket_outline(slots[0]-.18,slots[-1]+.18,SLOT_RADIUS,edge_top-BOLT_DROP)
+        cutter=slot_cutter(panel,path,sorted([side*(x-half-.08),side*(x+half+.08)]))
+        aperture(panel,cutter);bpy.data.objects.remove(cutter,do_unlink=True)
+        panel['holder_bolt_slot']=True
     for rim in (o for o in drawer.children if o.name.startswith('Drawer_sewn_rim') and 'cutaway' in o):
         del rim['cutaway']
     for board in [o for o in scene.objects if o.get('material_id')]:
         under_sample_reel(board,bpy.data.objects['Tether_reel_'+board['material_id']],steel)
-        install_socket(board,drawer,steel,magnet,clip_finish,wheel_finish,panel_edges)
+        install_socket(board,drawer,steel,magnet,fastener,panel_edges)
     # Four vertices at each station form a solid ribbon. Use identical topology
     # for the native shape-key animation and the browser's continuous motion.
     segments=192;verts=[];faces=[]
@@ -260,7 +258,7 @@ for v in range(1,7):
     data['slotPositions']=slots;data['alternativeTo']=source+'-model.glb'
     data['mechanism']['socketAdjustment']=INDEX_STEP
     data['mechanism']['screwTravel']=SCREW_TRAVEL
-    data['mechanism']['note']='Each U-hook rests on the sewn top edge of the blue drawer panel. The outside thumbwheels are optional. Tighten them to press the pads against the panel and lock the holder. Loosen them to reposition it.'
+    data['mechanism']['note']='Each gray holder bolts through a horizontal slot near the top of both blue panels. Loosen the two side bolts to reposition the holder, then tighten them against the washers and inside nuts.'
     scene.frame_set(96);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(prefix+'-model.blend')));scene.frame_set(0)
     bpy.ops.export_scene.gltf(filepath=str(ROOT/(prefix+'-model.glb')),export_format='GLB',export_animations=True,export_extras=True,export_apply=True,export_cameras=False,export_lights=False,export_frame_range=True,export_force_sampling=True,export_animation_mode='SCENE',export_anim_scene_split_object=False)
     (ROOT/(prefix+'-data.json')).write_text(json.dumps(data,separators=(',',':')))
