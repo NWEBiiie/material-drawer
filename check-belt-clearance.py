@@ -13,6 +13,13 @@ for volume in range(1,7):
         return {obj[tag]:obj for obj in scene.objects if tag in obj}
     anchors,guides,ends,boards,reels=map(indexed,('tether_anchor','tether_guide','tether_end','material_id','tether_reel'))
     assert all(set(group)==set(ids) for group in (anchors,guides,ends,boards,reels))
+    sockets=indexed('socket_index')
+    assert len(sockets)==len(ids)
+    for key in ids:
+        socket=sockets[boards[key]['index']]
+        assert len([o for o in socket.children if o.name.startswith('Clamp_screw_')])==2
+        assert len([o for o in boards[key].children if o.name.startswith('Card_keeper_')])==2
+        assert reels[key].parent==boards[key].parent
     # Each ray is one strand on the outside of a 0.6 mm cable.
     offsets=[Vector((0,0,0))]+[Vector((.00030*math.cos(i*math.pi/4),.00030*math.sin(i*math.pi/4),0)) for i in range(8)]
     shell=[o for o in scene.objects if o.type=='MESH' and not ('tether_rest' in o or o.name.startswith(('Ring_terminal_','Outlet_ferrule_','Reel_outlet_')))]
@@ -32,7 +39,9 @@ for volume in range(1,7):
             assert a.z<b.z<c.z and max((a-b).xy.length,(a-c).xy.length)<.00001,(prefix,id,frame,a,b,c)
             assert (a-c).length+boards[id]['extraction_distance']<.55
             reel=reels[id];board=boards[id]
-            assert abs(reel.matrix_world.translation.x-board.matrix_world.translation.x)<.925*inch
+            roller=bpy.data.objects['Roller_'+id]
+            assert abs(reel.matrix_world.translation.x-roller.matrix_world.translation.x)<.001*inch
+            assert roller.matrix_world.translation.z+.15*inch<reel.matrix_world.translation.z-.50*inch
             assert reel.matrix_world.translation.z+(.575*inch)<board.matrix_world.translation.z-1.05*inch
             # Check the path up through the empty slot as well as the parked cord.
             for o,lo,hi in meshes:

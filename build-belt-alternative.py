@@ -6,7 +6,7 @@ This is a motion study; strip material, tension and fatigue need prototyping.
 import bpy, math, json, sys, pathlib
 from mathutils import Euler
 ROOT=pathlib.Path(sys.argv[sys.argv.index('--')+1]).resolve(); I=.0254
-START,END,TOP,THICK,RISE,HALF=-6.05,6.05,2.35,.06,1.,1.8
+START,END,TOP,THICK,RISE,HALF=-6.05,6.05,1.10,.06,1.,1.8
 def height(y,c):
     width=min(HALF,c-START if y<c else END-c)
     return .5*RISE*(1+math.cos(math.pi*(y-c)/width)) if width>0 and abs(y-c)<width else 0
@@ -30,13 +30,13 @@ def under_sample_reel(board,reel,steel):
     # The disk lies across the width of the drawer. Only its thickness uses
     # row pitch. Its outlet, fairlead and terminal share one vertical axis.
     key=board['material_id'];follower=board.parent
-    x,offset=-.78,.061
-    y=follower.location.y/I+offset
-    reel.location=(x*I,y*I,1.35*I)
+    x,offset=0,.061
+    reel.parent=follower
+    reel.location=(0,offset*I,2.22*I)
     reel.rotation_quaternion=Euler((-math.pi/2,0,0)).to_quaternion()
     mount=bpy.data.objects['Reel_mount_'+key]
-    mount.location=(x*I,(y-.195)*I,1.20*I)
-    mount.dimensions=(.73*I,.05*I,1.44*I)
+    mount.parent=follower;mount.location=(0,(offset-.195)*I,2.18*I)
+    mount.dimensions=(1.23*I,.05*I,1.12*I)
     adapter=bpy.data.objects['Tether_adapter_'+key]
     adapter.location=(x*I,-1.105*I,-offset*I);adapter.rotation_euler.z=0
     # The saddle sits flush on the back of the card; the eyelet hangs below it.
@@ -54,6 +54,35 @@ def under_sample_reel(board,reel,steel):
     plate=box('Fairlead_plate_'+key,(x,.015,2.956),(.36,.23,.03),steel,follower)
     bore=cylinder('Fairlead bore',(x,offset,2.956),.040,.14,steel,follower)
     bore.rotation_euler.y=0;aperture(plate,bore);bpy.data.objects.remove(bore,do_unlink=True)
+
+def install_socket(board,drawer,steel,magnet):
+    key=board['material_id'];index=board['index'];follower=board.parent;station=follower.location.y/I
+    fixture=bpy.data.objects.new('Adjustable_socket_'+key,None)
+    bpy.context.scene.collection.objects.link(fixture);fixture.parent=drawer
+    fixture.location.y=station*I;fixture['socket_index']=index
+    # These two stations clamp the vertical guides to slotted rails on the drawer.
+    anchors=[o for o in drawer.children if o.name.split('.')[0] in ('Guide_anchor_'+key,'Guide_pin_'+key)]
+    for o in anchors:o.parent=fixture;o.location.y-=station*I
+    for side in [-1,1]:
+        x=side*1.86
+        block=box('Rail_clamp_'+key,(x,0,4.68),(.32,.29,.12),steel,fixture)
+        screw=cylinder('Clamp_screw_'+key,(x,0,4.70),.041,.34,magnet,fixture);screw.rotation_euler.y=0
+        head=cylinder('Clamp_head_'+key,(x,0,4.87),.085,.052,steel,fixture);head.rotation_euler.y=0
+        box('Screw_drive_'+key,(x,0,4.898),(.105,.017,.004),magnet,fixture)
+        box('Captive_nut_'+key,(x,0,4.77),(.16,.19,.045),steel,fixture)
+        # Load travels around the reel, via the fork and the two cheeks.
+        box('Socket_yoke_'+key,(side*.61,0,2.29),(.085,.15,1.40),steel,follower)
+        # Magnetic contact at the bottom edge of the removable card.
+        mx=side*.72
+        for parent,z,name,part in [(follower,3.151,'Seat_magnet_',bpy.data.objects['Sample_seat_'+key]),
+                                   (board,-1.031,'Card_keeper_',bpy.data.objects['Acrylic_carrier_'+key])]:
+            xyz=(mx,0,z) if parent==follower else (mx,z,0)
+            dims=(.21,.060,.038) if parent==follower else (.21,.038,.060)
+            tool=box('Magnet recess',xyz,tuple(n+.002 for n in dims),steel,parent)
+            aperture(part,tool);bpy.data.objects.remove(tool,do_unlink=True)
+            box(name+key,xyz,dims,magnet,parent)
+    box('Fork_bridge_'+key,(0,0,1.625),(1.30,.15,.08),steel,follower)
+    bpy.data.objects.remove(bpy.data.objects['Pushrod_'+key],do_unlink=True)
 
 def socket_outline(start,end,radius,z):
     # Counterclockwise obround in the side panel's Y/Z plane.
@@ -108,11 +137,20 @@ for v in range(1,7):
     followers=sorted([o for o in scene.objects if 'wave_follower' in o],key=lambda o:o['wave_follower'])
     for o in followers:o.animation_data_clear();o.location.z=0
     for o in scene.objects:
-        if o.name.startswith(('Roller_','Roller_axle_')) and not o.name.startswith('Roller_fork_'):o.rotation_euler=(0,math.pi/2,0)
-        if o.name.startswith('Roller_fork_'):o.location.x=o.location.y;o.location.y=0;o.rotation_euler.z=math.pi/2
+        if o.name.startswith('Roller_'):
+            o.location.z-=(2.35-TOP)*I
+            if o.name.startswith('Roller_fork_'):o.location.x=o.location.y;o.location.y=0;o.rotation_euler.z=math.pi/2
+            else:o.rotation_euler=(0,math.pi/2,0)
     stripmat=material('Flexible blue belt',(.015,.13,.29));wood=material('Sliding beech dowel',(.62,.44,.25));steel=material('Guide track',(.26,.30,.33),.65)
+    magnet=material('Dark magnetic steel',(.075,.09,.105),.8)
+    for side in [-1,1]:
+        # Lower rail is the clamp's bearing face. A captive nut slides under the two lips.
+        for xx in [1.748,1.972]:
+            box('Socket_rail_lip',(side*xx,0,4.81),(.14,12.12,.055),steel,drawer)
+        box('Socket_rail_back',(side*2.045,0,4.74),(.055,12.12,.27),steel,drawer)
     for board in [o for o in scene.objects if o.get('material_id')]:
         under_sample_reel(board,bpy.data.objects['Tether_reel_'+board['material_id']],steel)
+        install_socket(board,drawer,steel,magnet)
     # Four vertices at each station form a solid ribbon. Use identical topology
     # for the native shape-key animation and the browser's continuous motion.
     segments=192;verts=[];faces=[]
@@ -138,16 +176,16 @@ for v in range(1,7):
     cut_side_socket(right_panel,[],slots[0],slots[-1],axle_z,False,trim)
     cut_side_socket(sleeve,seams,-7.0,slots[-1],axle_z,True,trim)
     # The axle starts at its inboard bearing, beyond the entire tether lane.
-    cylinder('Transverse_wooden_dowel',(1.05,0,axle_z),.15,3.20,wood,handle)
+    cylinder('Transverse_wooden_dowel',(.52,0,axle_z),.15,4.26,wood,handle)
     pull=cylinder('Exterior_thumb_pull',(2.75,0,axle_z),.44,.22,wood,handle)
     bevel=pull.modifiers.new('Rounded thumb grip','BEVEL');bevel.width=.045*I;bevel.segments=3
     pull.modifiers.new('Grip normals','WEIGHTED_NORMAL');pull['side_pull']=True
     for y in [START,END]:box('Fixed_belt_clamp',(0,y,TOP),(.96,.16,.16),steel,drawer)
-    for x in [-.48,2.06]:
+    for x in [-1.55,2.06]:
         # An open track holds the dowel axis and leaves a visible travel slot.
         for z in [TOP+RISE-THICK-.15-.23,TOP+RISE-THICK-.15+.23]:box('Dowel_guide',(x,0,z),(.12,12.15,.12),steel,drawer)
     for y in [-5.99,5.99]:
-        box('Inboard_guide_end_bracket',(-1.27,y,axle_z),(1.70,.12,.58),steel,drawer)
+        box('Inboard_guide_end_bracket',(-1.83,y,axle_z),(.66,.12,.58),steel,drawer)
     scene.frame_end=240
     for frame in range(0,241,4):
         phase=max(0,(frame-48)/192);q=(1-abs(2*phase-1))*24;c=slots[0]+(slots[-1]-slots[0])*q/24
@@ -155,17 +193,24 @@ for v in range(1,7):
         for k,key in enumerate(poses):key.value=max(0,1-abs(q-k));key.keyframe_insert(data_path='value',frame=frame)
         for f,y in zip(followers,slots):f.location.z=height(y,c)*I;f.keyframe_insert(data_path='location',frame=frame)
     # Re-bake existing cables against the new follower motion for Blender too.
+    def by_tag(tag):return {o[tag]:o for o in scene.objects if tag in o}
+    anchors,guides,ends=[by_tag(tag) for tag in ('tether_anchor','tether_guide','tether_end')]
+    strands={key:[] for key in anchors}
+    for o in scene.objects:
+        if 'tether_rest' in o:strands[o['tether_rest']].append(o)
+    for wires in strands.values():wires.sort(key=lambda o:o.name)
     for frame in range(0,241,2):
         scene.frame_set(frame);bpy.context.view_layer.update()
-        for sample in data['materials']:
-            id=sample['id'];anchor=next(o for o in scene.objects if o.get('tether_anchor')==id);guide=next(o for o in scene.objects if o.get('tether_guide')==id);end=next(o for o in scene.objects if o.get('tether_end')==id)
-            wires=sorted([o for o in scene.objects if o.get('tether_rest')==id],key=lambda o:o.name);inv=wires[0].parent.matrix_world.inverted();a=inv@anchor.matrix_world.translation;b=inv@guide.matrix_world.translation;c=inv@end.matrix_world.translation;mid=(b+c)/2;mid.z-=min(.0015,(c-b).length*.05)
+        for id,wires in strands.items():
+            inv=wires[0].parent.matrix_world.inverted();a=inv@anchors[id].matrix_world.translation;b=inv@guides[id].matrix_world.translation;c=inv@ends[id].matrix_world.translation;mid=(b+c)/2;mid.z-=min(.0015,(c-b).length*.05)
             points=[a,b,mid,c]
             for o,p,q in zip(wires,points,points[1:]):
                 delta=q-p;o.location=(p+q)/2;o.rotation_mode='QUATERNION';o.rotation_quaternion=delta.to_track_quat('Z','Y');o.scale=(1,1,max(delta.length,.00001))
                 for prop in ['location','rotation_quaternion','scale']:o.keyframe_insert(data_path=prop,frame=frame)
     data['mechanism']={'type':'sliding-dowel-belt','drive':'translating dowel','beltStart':START,'beltEnd':END,'beltTop':TOP,'beltThickness':THICK,'stroke':RISE,'halfWidth':HALF,'dowelDiameter':.3,'slotPositions':slots,'note':'Concept from your sketch. Fixed-end flexible strip with a sliding transverse dowel. Belt compliance, tension, loads and fatigue require physical prototyping.'}
     data['slotPositions']=slots;data['alternativeTo']=source+'-model.glb'
+    data['mechanism']['socketAdjustment']=.0625
+    data['mechanism']['note']='Each roller carries a reel directly below its magnetic sample socket. Loosen the two rail clamps to shift the holder along the drawer, then lock it again. Magnet strength, clamping force and belt tension need a physical prototype.'
     scene.frame_set(96);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(prefix+'-model.blend')));scene.frame_set(0)
     bpy.ops.export_scene.gltf(filepath=str(ROOT/(prefix+'-model.glb')),export_format='GLB',export_animations=True,export_extras=True,export_apply=True,export_cameras=False,export_lights=False,export_frame_range=True,export_force_sampling=True,export_animation_mode='SCENE',export_anim_scene_split_object=False)
     (ROOT/(prefix+'-data.json')).write_text(json.dumps(data,separators=(',',':')))
