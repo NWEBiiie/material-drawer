@@ -20,7 +20,14 @@ for volume in range(1,7):
     rail_top=max(o.location.z+o.dimensions.z/2 for o in rails)
     rail_under=min(o.location.z-o.dimensions.z/2 for o in rails)
     rail_inner=min(abs(o.location.x)-o.dimensions.x/2 for o in rails)
-    assert abs(rail_top/inch-4.43)<.0001
+    rail_outer=max(abs(o.location.x)+o.dimensions.x/2 for o in rails)
+    assert abs(rail_top/inch-5.75)<.0001
+    posts=[o for o in scene.objects if o.name.startswith('Rim_upright')]
+    assert len(posts)==6 and all(abs(o.location.z+o.dimensions.z/2-rail_under)<.00001 for o in posts)
+    sleeve=next(o for o in scene.objects if o.name.startswith('Cabinet_side') and o.location.x>0)
+    sleeve_inside=sleeve.location.x-sleeve.dimensions.x/2
+    lid=next(o for o in scene.objects if o.name.startswith('Cabinet_top'))
+    ceiling=lid.location.z-lid.dimensions.z/2
     assert not any(o.name.startswith(('Clamp_screw_','Captive_nut_','Clamp_head_')) for o in scene.objects)
     ribs=[o for o in scene.objects if o.name.startswith('Clip_index_rib') and o.location.x>0]
     gaps=sorted((o.location.y-o.dimensions.y/2,o.location.y+o.dimensions.y/2) for o in ribs)
@@ -33,9 +40,17 @@ for volume in range(1,7):
             # The narrow tooth clears the ledge but catches the indexing ribs.
             tooth=[v.co for v in clip.data.vertices if abs(abs(v.co.y)/inch-.015)<.0001]
             assert tooth and rib_bottom<clip.location.z+max(v.z for v in tooth)<rail_under
-            assert max(abs(clip.location.x+v.x) for v in tooth)>rail_inner+.03*inch
-            angle=math.radians(40)*clip['clip_side']
-            assert max(abs(clip.location.x+v.co.x*math.cos(angle)+v.co.z*math.sin(angle)) for v in clip.data.vertices)<rail_inner
+            assert min(abs(clip.location.x+v.x) for v in tooth)<rail_outer-.03*inch
+            angle=-math.radians(data['mechanism']['clipReleaseDegrees'])*clip['clip_side']
+            for step in range(13):
+                a=angle*step/12
+                for v in clip.data.vertices:
+                    x=abs(clip.location.x+v.co.x*math.cos(a)+v.co.z*math.sin(a))
+                    z=clip.location.z-v.co.x*math.sin(a)+v.co.z*math.cos(a)
+                    assert x<sleeve_inside and z<ceiling,(key,'casing clearance')
+                    if rail_under+.00001<z<rail_top-.00001:assert x>rail_outer,(key,'rim collision')
+                    if step==12 and z<rail_top:assert x>rail_outer+.01*inch,(key,'release clearance')
+            assert clip.location.z+max(v.co.z for v in clip.data.vertices)>rail_top+.35*inch
         for step in (-1,0,1):
             if index+step<0 or index+step>=len(ids):continue
             center=socket.location.y+step*data['mechanism']['socketAdjustment']*inch
@@ -46,8 +61,15 @@ for volume in range(1,7):
         assert reels[key].parent==boards[key].parent
         brackets=[o for o in socket.children if o.name.startswith('Clip_bracket_')]
         assert len(brackets)==2
-        for bracket in brackets:
-            assert abs(bracket.location.z-bracket.dimensions.z/2-rail_top)<.00001
+        saddles=[o for o in socket.children if o.name.startswith('Clip_saddle_')]
+        pins=[o for o in socket.children if o.name.startswith('Guide_pin_')]
+        assert len(saddles)==len(pins)==2
+        for saddle in saddles:
+            assert abs(saddle.location.z-saddle.dimensions.z/2-rail_top)<.00001
+            assert abs(saddle.location.x)+saddle.dimensions.x/2>rail_outer
+        for pin in pins:
+            assert pin.location.z+pin.dimensions.z/2>=rail_top+.095*inch
+            assert pin.location.z-pin.dimensions.z/2<2.61*inch
     # Each ray is one strand on the outside of a 0.6 mm cable.
     offsets=[Vector((0,0,0))]+[Vector((.00030*math.cos(i*math.pi/4),.00030*math.sin(i*math.pi/4),0)) for i in range(8)]
     shell=[o for o in scene.objects if o.type=='MESH' and not ('tether_rest' in o or o.name.startswith(('Ring_terminal_','Outlet_ferrule_','Reel_outlet_')))]

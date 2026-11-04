@@ -55,28 +55,36 @@ def under_sample_reel(board,reel,steel):
     bore=cylinder('Fairlead bore',(x,offset,2.956),.040,.14,steel,follower)
     bore.rotation_euler.y=0;aperture(plate,bore);bpy.data.objects.remove(bore,do_unlink=True)
 
-RAIL_TOP=4.43
+RAIL_TOP=5.75
 INDEX_STEP=1/16
+CLIP_ROOT_X=2.055
+RELEASE_DEGREES=18
 
 def install_clip_rails(drawer,steel,slots):
-    # The back of the ledge mounts flush to the drawer side. Gaps in the
-    # underside rib register the clip tooth at each selectable station.
+    # Extend the side rim on short uprights without hiding the cards.
     detents=sorted(y+step*INDEX_STEP for i,y in enumerate(slots) for step in [-1,0,1]
                    if not (i==0 and step<0 or i==len(slots)-1 and step>0))
     for side in [-1,1]:
-        box('Clip_rail_ledge',(side*1.90,0,RAIL_TOP-.05),(.28,12.12,.10),steel,drawer)
-        box('Clip_rail_back',(side*2.015,0,RAIL_TOP-.145),(.05,12.12,.09),steel,drawer)
+        rail_bottom=RAIL_TOP-.20
+        box('Clip_rail_ledge',(side*1.925,0,RAIL_TOP-.10),(.21,12.12,.20),steel,drawer)
+        # Offset the uprights inboard of the outside latch and its notches.
+        for y in [-5.99,0,5.99]:
+            box('Rim_upright',(side*1.91,y,(4.49+rail_bottom)/2),(.075,.21,rail_bottom-4.49),steel,drawer)
+            box('Rim_mount_foot',(side*1.96,y,4.48),(.22,.21,.1),steel,drawer)
         start=-6.06
         for end,next_start in [(y-.021,y+.021) for y in detents]+[(6.06,6.06)]:
-            box('Clip_index_rib',(side*1.80,(start+end)/2,RAIL_TOP-.115),(.08,end-start,.03),steel,drawer)
+            box('Clip_index_rib',(side*1.99,(start+end)/2,rail_bottom-.015),(.08,end-start,.03),steel,drawer)
             start=next_start
 
 def spring_clip(key,side,fixture,finish):
-    # Formed leaf, finger tab and narrow indexing tooth share one flexing root.
-    # Coordinates are relative to the root where the leaf enters the bracket.
-    leaf=[(-.020,.010),(.018,.010),(.018,-.135),(.093,-.151),
-          (.060,-.197),(-.030,-.153),(-.12,-.205),(-.14,-.178),(-.02,-.10)]
-    tooth=[(.060,-.161),(.091,-.152),(.091,-.105),(.067,-.105)]
+    # The saddle comes down over the top of the rim. Its long outer jaw
+    # hooks underneath. Pinching the two thumb tabs swings both jaws outward.
+    box('Clip_saddle_'+key,(side*1.86,0,RAIL_TOP+.050),(.40,.26,.10),finish,fixture)
+    box('Clip_inner_cheek_'+key,(side*1.79,0,RAIL_TOP-.105),(.05,.26,.21),finish,fixture)
+    leaf=[(-.017,.005),(-.035,.19),(-.085,.245),(-.062,.275),(.005,.22),
+          (.023,.035),(.021,-.282),(.027,-.332),(-.070,-.40),
+          (-.106,-.355),(-.015,-.332)]
+    tooth=[(-.094,-.359),(-.060,-.355),(-.060,-.306),(-.090,-.306)]
     vertices=[];faces=[]
     for profile,width in [(leaf,.22),(tooth,.030)]:
         n=len(profile);base=len(vertices)
@@ -87,7 +95,7 @@ def spring_clip(key,side,fixture,finish):
     # Mirror copies must retain outward-facing normals.
     bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=bm.faces);bm.to_mesh(mesh);bm.free()
     clip=bpy.data.objects.new('Spring_clip_'+key,mesh);bpy.context.scene.collection.objects.link(clip)
-    clip.parent=fixture;clip.location=(side*1.73*I,0,RAIL_TOP*I);mesh.materials.append(finish)
+    clip.parent=fixture;clip.location=(side*CLIP_ROOT_X*I,0,(RAIL_TOP+.10)*I);mesh.materials.append(finish)
     clip['clip_side']=side
 
 def install_socket(board,drawer,steel,magnet,clip_finish):
@@ -99,9 +107,13 @@ def install_socket(board,drawer,steel,magnet,clip_finish):
     anchors=[o for o in drawer.children if o.name.split('.')[0]=='Guide_anchor_'+key]
     for o in anchors:bpy.data.objects.remove(o,do_unlink=True)
     pins=[o for o in drawer.children if o.name.split('.')[0]=='Guide_pin_'+key]
-    for o in pins:o.parent=fixture;o.location.y-=station*I
+    for o in pins:
+        o.parent=fixture;o.location.y-=station*I
+        bottom=o.location.z-o.dimensions.z/2
+        top=(RAIL_TOP+.10)*I
+        o.location.z=(bottom+top)/2;o.dimensions.z=top-bottom
     for side in [-1,1]:
-        box('Clip_bracket_'+key,(side*1.63,0,RAIL_TOP+.060),(.77,.29,.12),steel,fixture)
+        box('Clip_bracket_'+key,(side*1.45,0,RAIL_TOP+.050),(.43,.26,.10),steel,fixture)
         spring_clip(key,side,fixture,clip_finish)
         # Load travels around the reel, via the fork and the two cheeks.
         box('Socket_yoke_'+key,(side*.61,0,2.29),(.085,.15,1.40),steel,follower)
@@ -240,7 +252,8 @@ for v in range(1,7):
     data['mechanism']={'type':'sliding-dowel-belt','drive':'translating dowel','beltStart':START,'beltEnd':END,'beltTop':TOP,'beltThickness':THICK,'stroke':RISE,'halfWidth':HALF,'dowelDiameter':.3,'slotPositions':slots,'note':'Concept from your sketch. Fixed-end flexible strip with a sliding transverse dowel. Belt compliance, tension, loads and fatigue require physical prototyping.'}
     data['slotPositions']=slots;data['alternativeTo']=source+'-model.glb'
     data['mechanism']['socketAdjustment']=INDEX_STEP
-    data['mechanism']['note']='Spring clips hook beneath the rails near the drawer rim. Pull both tabs inward to release the holder. Slide it to the next notch and release the tabs to lock it. Clip force and fatigue still need a physical prototype.'
+    data['mechanism']['clipReleaseDegrees']=RELEASE_DEGREES
+    data['mechanism']['note']='Each teal saddle fits down over the raised side rim. Pinch the two top tabs inward to swing the outer hooks clear, slide the holder, then release to catch the next notch. Spring force and fatigue need a physical prototype.'
     scene.frame_set(96);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(prefix+'-model.blend')));scene.frame_set(0)
     bpy.ops.export_scene.gltf(filepath=str(ROOT/(prefix+'-model.glb')),export_format='GLB',export_animations=True,export_extras=True,export_apply=True,export_cameras=False,export_lights=False,export_frame_range=True,export_force_sampling=True,export_animation_mode='SCENE',export_anim_scene_split_object=False)
     (ROOT/(prefix+'-data.json')).write_text(json.dumps(data,separators=(',',':')))
