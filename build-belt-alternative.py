@@ -4,7 +4,7 @@ The belt is fixed at both ends and deforms over a translating transverse dowel.
 This is a motion study; strip material, tension and fatigue need prototyping.
 """
 import bpy, math, json, sys, pathlib
-from mathutils import Quaternion
+from mathutils import Euler
 ROOT=pathlib.Path(sys.argv[sys.argv.index('--')+1]).resolve(); I=.0254
 START,END,TOP,THICK,RISE,HALF=-6.05,6.05,2.35,.06,1.,1.8
 def height(y,c):
@@ -18,6 +18,42 @@ def box(name,xyz,dims,mat,parent):
     bpy.ops.mesh.primitive_cube_add(size=1);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.dimensions=[n*I for n in dims];bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat);return o
 def cylinder(name,xyz,r,depth,mat,parent):
     bpy.ops.mesh.primitive_cylinder_add(vertices=40,radius=r*I,depth=depth*I);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.rotation_euler.y=math.pi/2;o.data.materials.append(mat);return o
+
+def aperture(part,tool):
+    bpy.context.view_layer.update()
+    bpy.context.view_layer.objects.active=part
+    cut=part.modifiers.new('Tether clearance','BOOLEAN')
+    cut.operation='DIFFERENCE';cut.object=tool
+    bpy.ops.object.modifier_apply(modifier=cut.name)
+
+def under_sample_reel(board,reel,steel):
+    # The disk lies across the width of the drawer. Only its thickness uses
+    # row pitch. Its outlet, fairlead and terminal share one vertical axis.
+    key=board['material_id'];follower=board.parent
+    x,offset=-.78,.061
+    y=follower.location.y/I+offset
+    reel.location=(x*I,y*I,1.35*I)
+    reel.rotation_quaternion=Euler((-math.pi/2,0,0)).to_quaternion()
+    mount=bpy.data.objects['Reel_mount_'+key]
+    mount.location=(x*I,(y-.195)*I,1.20*I)
+    mount.dimensions=(.73*I,.05*I,1.44*I)
+    adapter=bpy.data.objects['Tether_adapter_'+key]
+    adapter.location=(x*I,-1.105*I,-offset*I);adapter.rotation_euler.z=0
+    # The saddle sits flush on the back of the card; the eyelet hangs below it.
+    board['under_sample_tether']=True
+    # The tethered card now turns about its upright edge during inspection.
+    bpy.data.objects['Back_card_'+key].rotation_euler=(0,math.pi,0)
+    for name in ['Tether_guide_','Cable_guide_']:
+        guide=bpy.data.objects[name+key];guide.parent=follower
+        guide.location=(x*I,offset*I,2.95*I)
+    tool=box('Eyelet clearance',(x,offset,3.17),(.31,.096,.62),steel,follower)
+    for part in follower.children:
+        if part.name.split('.')[0] in ['Crosshead_'+key,'Sample_seat_'+key,'Slot_lip_'+key]:
+            aperture(part,tool)
+    bpy.data.objects.remove(tool,do_unlink=True)
+    plate=box('Fairlead_plate_'+key,(x,.015,2.956),(.36,.23,.03),steel,follower)
+    bore=cylinder('Fairlead bore',(x,offset,2.956),.040,.14,steel,follower)
+    bore.rotation_euler.y=0;aperture(plate,bore);bpy.data.objects.remove(bore,do_unlink=True)
 
 def socket_outline(start,end,radius,z):
     # Counterclockwise obround in the side panel's Y/Z plane.
@@ -66,16 +102,6 @@ for v in range(1,7):
     bpy.ops.wm.open_mainfile(filepath=str(ROOT/(source+'-model.blend')));scene=bpy.context.scene;scene.frame_set(0)
     data=json.loads((ROOT/(source+'-data.json')).read_text());N=len(data['materials']);slots=data.get('slotPositions',[-5.45+i*.64 for i in range(N)])
     drawer=next(o for o in scene.objects if o.get('motion')=='drawer')
-    # Move the complete tether path to the left, opposite the right-hand pull.
-    # A half turn keeps the adhesive against the wall and the outlet pointing up.
-    turn=Quaternion((0,0,1),math.pi)
-    for o in scene.objects:
-        if o.get('tether_reel'):
-            o.location.x=-o.location.x
-            o.rotation_quaternion=turn @ o.rotation_quaternion
-        elif o.get('tether_guide') or o.name.startswith(('Reel_mount_','Cable_guide_','Tether_adapter_')):
-            o.location.x=-o.location.x
-            if o.name.startswith('Tether_adapter_'):o.rotation_euler.z=-o.rotation_euler.z
     shaft=next(o for o in scene.objects if o.get('wave_shaft'))
     remove=[shaft,*shaft.children_recursive]+[o for o in scene.objects if o.name.startswith(('Bearing','Return_spring')) or 'wave_spring' in o]
     for o in set(remove):bpy.data.objects.remove(o,do_unlink=True)
@@ -85,6 +111,8 @@ for v in range(1,7):
         if o.name.startswith(('Roller_','Roller_axle_')) and not o.name.startswith('Roller_fork_'):o.rotation_euler=(0,math.pi/2,0)
         if o.name.startswith('Roller_fork_'):o.location.x=o.location.y;o.location.y=0;o.rotation_euler.z=math.pi/2
     stripmat=material('Flexible blue belt',(.015,.13,.29));wood=material('Sliding beech dowel',(.62,.44,.25));steel=material('Guide track',(.26,.30,.33),.65)
+    for board in [o for o in scene.objects if o.get('material_id')]:
+        under_sample_reel(board,bpy.data.objects['Tether_reel_'+board['material_id']],steel)
     # Four vertices at each station form a solid ribbon. Use identical topology
     # for the native shape-key animation and the browser's continuous motion.
     segments=192;verts=[];faces=[]
@@ -109,14 +137,17 @@ for v in range(1,7):
     trim=next(o for o in seams if 'stitch' not in o.name).data.materials[0]
     cut_side_socket(right_panel,[],slots[0],slots[-1],axle_z,False,trim)
     cut_side_socket(sleeve,seams,-7.0,slots[-1],axle_z,True,trim)
-    cylinder('Transverse_wooden_dowel',(.32,0,axle_z),.15,4.66,wood,handle)
+    # The axle starts at its inboard bearing, beyond the entire tether lane.
+    cylinder('Transverse_wooden_dowel',(1.05,0,axle_z),.15,3.20,wood,handle)
     pull=cylinder('Exterior_thumb_pull',(2.75,0,axle_z),.44,.22,wood,handle)
     bevel=pull.modifiers.new('Rounded thumb grip','BEVEL');bevel.width=.045*I;bevel.segments=3
     pull.modifiers.new('Grip normals','WEIGHTED_NORMAL');pull['side_pull']=True
     for y in [START,END]:box('Fixed_belt_clamp',(0,y,TOP),(.96,.16,.16),steel,drawer)
-    for x in [-2.06,2.06]:
+    for x in [-.48,2.06]:
         # An open track holds the dowel axis and leaves a visible travel slot.
         for z in [TOP+RISE-THICK-.15-.23,TOP+RISE-THICK-.15+.23]:box('Dowel_guide',(x,0,z),(.12,12.15,.12),steel,drawer)
+    for y in [-5.99,5.99]:
+        box('Inboard_guide_end_bracket',(-1.27,y,axle_z),(1.70,.12,.58),steel,drawer)
     scene.frame_end=240
     for frame in range(0,241,4):
         phase=max(0,(frame-48)/192);q=(1-abs(2*phase-1))*24;c=slots[0]+(slots[-1]-slots[0])*q/24
