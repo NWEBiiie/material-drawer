@@ -55,21 +55,42 @@ def under_sample_reel(board,reel,steel):
     bore=cylinder('Fairlead bore',(x,offset,2.956),.040,.14,steel,follower)
     bore.rotation_euler.y=0;aperture(plate,bore);bpy.data.objects.remove(bore,do_unlink=True)
 
+BRACKET_BOTTOM=2.59
+RAIL_CENTER_X=1.86
+BRACKET_THICKNESS=.12
+LIP_THICKNESS=.065
+
+def install_clamp_rails(drawer,steel):
+    # Upward-facing T slots support the underside of each guide bracket.
+    for side in [-1,1]:
+        for dx in [-.115,.115]:
+            box('Socket_rail_lip',(side*(RAIL_CENTER_X+dx),0,BRACKET_BOTTOM-LIP_THICKNESS/2),(.125,12.12,LIP_THICKNESS),steel,drawer)
+        for dx in [-.16,.16]:
+            box('Socket_rail_web',(side*(RAIL_CENTER_X+dx),0,BRACKET_BOTTOM-.1325),(.035,12.12,.135),steel,drawer)
+        box('Socket_rail_base',(side*RAIL_CENTER_X,0,BRACKET_BOTTOM-.22),(.355,12.12,.04),steel,drawer)
+
 def install_socket(board,drawer,steel,magnet):
     key=board['material_id'];index=board['index'];follower=board.parent;station=follower.location.y/I
     fixture=bpy.data.objects.new('Adjustable_socket_'+key,None)
     bpy.context.scene.collection.objects.link(fixture);fixture.parent=drawer
     fixture.location.y=station*I;fixture['socket_index']=index
     # These two stations clamp the vertical guides to slotted rails on the drawer.
-    anchors=[o for o in drawer.children if o.name.split('.')[0] in ('Guide_anchor_'+key,'Guide_pin_'+key)]
-    for o in anchors:o.parent=fixture;o.location.y-=station*I
+    anchors=[o for o in drawer.children if o.name.split('.')[0]=='Guide_anchor_'+key]
+    for o in anchors:bpy.data.objects.remove(o,do_unlink=True)
+    pins=[o for o in drawer.children if o.name.split('.')[0]=='Guide_pin_'+key]
+    for o in pins:o.parent=fixture;o.location.y-=station*I
     for side in [-1,1]:
-        x=side*1.86
-        block=box('Rail_clamp_'+key,(x,0,4.68),(.32,.29,.12),steel,fixture)
-        screw=cylinder('Clamp_screw_'+key,(x,0,4.70),.041,.34,magnet,fixture);screw.rotation_euler.y=0
-        head=cylinder('Clamp_head_'+key,(x,0,4.87),.085,.052,steel,fixture);head.rotation_euler.y=0
-        box('Screw_drive_'+key,(x,0,4.898),(.105,.017,.004),magnet,fixture)
-        box('Captive_nut_'+key,(x,0,4.77),(.16,.19,.045),steel,fixture)
+        x=side*RAIL_CENTER_X
+        top=BRACKET_BOTTOM+BRACKET_THICKNESS
+        bracket=box('Rail_clamp_'+key,(side*1.63,0,(top+BRACKET_BOTTOM)/2),(.77,.29,BRACKET_THICKNESS),steel,fixture)
+        bore=cylinder('Clamp clearance',(x,0,top-.06),.048,.24,steel,fixture);bore.rotation_euler.y=0
+        aperture(bracket,bore);bpy.data.objects.remove(bore,do_unlink=True)
+        nut_top=BRACKET_BOTTOM-LIP_THICKNESS;tip=nut_top-.09
+        screw=cylinder('Clamp_screw_'+key,(x,0,(top+tip)/2),.041,top-tip,magnet,fixture);screw.rotation_euler.y=0
+        nut=box('Captive_nut_'+key,(x,0,nut_top-.035),(.195,.20,.07),steel,fixture)
+        head=cylinder('Clamp_head_'+key,(x,0,top+.03),.088,.06,steel,fixture);head.rotation_euler.y=0
+        drive=box('Screwdriver slot',(x,0,top+.059),(.122,.020,.032),magnet,fixture)
+        aperture(head,drive);bpy.data.objects.remove(drive,do_unlink=True)
         # Load travels around the reel, via the fork and the two cheeks.
         box('Socket_yoke_'+key,(side*.61,0,2.29),(.085,.15,1.40),steel,follower)
         # Magnetic contact at the bottom edge of the removable card.
@@ -143,11 +164,7 @@ for v in range(1,7):
             else:o.rotation_euler=(0,math.pi/2,0)
     stripmat=material('Flexible blue belt',(.015,.13,.29));wood=material('Sliding beech dowel',(.62,.44,.25));steel=material('Guide track',(.26,.30,.33),.65)
     magnet=material('Dark magnetic steel',(.075,.09,.105),.8)
-    for side in [-1,1]:
-        # Lower rail is the clamp's bearing face. A captive nut slides under the two lips.
-        for xx in [1.748,1.972]:
-            box('Socket_rail_lip',(side*xx,0,4.81),(.14,12.12,.055),steel,drawer)
-        box('Socket_rail_back',(side*2.045,0,4.74),(.055,12.12,.27),steel,drawer)
+    install_clamp_rails(drawer,steel)
     for board in [o for o in scene.objects if o.get('material_id')]:
         under_sample_reel(board,bpy.data.objects['Tether_reel_'+board['material_id']],steel)
         install_socket(board,drawer,steel,magnet)

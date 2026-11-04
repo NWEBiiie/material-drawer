@@ -15,11 +15,25 @@ for volume in range(1,7):
     assert all(set(group)==set(ids) for group in (anchors,guides,ends,boards,reels))
     sockets=indexed('socket_index')
     assert len(sockets)==len(ids)
+    rails=[o for o in scene.objects if o.name.startswith('Socket_rail_lip')]
+    assert len(rails)==4
+    rail_top=max(o.location.z+o.dimensions.z/2 for o in rails)
+    rail_under=min(o.location.z-o.dimensions.z/2 for o in rails)
+    rail_inner=min(abs(o.location.x)-o.dimensions.x/2 for o in rails)
     for key in ids:
         socket=sockets[boards[key]['index']]
         assert len([o for o in socket.children if o.name.startswith('Clamp_screw_')])==2
         assert len([o for o in boards[key].children if o.name.startswith('Card_keeper_')])==2
         assert reels[key].parent==boards[key].parent
+        brackets=[o for o in socket.children if o.name.startswith('Rail_clamp_')]
+        assert len(brackets)==2
+        for bracket in brackets:
+            assert abs(bracket.location.z-bracket.dimensions.z/2-rail_top)<.00001
+        for o in socket.children:
+            if o.name.startswith('Clamp_head_'):
+                assert o.location.z-o.dimensions.z/2>=rail_top+.119*inch
+            if o.name.startswith('Captive_nut_'):
+                assert abs(o.location.z+o.dimensions.z/2-rail_under)<.00001
     # Each ray is one strand on the outside of a 0.6 mm cable.
     offsets=[Vector((0,0,0))]+[Vector((.00030*math.cos(i*math.pi/4),.00030*math.sin(i*math.pi/4),0)) for i in range(8)]
     shell=[o for o in scene.objects if o.type=='MESH' and not ('tether_rest' in o or o.name.startswith(('Ring_terminal_','Outlet_ferrule_','Reel_outlet_')))]
@@ -42,6 +56,12 @@ for volume in range(1,7):
             roller=bpy.data.objects['Roller_'+id]
             assert abs(reel.matrix_world.translation.x-roller.matrix_world.translation.x)<.001*inch
             assert roller.matrix_world.translation.z+.15*inch<reel.matrix_world.translation.z-.50*inch
+            crosshead=bpy.data.objects['Crosshead_'+id]
+            bracket=next(o for o in sockets[board['index']].children if o.name.startswith('Rail_clamp_'))
+            assert crosshead.matrix_world.translation.z-crosshead.dimensions.z/2>bracket.matrix_world.translation.z+bracket.dimensions.z/2
+            for moving in (crosshead,roller,reel):
+                extent=.50*inch if moving==reel else moving.dimensions.x/2
+                assert abs(moving.matrix_world.translation.x)+extent<rail_inner
             assert reel.matrix_world.translation.z+(.575*inch)<board.matrix_world.translation.z-1.05*inch
             # Check the path up through the empty slot as well as the parked cord.
             for o,lo,hi in meshes:
