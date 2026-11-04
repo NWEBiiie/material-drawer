@@ -3,8 +3,8 @@ Blender: --background --python build-belt-alternative.py -- REPO
 The belt is fixed at both ends and deforms over a translating transverse dowel.
 This is a motion study; strip material, tension and fatigue need prototyping.
 """
-import bpy, bmesh, math, json, sys, pathlib
-from mathutils import Euler
+import bpy, math, json, sys, pathlib
+from mathutils import Euler, Vector
 ROOT=pathlib.Path(sys.argv[sys.argv.index('--')+1]).resolve(); I=.0254
 START,END,TOP,THICK,RISE,HALF=-6.05,6.05,1.10,.06,1.,1.8
 def height(y,c):
@@ -55,50 +55,47 @@ def under_sample_reel(board,reel,steel):
     bore=cylinder('Fairlead bore',(x,offset,2.956),.040,.14,steel,follower)
     bore.rotation_euler.y=0;aperture(plate,bore);bpy.data.objects.remove(bore,do_unlink=True)
 
-RAIL_TOP=5.75
 INDEX_STEP=1/16
-CLIP_ROOT_X=2.055
-RELEASE_DEGREES=18
+SCREW_TRAVEL=.012
 
-def install_clip_rails(drawer,steel,slots):
-    # Extend the side rim on short uprights without hiding the cards.
-    detents=sorted(y+step*INDEX_STEP for i,y in enumerate(slots) for step in [-1,0,1]
-                   if not (i==0 and step<0 or i==len(slots)-1 and step>0))
-    for side in [-1,1]:
-        rail_bottom=RAIL_TOP-.20
-        box('Clip_rail_ledge',(side*1.925,0,RAIL_TOP-.10),(.21,12.12,.20),steel,drawer)
-        # Offset the uprights inboard of the outside latch and its notches.
-        for y in [-5.99,0,5.99]:
-            box('Rim_upright',(side*1.91,y,(4.49+rail_bottom)/2),(.075,.21,rail_bottom-4.49),steel,drawer)
-            box('Rim_mount_foot',(side*1.96,y,4.48),(.22,.21,.1),steel,drawer)
-        start=-6.06
-        for end,next_start in [(y-.021,y+.021) for y in detents]+[(6.06,6.06)]:
-            box('Clip_index_rib',(side*1.99,(start+end)/2,rail_bottom-.015),(.08,end-start,.03),steel,drawer)
-            start=next_start
+def panel_hook(key,side,fixture,edge,finish,metal,pad):
+    inner,outer,top=edge
+    # A bent strap bears on the binding and returns down both panel faces.
+    jaw_inner=outer+.019
+    jaw_outer=jaw_inner+.030
+    width=.33
+    box('Panel_hook_crown_'+key,(side*(inner-.06+jaw_outer)/2,0,top+.032),
+        (jaw_outer-inner+.06,width,.064),finish,fixture)
+    box('Panel_hook_inner_'+key,(side*(inner-.043),0,top-.165),(.034,width,.33),finish,fixture)
+    box('Hook_lining_'+key,(side*(inner-.013),0,top-.215),(.026,width,.21),pad,fixture)
+    z=top-.245
+    cheek=box('Panel_hook_outer_'+key,(side*(jaw_inner+jaw_outer)/2,0,top-.19),
+              (jaw_outer-jaw_inner,width,.38),finish,fixture)
+    bore=cylinder('Side screw bore',(side*(jaw_inner+jaw_outer)/2,0,z),.032,.09,metal,fixture)
+    aperture(cheek,bore);bpy.data.objects.remove(bore,do_unlink=True)
 
-def spring_clip(key,side,fixture,finish):
-    # The saddle comes down over the top of the rim. Its long outer jaw
-    # hooks underneath. Pinching the two thumb tabs swings both jaws outward.
-    box('Clip_saddle_'+key,(side*1.86,0,RAIL_TOP+.050),(.40,.26,.10),finish,fixture)
-    box('Clip_inner_cheek_'+key,(side*1.79,0,RAIL_TOP-.105),(.05,.26,.21),finish,fixture)
-    leaf=[(-.017,.005),(-.035,.19),(-.085,.245),(-.062,.275),(.005,.22),
-          (.023,.035),(.021,-.282),(.027,-.332),(-.070,-.40),
-          (-.106,-.355),(-.015,-.332)]
-    tooth=[(-.094,-.359),(-.060,-.355),(-.060,-.306),(-.090,-.306)]
-    vertices=[];faces=[]
-    for profile,width in [(leaf,.22),(tooth,.030)]:
-        n=len(profile);base=len(vertices)
-        vertices.extend((side*x*I,y*I,z*I) for y in [-width/2,width/2] for x,z in profile)
-        faces.extend([tuple(base+i for i in range(n)),tuple(base+n+i for i in reversed(range(n)))])
-        faces.extend((base+i,base+n+i,base+n+(i+1)%n,base+(i+1)%n) for i in range(n))
-    mesh=bpy.data.meshes.new('Formed spring clip');mesh.from_pydata(vertices,[],faces);mesh.update()
-    # Mirror copies must retain outward-facing normals.
-    bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=bm.faces);bm.to_mesh(mesh);bm.free()
-    clip=bpy.data.objects.new('Spring_clip_'+key,mesh);bpy.context.scene.collection.objects.link(clip)
-    clip.parent=fixture;clip.location=(side*CLIP_ROOT_X*I,0,(RAIL_TOP+.10)*I);mesh.materials.append(finish)
-    clip['clip_side']=side
+    # The wide wheel is turned at its scalloped edge. Both wheel and shoe
+    # stay inside the sleeve even when fully backed off.
+    screw=bpy.data.objects.new('Side_thumbscrew_'+key,None)
+    bpy.context.scene.collection.objects.link(screw);screw.parent=fixture
+    screw.location=(side*(outer+SCREW_TRAVEL)*I,0,z*I)
+    screw['thumbwheel_side']=side
+    cylinder('Pressure_pad_'+key,(side*.003,0,0),.088,.006,pad,screw)
+    cylinder('Thumbwheel_shank_'+key,(side*.030,0,0),.030,.051,metal,screw)
+    verts=[];faces=[];n=72
+    for x in [.055,.083]:
+        for i in range(n):
+            a=math.tau*i/n;r=.165+.014*math.cos(12*a)
+            verts.append((side*x*I,r*math.cos(a)*I,r*math.sin(a)*I))
+    faces=[tuple(reversed(range(n))),tuple(range(n,2*n))]
+    faces.extend((i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n))
+    if side<0:faces=[tuple(reversed(face)) for face in faces]
+    mesh=bpy.data.meshes.new('Scalloped thumbwheel');mesh.from_pydata(verts,[],faces);mesh.update()
+    head=bpy.data.objects.new('Thumbwheel_head_'+key,mesh);bpy.context.scene.collection.objects.link(head)
+    head.parent=screw;mesh.materials.append(metal)
+    box('Thumbwheel_mark_'+key,(side*.084,.076,0),(.002,.095,.014),pad,screw)
 
-def install_socket(board,drawer,steel,magnet,clip_finish):
+def install_socket(board,drawer,steel,magnet,clip_finish,wheel_finish,panel_edges):
     key=board['material_id'];index=board['index'];follower=board.parent;station=follower.location.y/I
     fixture=bpy.data.objects.new('Adjustable_socket_'+key,None)
     bpy.context.scene.collection.objects.link(fixture);fixture.parent=drawer
@@ -110,11 +107,12 @@ def install_socket(board,drawer,steel,magnet,clip_finish):
     for o in pins:
         o.parent=fixture;o.location.y-=station*I
         bottom=o.location.z-o.dimensions.z/2
-        top=(RAIL_TOP+.10)*I
+        top=(panel_edges[1 if o.location.x>0 else -1][2]+.06)*I
         o.location.z=(bottom+top)/2;o.dimensions.z=top-bottom
     for side in [-1,1]:
-        box('Clip_bracket_'+key,(side*1.45,0,RAIL_TOP+.050),(.43,.26,.10),steel,fixture)
-        spring_clip(key,side,fixture,clip_finish)
+        inner,_,top=panel_edges[side]
+        box('Clip_bracket_'+key,(side*(1.24+inner-.055)/2,0,top+.032),(inner-.055-1.24,.26,.064),steel,fixture)
+        panel_hook(key,side,fixture,panel_edges[side],clip_finish,wheel_finish,magnet)
         # Load travels around the reel, via the fork and the two cheeks.
         box('Socket_yoke_'+key,(side*.61,0,2.29),(.085,.15,1.40),steel,follower)
         # Magnetic contact at the bottom edge of the removable card.
@@ -189,10 +187,19 @@ for v in range(1,7):
     stripmat=material('Flexible blue belt',(.015,.13,.29));wood=material('Sliding beech dowel',(.62,.44,.25));steel=material('Guide track',(.26,.30,.33),.65)
     magnet=material('Dark magnetic steel',(.075,.09,.105),.8)
     clip_finish=material('Teal spring clips',(.045,.38,.47),.45)
-    install_clip_rails(drawer,steel,slots)
+    wheel_finish=material('Brass thumbwheels',(.67,.41,.13),.65)
+    panel_edges={}
+    for panel in (o for o in drawer.children if o.name.startswith('Drawer_side')):
+        side=1 if panel.location.x>0 else -1
+        rim_points=[o.matrix_world@Vector(p) for o in drawer.children if o.name.startswith('Drawer_sewn_rim') for p in o.bound_box]
+        edge_top=max(p.z for p in rim_points if side*p.x>0)/I
+        x=abs(panel.location.x)/I;half=panel.dimensions.x/(2*I)
+        panel_edges[side]=(x-half,x+half,edge_top)
+    for rim in (o for o in drawer.children if o.name.startswith('Drawer_sewn_rim') and 'cutaway' in o):
+        del rim['cutaway']
     for board in [o for o in scene.objects if o.get('material_id')]:
         under_sample_reel(board,bpy.data.objects['Tether_reel_'+board['material_id']],steel)
-        install_socket(board,drawer,steel,magnet,clip_finish)
+        install_socket(board,drawer,steel,magnet,clip_finish,wheel_finish,panel_edges)
     # Four vertices at each station form a solid ribbon. Use identical topology
     # for the native shape-key animation and the browser's continuous motion.
     segments=192;verts=[];faces=[]
@@ -252,8 +259,8 @@ for v in range(1,7):
     data['mechanism']={'type':'sliding-dowel-belt','drive':'translating dowel','beltStart':START,'beltEnd':END,'beltTop':TOP,'beltThickness':THICK,'stroke':RISE,'halfWidth':HALF,'dowelDiameter':.3,'slotPositions':slots,'note':'Concept from your sketch. Fixed-end flexible strip with a sliding transverse dowel. Belt compliance, tension, loads and fatigue require physical prototyping.'}
     data['slotPositions']=slots;data['alternativeTo']=source+'-model.glb'
     data['mechanism']['socketAdjustment']=INDEX_STEP
-    data['mechanism']['clipReleaseDegrees']=RELEASE_DEGREES
-    data['mechanism']['note']='Each teal saddle fits down over the raised side rim. Pinch the two top tabs inward to swing the outer hooks clear, slide the holder, then release to catch the next notch. Spring force and fatigue need a physical prototype.'
+    data['mechanism']['screwTravel']=SCREW_TRAVEL
+    data['mechanism']['note']='Each U-hook rests on the sewn top edge of the blue drawer panel. The outside thumbwheels are optional. Tighten them to press the pads against the panel and lock the holder. Loosen them to reposition it.'
     scene.frame_set(96);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(prefix+'-model.blend')));scene.frame_set(0)
     bpy.ops.export_scene.gltf(filepath=str(ROOT/(prefix+'-model.glb')),export_format='GLB',export_animations=True,export_extras=True,export_apply=True,export_cameras=False,export_lights=False,export_frame_range=True,export_force_sampling=True,export_animation_mode='SCENE',export_anim_scene_split_object=False)
     (ROOT/(prefix+'-data.json')).write_text(json.dumps(data,separators=(',',':')))

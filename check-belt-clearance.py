@@ -1,6 +1,6 @@
 """Check actual closed/open/crest Blender meshes against the under-card cord lanes."""
 import bpy, math, pathlib, json, sys
-from mathutils import Vector
+from mathutils import Vector, Matrix
 root=pathlib.Path(sys.argv[sys.argv.index('--')+1]).resolve()
 inch=.0254
 for volume in range(1,7):
@@ -15,61 +15,44 @@ for volume in range(1,7):
     assert all(set(group)==set(ids) for group in (anchors,guides,ends,boards,reels))
     sockets=indexed('socket_index')
     assert len(sockets)==len(ids)
-    rails=[o for o in scene.objects if o.name.startswith('Clip_rail_ledge')]
-    assert len(rails)==2
-    rail_top=max(o.location.z+o.dimensions.z/2 for o in rails)
-    rail_under=min(o.location.z-o.dimensions.z/2 for o in rails)
-    rail_inner=min(abs(o.location.x)-o.dimensions.x/2 for o in rails)
-    rail_outer=max(abs(o.location.x)+o.dimensions.x/2 for o in rails)
-    assert abs(rail_top/inch-5.75)<.0001
-    posts=[o for o in scene.objects if o.name.startswith('Rim_upright')]
-    assert len(posts)==6 and all(abs(o.location.z+o.dimensions.z/2-rail_under)<.00001 for o in posts)
+    panels=[o for o in scene.objects if o.name.startswith('Drawer_side')]
+    assert len(panels)==2
+    assert not any(o.name.startswith(('Clip_rail_','Clip_index_rib','Rim_upright','Spring_clip_')) for o in scene.objects)
+    panel_inner=min(abs(p.location.x)-p.dimensions.x/2 for p in panels)
     sleeve=next(o for o in scene.objects if o.name.startswith('Cabinet_side') and o.location.x>0)
     sleeve_inside=sleeve.location.x-sleeve.dimensions.x/2
-    lid=next(o for o in scene.objects if o.name.startswith('Cabinet_top'))
-    ceiling=lid.location.z-lid.dimensions.z/2
-    assert not any(o.name.startswith(('Clamp_screw_','Captive_nut_','Clamp_head_')) for o in scene.objects)
-    ribs=[o for o in scene.objects if o.name.startswith('Clip_index_rib') and o.location.x>0]
-    gaps=sorted((o.location.y-o.dimensions.y/2,o.location.y+o.dimensions.y/2) for o in ribs)
-    rib_bottom=min(o.location.z-o.dimensions.z/2 for o in ribs)
+    seam_top=max((o.matrix_world@Vector(p)).z for o in scene.objects if o.name.startswith('Drawer_sewn_rim') for p in o.bound_box)
+    travel=data['mechanism']['screwTravel']*inch
     for key in ids:
-        index=boards[key]['index'];socket=sockets[index]
-        clips=[o for o in socket.children if 'clip_side' in o]
-        assert {o['clip_side'] for o in clips}=={-1,1} and len(clips)==2
-        for clip in clips:
-            # The narrow tooth clears the ledge but catches the indexing ribs.
-            tooth=[v.co for v in clip.data.vertices if abs(abs(v.co.y)/inch-.015)<.0001]
-            assert tooth and rib_bottom<clip.location.z+max(v.z for v in tooth)<rail_under
-            assert min(abs(clip.location.x+v.x) for v in tooth)<rail_outer-.03*inch
-            angle=-math.radians(data['mechanism']['clipReleaseDegrees'])*clip['clip_side']
-            for step in range(13):
-                a=angle*step/12
-                for v in clip.data.vertices:
-                    x=abs(clip.location.x+v.co.x*math.cos(a)+v.co.z*math.sin(a))
-                    z=clip.location.z-v.co.x*math.sin(a)+v.co.z*math.cos(a)
-                    assert x<sleeve_inside and z<ceiling,(key,'casing clearance')
-                    if rail_under+.00001<z<rail_top-.00001:assert x>rail_outer,(key,'rim collision')
-                    if step==12 and z<rail_top:assert x>rail_outer+.01*inch,(key,'release clearance')
-            assert clip.location.z+max(v.co.z for v in clip.data.vertices)>rail_top+.35*inch
-        for step in (-1,0,1):
-            if index+step<0 or index+step>=len(ids):continue
-            center=socket.location.y+step*data['mechanism']['socketAdjustment']*inch
-            assert any(abs((left[1]+right[0])/2-center)<.0001*inch and
-                       left[1]<center-.015*inch and center+.015*inch<right[0]
-                       for left,right in zip(gaps,gaps[1:])),(key,step)
-        assert len([o for o in boards[key].children if o.name.startswith('Card_keeper_')])==2
+        socket=sockets[boards[key]['index']]
         assert reels[key].parent==boards[key].parent
-        brackets=[o for o in socket.children if o.name.startswith('Clip_bracket_')]
-        assert len(brackets)==2
-        saddles=[o for o in socket.children if o.name.startswith('Clip_saddle_')]
-        pins=[o for o in socket.children if o.name.startswith('Guide_pin_')]
-        assert len(saddles)==len(pins)==2
-        for saddle in saddles:
-            assert abs(saddle.location.z-saddle.dimensions.z/2-rail_top)<.00001
-            assert abs(saddle.location.x)+saddle.dimensions.x/2>rail_outer
-        for pin in pins:
-            assert pin.location.z+pin.dimensions.z/2>=rail_top+.095*inch
-            assert pin.location.z-pin.dimensions.z/2<2.61*inch
+        assert len([o for o in boards[key].children if o.name.startswith('Card_keeper_')])==2
+        screws=[o for o in socket.children if 'thumbwheel_side' in o]
+        assert {o['thumbwheel_side'] for o in screws}=={-1,1} and len(screws)==2
+        for screw in screws:
+            side=screw['thumbwheel_side']
+            panel=next(o for o in panels if o.location.x*side>0)
+            inner=abs(panel.location.x)-panel.dimensions.x/2
+            outer=abs(panel.location.x)+panel.dimensions.x/2
+            def part(name):
+                return next(o for o in socket.children if o.name.startswith(name) and o.location.x*side>0)
+            bridge=part('Panel_hook_crown_');liner=part('Hook_lining_');cheek=part('Panel_hook_outer_')
+            assert abs(bridge.location.z-bridge.dimensions.z/2-seam_top)<.00001
+            assert abs(bridge.location.x)-bridge.dimensions.x/2<inner and abs(bridge.location.x)+bridge.dimensions.x/2>outer
+            assert abs(abs(liner.location.x)+liner.dimensions.x/2-inner)<.00001
+            assert abs(cheek.location.x)-cheek.dimensions.x/2>outer
+            # The hooked crown carries the load with no screw contact. Closing
+            # the small gap brings the pad to the textile without penetrating it.
+            pad=next(o for o in screw.children if o.name.startswith('Pressure_pad_'))
+            loose_tip=min(side*(pad.matrix_world@Vector(p)).x for p in pad.bound_box)
+            assert abs(loose_tip-outer-travel)<.00001 and travel>0
+            for step in range(13):
+                f=step/12
+                screw_transform=screw.matrix_world@Matrix.Translation((-side*f*travel,0,0))@Matrix.Rotation(-side*f*1.5*math.pi,4,'X')
+                outside=max(side*(screw_transform@child.matrix_local@Vector(v.co)).x for child in screw.children for v in child.data.vertices)
+                assert outside<sleeve_inside-.012*inch,(key,'thumbwheel/sleeve')
+            pin=part('Guide_pin_')
+            assert pin.location.z+pin.dimensions.z/2>seam_top and pin.location.z-pin.dimensions.z/2<2.61*inch
     # Each ray is one strand on the outside of a 0.6 mm cable.
     offsets=[Vector((0,0,0))]+[Vector((.00030*math.cos(i*math.pi/4),.00030*math.sin(i*math.pi/4),0)) for i in range(8)]
     shell=[o for o in scene.objects if o.type=='MESH' and not ('tether_rest' in o or o.name.startswith(('Ring_terminal_','Outlet_ferrule_','Reel_outlet_')))]
@@ -97,7 +80,7 @@ for volume in range(1,7):
             assert crosshead.matrix_world.translation.z+crosshead.dimensions.z/2<bracket.matrix_world.translation.z-bracket.dimensions.z/2
             for moving in (crosshead,roller,reel):
                 extent=.50*inch if moving==reel else moving.dimensions.x/2
-                assert abs(moving.matrix_world.translation.x)+extent<rail_inner
+                assert abs(moving.matrix_world.translation.x)+extent<panel_inner
             assert reel.matrix_world.translation.z+(.575*inch)<board.matrix_world.translation.z-1.05*inch
             # Check the path up through the empty slot as well as the parked cord.
             for o,lo,hi in meshes:
