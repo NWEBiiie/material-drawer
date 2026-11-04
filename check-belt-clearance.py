@@ -17,7 +17,7 @@ for volume in range(1,7):
     assert len(sockets)==len(ids)
     panels=[o for o in scene.objects if o.name.startswith('Drawer_side')]
     assert len(panels)==2
-    assert not any(o.name.startswith(('Clip_rail_','Clip_index_rib','Rim_upright','Spring_clip_')) for o in scene.objects)
+    assert not any(o.name.startswith(('Clip_rail_','Clip_index_rib','Rim_upright','Spring_clip_','Thumbwheel_','Pressure_pad_')) for o in scene.objects)
     panel_inner=min(abs(p.location.x)-p.dimensions.x/2 for p in panels)
     sleeve=next(o for o in scene.objects if o.name.startswith('Cabinet_side') and o.location.x>0)
     sleeve_inside=sleeve.location.x-sleeve.dimensions.x/2
@@ -27,30 +27,50 @@ for volume in range(1,7):
         socket=sockets[boards[key]['index']]
         assert reels[key].parent==boards[key].parent
         assert len([o for o in boards[key].children if o.name.startswith('Card_keeper_')])==2
-        screws=[o for o in socket.children if 'thumbwheel_side' in o]
-        assert {o['thumbwheel_side'] for o in screws}=={-1,1} and len(screws)==2
+        screws=[o for o in socket.children if 'bolt_side' in o]
+        assert {o['bolt_side'] for o in screws}=={-1,1} and len(screws)==2
         for screw in screws:
-            side=screw['thumbwheel_side']
+            side=screw['bolt_side']
             panel=next(o for o in panels if o.location.x*side>0)
             inner=abs(panel.location.x)-panel.dimensions.x/2
             outer=abs(panel.location.x)+panel.dimensions.x/2
             def part(name):
                 return next(o for o in socket.children if o.name.startswith(name) and o.location.x*side>0)
-            bridge=part('Panel_hook_crown_');liner=part('Hook_lining_');cheek=part('Panel_hook_outer_')
+            bridge=part('Hanger_crown_');plate=part('Hanger_plate_')
+            washer=part('Side_washer_');nut=part('Captive_hex_nut_')
             assert abs(bridge.location.z-bridge.dimensions.z/2-seam_top)<.00001
             assert abs(bridge.location.x)-bridge.dimensions.x/2<inner and abs(bridge.location.x)+bridge.dimensions.x/2>outer
-            assert abs(abs(liner.location.x)+liner.dimensions.x/2-inner)<.00001
-            assert abs(cheek.location.x)-cheek.dimensions.x/2>outer
-            # The hooked crown carries the load with no screw contact. Closing
-            # the small gap brings the pad to the textile without penetrating it.
-            pad=next(o for o in screw.children if o.name.startswith('Pressure_pad_'))
-            loose_tip=min(side*(pad.matrix_world@Vector(p)).x for p in pad.bound_box)
-            assert abs(loose_tip-outer-travel)<.00001 and travel>0
+            assert panel.get('holder_bolt_slot')
+            # Probe the bare panel, at this holder's allowed positions, on
+            # both sides of the shank. There must still be fabric above/below.
+            station=socket.location.y
+            bolt_z=screw.location.z
+            def panel_solid(y,z):
+                local=panel.matrix_local.inverted()@Vector((side*(outer+.05*inch),y,z))
+                return panel.ray_cast(local,Vector((-side,0,0)))[0]
+            assert abs(plate.location.z+plate.dimensions.z/2-seam_top)<.00001
+            for adjustment in (-1,0,1):
+                y=station+adjustment*data['mechanism']['socketAdjustment']*inch
+                for dz in (-.067,0,.067):assert not panel_solid(y,bolt_z+dz*inch),(key,'slot blocked',side,dz)
+                for dz in (-.11,.11):assert panel_solid(y,bolt_z+dz*inch),(key,'missing slot web',side,dz)
+            head=next(o for o in screw.children if o.name.startswith('Hex_bolt_head_'))
+            shank=next(o for o in screw.children if o.name.startswith('Bolt_shank_'))
+            loose_head=min(side*(head.matrix_world@v.co).x for v in head.data.vertices)
+            washer_face=max(side*(washer.matrix_world@v.co).x for v in washer.data.vertices)
+            assert abs(loose_head-washer_face-travel)<.00001 and travel>0
+            shank_tip=min(side*(shank.matrix_world@v.co).x for v in shank.data.vertices)
+            nut_face=min(side*(nut.matrix_world@v.co).x for v in nut.data.vertices)
+            assert shank_tip<nut_face
+            for part_with_bore in (plate,washer,nut):
+                inv=part_with_bore.matrix_world.inverted()
+                start=inv@(screw.matrix_world.translation+Vector((side*.01,0,0)))
+                direction=inv.to_3x3()@Vector((-side,0,0))
+                assert not part_with_bore.ray_cast(start,direction)[0],(key,part_with_bore.name)
             for step in range(13):
                 f=step/12
                 screw_transform=screw.matrix_world@Matrix.Translation((-side*f*travel,0,0))@Matrix.Rotation(-side*f*1.5*math.pi,4,'X')
                 outside=max(side*(screw_transform@child.matrix_local@Vector(v.co)).x for child in screw.children for v in child.data.vertices)
-                assert outside<sleeve_inside-.012*inch,(key,'thumbwheel/sleeve')
+                assert outside<sleeve_inside-.012*inch,(key,'bolt/sleeve')
             pin=part('Guide_pin_')
             assert pin.location.z+pin.dimensions.z/2>seam_top and pin.location.z-pin.dimensions.z/2<2.61*inch
     # Each ray is one strand on the outside of a 0.6 mm cable.
