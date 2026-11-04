@@ -15,18 +15,25 @@ function buildItem(item,scene,pickables){const group=new THREE.Group(),[w,d,h]=i
  const tag=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w-.6,6),.95),labelTexture(String(item.volume).padStart(2,'0')+'  '+item.name.toUpperCase(),item.count+' MATERIALS'));tag.position.set(0,item.kind==='wave'?-.6:0,d/2+.17);group.add(tag);
 }
 
-function createView(rack,items){
+function inches(n){return Math.floor(n)+(['','¼','½','¾'][Math.round(n%1*4)]||'');}
+function createView(shelf,rack,items){
  const card=document.createElement('article');card.className='shelf-card';card.dataset.kind=rack.kind;
- card.innerHTML=`<div class="card-heading"><div><h2>${names[rack.kind]}</h2><p>6 volumes · ${rack.arrangement}</p></div><strong>${rack.width} × ${rack.depth} × ${rack.height}″<small>W × D × H</small></strong></div><div class="scene-wrap"><canvas aria-label="${names[rack.kind]} shelf, six volumes, ${rack.width} by ${rack.depth} by ${rack.height} inches. Drag to orbit; click a volume to open."></canvas><div class="dimensions" aria-hidden="true"></div><button class="reset" aria-label="Reset ${names[rack.kind].toLowerCase()} view">⌖</button></div><nav class="volume-links" aria-label="${names[rack.kind]} volumes"></nav>`;
+ const [rw,rd,rh]=rack.required,requiredText=rack.required.map(inches).join(' × ')+'″';
+ const {width:w,depth:d,height:h,panel:p}=shelf,clearWidth=w-2*p;
+ card.innerHTML=`<div class="card-heading"><div><h2>${names[rack.kind]}</h2><p>6 volumes · ${rack.arrangement}</p></div><strong>${requiredText}<small>SPACE NEEDED · W × D × H</small></strong></div><div class="scene-wrap"><canvas aria-label="${names[rack.kind]} in a standard shelf. Six volumes need ${requiredText} including clearance. Drag to orbit or click a volume to open."></canvas><div class="dimensions" aria-hidden="true"></div><button class="reset" aria-label="Reset ${names[rack.kind].toLowerCase()} view">⌖</button></div><div class="space-summary"><div class="width-meter" aria-hidden="true"><i style="width:${100*rw/clearWidth}%"></i></div><span>${inches(clearWidth-rw)}″ of shelf width free</span></div><nav class="volume-links" aria-label="${names[rack.kind]} volumes"></nav>`;
  $('shelves').append(card);
  const canvas=card.querySelector('canvas'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor('#eeeae2');renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
  const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-26,26,20,-20,.1,300),controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;controls.enableZoom=false;controls.minPolarAngle=.25;controls.maxPolarAngle=Math.PI*.49;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa8b2b8,2));const light=new THREE.DirectionalLight(0xfff8eb,3);light.position.set(30,60,50);light.castShadow=true;light.shadow.mapSize.set(1024,1024);Object.assign(light.shadow.camera,{left:-32,right:32,top:32,bottom:-32,near:1,far:160});light.shadow.normalBias=.025;scene.add(light);const fill=new THREE.DirectionalLight(0xd8eaff,1.5);fill.position.set(-40,30,-25);scene.add(fill);
- const {width:w,depth:d,height:h,panel:p}=rack,unit=new THREE.Group();scene.add(unit);
+ const unit=new THREE.Group();scene.add(unit);
  // Independent open-front shelf unit: floor, roof, two sides and back.
  for(const y of [p/2,h-p/2])box(unit,w,p,d,0,y,0,white);
  for(const x of [-w/2+p/2,w/2-p/2])box(unit,p,h-2*p,d,x,h/2,0,white);
  box(unit,w-2*p,h-2*p,p,0,h/2,-d/2+p/2,edge);
+ // The dashed envelope shares the front-left datum with the packed samples.
+ const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(rw,rh,rd)),new THREE.LineDashedMaterial({color:'#178985',dashSize:.40,gapSize:.24}));
+ frame.position.set(-clearWidth/2+rw/2,p+rh/2,d/2-rd/2+.025);
+ frame.computeLineDistances();scene.add(frame);
  const pickables=[];items.forEach(item=>buildItem(item,scene,pickables));
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({opacity:.13,color:'#334c56'}));floor.rotation.x=-Math.PI/2;floor.position.y=-.015;floor.receiveShadow=true;scene.add(floor);
  const labels=[];
@@ -39,7 +46,7 @@ function createView(rack,items){
 }
 function show(kind){document.querySelectorAll('[data-show]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.show===kind)));$('shelves').classList.toggle('focused',kind!=='all');for(const v of views)v.card.hidden=kind!=='all'&&v.card.dataset.kind!==kind;requestAnimationFrame(()=>views.forEach(v=>v.resize()));}
 function render(){for(const v of views){if(v.card.hidden)continue;v.controls.update();for(const l of v.labels){const pt=l.point.clone().project(v.camera);l.element.style.left=(pt.x+1)*v.canvas.clientWidth/2+'px';l.element.style.top=(1-pt.y)*v.canvas.clientHeight/2+'px';}v.renderer.render(v.scene,v.camera);}requestAnimationFrame(render);}
-async function boot(){try{const data=await fetch('storage-data.json?v=2').then(r=>{if(!r.ok)throw Error('Missing shelf sizes');return r.json();});for(const rack of data.racks)createView(rack,data.items.filter(i=>i.kind===rack.kind));
+async function boot(){try{const data=await fetch('storage-data.json?v=3').then(r=>{if(!r.ok)throw Error('Missing shelf sizes');return r.json();});const {shelf}=data;$('shelfSize').textContent=[shelf.width,shelf.depth,shelf.height].join(' × ')+'″';for(const rack of data.racks)createView(shelf,rack,data.items.filter(i=>i.kind===rack.kind));
  $('drive').onchange=()=>document.querySelectorAll('[data-kind="wave"][data-volume]').forEach(a=>a.href=url(data.items.find(i=>i.kind==='wave'&&i.volume===Number(a.dataset.volume))));
  document.querySelectorAll('[data-show]').forEach(b=>b.onclick=()=>show(b.dataset.show));addEventListener('resize',()=>views.forEach(v=>v.resize()));show('all');$('loading').hidden=true;render();
  }catch(e){console.error(e);$('loading').hidden=true;$('error').hidden=false;}}

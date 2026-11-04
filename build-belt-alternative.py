@@ -4,6 +4,7 @@ The belt is fixed at both ends and deforms over a translating transverse dowel.
 This is a motion study; strip material, tension and fatigue need prototyping.
 """
 import bpy, math, json, sys, pathlib
+from mathutils import Quaternion
 ROOT=pathlib.Path(sys.argv[sys.argv.index('--')+1]).resolve(); I=.0254
 START,END,TOP,THICK,RISE,HALF=-6.05,6.05,2.35,.06,1.,1.8
 def height(y,c):
@@ -65,6 +66,16 @@ for v in range(1,7):
     bpy.ops.wm.open_mainfile(filepath=str(ROOT/(source+'-model.blend')));scene=bpy.context.scene;scene.frame_set(0)
     data=json.loads((ROOT/(source+'-data.json')).read_text());N=len(data['materials']);slots=data.get('slotPositions',[-5.45+i*.64 for i in range(N)])
     drawer=next(o for o in scene.objects if o.get('motion')=='drawer')
+    # Move the complete tether path to the left, opposite the right-hand pull.
+    # A half turn keeps the adhesive against the wall and the outlet pointing up.
+    turn=Quaternion((0,0,1),math.pi)
+    for o in scene.objects:
+        if o.get('tether_reel'):
+            o.location.x=-o.location.x
+            o.rotation_quaternion=turn @ o.rotation_quaternion
+        elif o.get('tether_guide') or o.name.startswith(('Reel_mount_','Cable_guide_','Tether_adapter_')):
+            o.location.x=-o.location.x
+            if o.name.startswith('Tether_adapter_'):o.rotation_euler.z=-o.rotation_euler.z
     shaft=next(o for o in scene.objects if o.get('wave_shaft'))
     remove=[shaft,*shaft.children_recursive]+[o for o in scene.objects if o.name.startswith(('Bearing','Return_spring')) or 'wave_spring' in o]
     for o in set(remove):bpy.data.objects.remove(o,do_unlink=True)
