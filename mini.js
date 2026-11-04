@@ -59,9 +59,39 @@ function details(id){
 function hit(e){
  const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);ray.setFromCamera(pointer,camera);
  const first=ray.intersectObject(model,true).find(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});if(!first)return null;
- let o=first.object;while(o){if(o.userData.material_id&&opened>.999)return {id:o.userData.material_id};if(o.userData.wave_shaft||o.userData.belt_control)return {drive:true};if(o===moving)return {moving:true};o=o.parent;}return null;
+ let o=first.object;while(o){if(o.userData.side_pull)return {sidePull:first.point};if(o.userData.material_id&&opened>.999)return {id:o.userData.material_id};if(o.userData.wave_shaft||o.userData.belt_control)return {drive:true};if(o===moving)return {moving:true};o=o.parent;}return null;
 }
-function reset(){camera.zoom=1;camera.position.set(...(wave?[.50,.60,.85]:[.45,.65,.66]));controls.target.set(...(wave?[0,.12,.18]:[0,.075,-.035]));camera.lookAt(controls.target);controls.update();resize();}
+function bindSidePull(){
+ const plane=new THREE.Plane(),point=new THREE.Vector3(),normal=new THREE.Vector3(1,0,0);
+ let drag=null;
+ canvas.addEventListener('pointerdown',e=>{
+  if(!e.isPrimary||e.button!==0||inspection.active||opened!==target)return;
+  const contact=hit(e)?.sidePull;if(!contact||Math.abs(ray.ray.direction.x)<.035)return;
+  plane.setFromNormalAndCoplanarPoint(normal,contact);
+  const local=moving.worldToLocal(contact.clone());
+  drag={id:e.pointerId,offset:dowel.position.z-local.z};
+  e.stopImmediatePropagation();canvas.setPointerCapture(e.pointerId);
+  playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';
+  hovered=null;$('hover').hidden=true;canvas.style.cursor='grabbing';
+ },true);
+ canvas.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  e.stopImmediatePropagation();
+  const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
+  ray.setFromCamera(pointer,camera);if(!ray.ray.intersectPlane(plane,point))return;
+  const slots=data.slotPositions,y=-(moving.worldToLocal(point).z+drag.offset)/I;
+  let i=0;while(i<slots.length-2&&y>slots[i+1])i++;
+  focus=focusTarget=i+THREE.MathUtils.clamp((y-slots[i])/(slots[i+1]-slots[i]),0,1);
+  selected=Math.round(focus);dowelInput.value=focus;paintSelection();
+ },true);
+ function end(e){
+  if(!drag||drag.id!==e.pointerId)return;
+  drag=null;e.stopImmediatePropagation();canvas.style.cursor='grab';
+  if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);
+ }
+ for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,end,true);
+}
+function reset(){camera.zoom=1;camera.position.set(...(belt?[.78,.42,.72]:wave?[.50,.60,.85]:[.45,.65,.66]));controls.target.set(...(wave?[0,.12,.18]:[0,.075,-.035]));camera.lookAt(controls.target);controls.update();resize();}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight,a=w/h;renderer.setSize(w,h,false);const span=wave?(a<.8?.47/a:.68):(a<.8?.56/a:.60);camera.left=-span*a/2;camera.right=span*a/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();inspection?.resize();}
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -97,7 +127,7 @@ async function boot(){try{
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.65,right:.65,top:.7,bottom:-.65,near:.01,far:2});key.shadow.normalBias=.0005;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const assetVersion=12;
+ const assetVersion=belt?13:12;
  const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v='+assetVersion),fetch(prefix+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
  data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.sliding_belt){beltMesh=o;beltBase=o.geometry.attributes.position.array.slice();o.frustumCulled=false;}if(o.userData.belt_control)dowel=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
  clip=gltf.animations[0];if(carriers.length!==data.materials.length||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
@@ -108,7 +138,7 @@ async function boot(){try{
  $('flipSample').onclick=()=>inspection.flip();$('returnSample').onclick=()=>inspection.putBack();$('sampleInfo').onclick=()=>details(inspection.selection.record.id);$('soundToggle').onclick=()=>{inspection.audio.toggle();soundUI();};soundUI();
  $('lidToggle').onclick=()=>setOpen(!target);$('prev').onclick=()=>{select(selected-1);hovered=data.materials[selected].id;};$('next').onclick=()=>{select(selected+1);hovered=data.materials[selected].id;};$('pickCurrent').onclick=()=>pick(data.materials[selected].id);
  $('mechanismToggle').hidden=!wave;$('motionToggle').hidden=!wave;$('mechanismNotes').hidden=!wave;
- if(belt){if(!beltMesh||!dowel)throw Error('Missing belt mechanism');$('mechanismToggle').setAttribute('aria-label','Show belt and dowel cutaway');$('motionToggle').setAttribute('aria-label','Run sliding dowel demonstration');$('studyDescription').textContent='A fixed-end flexible belt bends over a sliding wooden dowel, lifting the sample row as you push it back and forth.';$('mechanismNotes').textContent=data.mechanism.note;dowelInput=document.querySelector('#dowelPosition');dowelInput.max=carriers.length-1;dowelInput.oninput=()=>{playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';focusTarget=Number(dowelInput.value);selected=Math.round(focusTarget);paintSelection();setOpen(true);};}
+ if(belt){if(!beltMesh||!dowel)throw Error('Missing belt mechanism');$('mechanismToggle').setAttribute('aria-label','Show belt and dowel cutaway');$('motionToggle').setAttribute('aria-label','Run sliding dowel demonstration');$('studyDescription').textContent='Drag the wooden grip along the slot on the right side. The dowel beneath the belt lifts the sample above it.';$('mechanismNotes').textContent=data.mechanism.note;dowelInput=document.querySelector('#dowelPosition');dowelInput.max=carriers.length-1;bindSidePull();document.querySelector('#caseFooter .hint').textContent='Drag side grip to browse · Click sample to lift';dowelInput.oninput=()=>{playing=false;$('motionToggle').setAttribute('aria-pressed','false');$('motionToggle').textContent='▷';focusTarget=Number(dowelInput.value);selected=Math.round(focusTarget);paintSelection();setOpen(true);};}
  document.querySelector('#about dd').textContent=carriers.length;
  if(volume>1){document.querySelector('#about dl dt:last-of-type').textContent='Known thicknesses';document.querySelector('#about dl dd:last-of-type').textContent='Preserved · unknown values use a 0.02″ display proxy';}
  if(volume>1||belt)document.querySelector('#about a[href="mini-source.zip"]').hidden=true;
@@ -118,7 +148,7 @@ async function boot(){try{
  data.materials.forEach(s=>{const b=document.createElement('button');b.textContent=s.id+' · '+s.color;b.onclick=()=>{$('about').close();pick(s.id);};$('materialIndex').append(b);});
  canvas.addEventListener('wheel',e=>{e.preventDefault();if(!inspection.active&&target===1&&Math.abs(e.deltaY)>3&&performance.now()-lastWheel>110){select(selected+Math.sign(e.deltaY));hovered=data.materials[selected].id;lastWheel=performance.now();}},{passive:false});
  let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointercancel',()=>{down=null;});canvas.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<6){if(inspection.active){inspection.hit(e)?inspection.flip():inspection.putBack();}else{const h=hit(e);if(h?.id)pick(h.id);else if(h?.drive)select(selected+1);else if(h?.moving)setOpen(!target);}}down=null;});
- canvas.addEventListener('pointermove',e=>{if(inspection.active||down){$('hover').hidden=true;return;}const h=hit(e);hovered=opened>.999?h?.id:null;canvas.style.cursor=(h?.id||h?.moving||h?.drive)?'pointer':'grab';$('hover').hidden=!hovered;if(hovered){select(data.materials.findIndex(s=>s.id===hovered));$('hover').querySelector('b').textContent=hovered+' · '+data.materials[selected].color;$('hover').querySelector('span').textContent='Lift sample';$('hover').style.left=Math.max(8,Math.min(innerWidth-255,e.clientX+15))+'px';$('hover').style.top=Math.min(innerHeight-80,e.clientY+15)+'px';}});canvas.addEventListener('pointerleave',()=>{hovered=null;$('hover').hidden=true;});
+ canvas.addEventListener('pointermove',e=>{if(inspection.active||down){$('hover').hidden=true;return;}const h=hit(e);hovered=opened>.999?h?.id:null;canvas.style.cursor=h?.sidePull?'ew-resize':(h?.id||h?.moving||h?.drive)?'pointer':'grab';$('hover').hidden=!hovered;if(hovered){select(data.materials.findIndex(s=>s.id===hovered));$('hover').querySelector('b').textContent=hovered+' · '+data.materials[selected].color;$('hover').querySelector('span').textContent='Lift sample';$('hover').style.left=Math.max(8,Math.min(innerWidth-255,e.clientX+15))+'px';$('hover').style.top=Math.min(innerHeight-80,e.clientY+15)+'px';}});canvas.addEventListener('pointerleave',()=>{hovered=null;$('hover').hidden=true;});
  addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(inspection.active){if(e.key==='Escape'){e.preventDefault();inspection.putBack();}if(e.key.toLowerCase()==='f')inspection.flip();return;}if(e.target.closest('button,a,input,select'))return;if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();select(selected+(e.key==='ArrowRight'?1:-1));hovered=data.materials[selected].id;}if(e.key==='Enter'){e.preventDefault();pick(data.materials[selected].id);}if(e.key===' '){e.preventDefault();setOpen(!target);}});
  reset();addEventListener('resize',resize);select(wave?Math.min(7,carriers.length-1):0);setOpen(true);$('loading').hidden=true;ready=true;requestAnimationFrame(frame);
  window.miniStudy={get ready(){return ready},get opened(){return opened},get target(){return target},get selected(){return selected},get focus(){return focus},mode,model,carriers,homes,data,renderer,camera,dimensions,finishes,inspection,moving,pick,setOpen,select,shaft,followers,springs,panels,camLift,mechanismView};

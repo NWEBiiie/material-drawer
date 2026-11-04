@@ -17,6 +17,49 @@ def box(name,xyz,dims,mat,parent):
     bpy.ops.mesh.primitive_cube_add(size=1);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.dimensions=[n*I for n in dims];bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat);return o
 def cylinder(name,xyz,r,depth,mat,parent):
     bpy.ops.mesh.primitive_cylinder_add(vertices=40,radius=r*I,depth=depth*I);o=bpy.context.object;o.name=name;o.parent=parent;o.location=[n*I for n in xyz];o.rotation_euler.y=math.pi/2;o.data.materials.append(mat);return o
+
+def socket_outline(start,end,radius,z):
+    # Counterclockwise obround in the side panel's Y/Z plane.
+    points=[]
+    for center,angle in [(end,-math.pi/2),(start,math.pi/2)]:
+        for i in range(17):
+            a=angle+i*math.pi/16
+            points.append((center+radius*math.cos(a),z+radius*math.sin(a)))
+    return points
+
+def cut_side_socket(panel,seams,start,end,z,open_front,trim):
+    radius=.28
+    path=socket_outline(start,end,radius,z)
+    n=len(path)
+    xs=[1.75,2.85]
+    mesh=bpy.data.meshes.new('Side slot tool')
+    verts=[(x*I,y*I,h*I) for x in xs for y,h in path]
+    faces=[tuple(reversed(range(n))),tuple(range(n,2*n))]
+    faces.extend((j,(j+1)%n,n+(j+1)%n,n+j) for j in range(n))
+    mesh.from_pydata(verts,[],faces);mesh.update()
+    cutter=bpy.data.objects.new('Side slot tool',mesh);bpy.context.scene.collection.objects.link(cutter)
+    cutter.parent=panel.parent
+    for obj in [panel,*seams]:
+        bpy.ops.object.select_all(action='DESELECT');obj.select_set(True)
+        bpy.context.view_layer.objects.active=obj
+        if obj.type!='MESH':bpy.ops.object.convert(target='MESH')
+        bpy.context.view_layer.update()
+        mod=obj.modifiers.new('Through opening for side pull','BOOLEAN')
+        mod.operation='DIFFERENCE';mod.object=cutter
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+    bpy.data.objects.remove(cutter,do_unlink=True)
+    panel['side_socket']='sleeve' if open_front else 'tray'
+    # Reinforced binding follows the edge. Leave the sleeve mouth open so the
+    # dowel can travel out of it when the drawer is extended.
+    x=(panel.location.x+panel.dimensions.x/2)/I+.012
+    if open_front:path=[(-6.46,z-radius),*path[:17],(-6.46,z+radius)]
+    curve=bpy.data.curves.new('Side socket binding','CURVE');curve.dimensions='3D'
+    curve.bevel_depth=.036*I;curve.bevel_resolution=2
+    line=curve.splines.new('POLY');line.points.add(len(path)-1)
+    for point,(y,h) in zip(line.points,path):point.co=(x*I,y*I,h*I,1)
+    line.use_cyclic_u=not open_front
+    edge=bpy.data.objects.new('Side_socket_binding',curve);bpy.context.scene.collection.objects.link(edge)
+    edge.parent=panel.parent;edge['cutaway']=True;curve.materials.append(trim)
 for v in range(1,7):
     source='wave' if v==1 else f'wave-volume-{v}';prefix='belt' if v==1 else f'belt-volume-{v}'
     bpy.ops.wm.open_mainfile(filepath=str(ROOT/(source+'-model.blend')));scene=bpy.context.scene;scene.frame_set(0)
@@ -48,10 +91,17 @@ for v in range(1,7):
         for p,base in zip(key.data,basis.data):p.co.z=base.co.z+height(base.co.y/I,c)*I
         poses.append(key)
     handle=bpy.data.objects.new('Sliding_dowel',None);scene.collection.objects.link(handle);handle.parent=drawer;handle['belt_control']=True
-    cylinder('Transverse_wooden_dowel',(0,0,TOP+RISE-THICK-.15),.15,4.02,wood,handle)
-    # Small finger grips stay inside the 4.4-inch sliding tray envelope, so
-    # closing the drawer never sends a handle through the surrounding case.
-    for x in [-2.04,2.04]:cylinder('Push_pull_knob',(x,0,TOP+RISE-THICK-.15),.15,.10,wood,handle)
+    axle_z=TOP+RISE-THICK-.15
+    right_panel=next(o for o in drawer.children if o.name.startswith('Drawer_side') and o.location.x>0)
+    sleeve=next(o for o in scene.objects if o.name.startswith('Cabinet_side') and o.location.x>0)
+    seams=[o for o in sleeve.parent.children if o.name.startswith('Cabinet_sewn_perimeter') and o.get('cutaway')]
+    trim=next(o for o in seams if 'stitch' not in o.name).data.materials[0]
+    cut_side_socket(right_panel,[],slots[0],slots[-1],axle_z,False,trim)
+    cut_side_socket(sleeve,seams,-7.0,slots[-1],axle_z,True,trim)
+    cylinder('Transverse_wooden_dowel',(.32,0,axle_z),.15,4.66,wood,handle)
+    pull=cylinder('Exterior_thumb_pull',(2.75,0,axle_z),.44,.22,wood,handle)
+    bevel=pull.modifiers.new('Rounded thumb grip','BEVEL');bevel.width=.045*I;bevel.segments=3
+    pull.modifiers.new('Grip normals','WEIGHTED_NORMAL');pull['side_pull']=True
     for y in [START,END]:box('Fixed_belt_clamp',(0,y,TOP),(.96,.16,.16),steel,drawer)
     for x in [-2.06,2.06]:
         # An open track holds the dowel axis and leaves a visible travel slot.
