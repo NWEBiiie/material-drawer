@@ -67,7 +67,12 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
   }
   function pose(p){
     const h=held,move=smooth((p-.18)/.82),lift=smooth(p/.22),end=h.destination;
-    if(h.clearancePath){
+    if(h.tetherPivot){
+      // Extract straight up. Once clear of the adjoining cards, present either
+      // face by turning around the vertical cord through the bottom eyelet.
+      h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.62)/.38));
+      positionOnCord(h,smooth(p/.62));
+    }else if(h.clearancePath){
       // Leave the slot vertically, clear the cabinet's front edge, then flip.
       // Reverse the same path on return; never slide diagonally through a rim.
       const rise=smooth(p/.42),out=smooth((p-.42)/.20),present=smooth((p-.62)/.38);
@@ -82,6 +87,10 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
     tethers?.constrain(h.object);
     frameTether();
     veil.material.opacity=.28*smooth(p);
+  }
+  function positionOnCord(h,lift){
+    const offset=h.tetherPivot.local.clone().multiply(h.object.scale).applyQuaternion(h.object.quaternion);
+    h.object.position.copy(h.tetherPivot.world).addScaledVector(h.liftVector,lift*h.liftDistance).sub(offset);
   }
   function pick(object,record){
     if(held)return false;
@@ -107,6 +116,18 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
       held.destination.y=Math.max(held.destination.y,held.homeWorld.y+held.liftDistance);
       held.destination.z=Math.max(held.destination.z,held.homeWorld.z+.046);
     }
+    if(object.userData.under_sample_tether&&entry){
+      const pivot=entry.end.getWorldPosition(new THREE.Vector3()),axis=held.liftVector;
+      held.tetherPivot={world:pivot,local:object.worldToLocal(pivot.clone())};
+      const facing=new THREE.Vector3(0,1,0).applyQuaternion(held.homeWorldRotation).projectOnPlane(axis).normalize();
+      const towardCamera=normal.clone().projectOnPlane(axis);
+      if(towardCamera.lengthSq()<1e-8)towardCamera.copy(facing);
+      towardCamera.normalize();
+      const yaw=Math.atan2(axis.dot(new THREE.Vector3().crossVectors(facing,towardCamera)),facing.dot(towardCamera));
+      held.front=new THREE.Quaternion().setFromAxisAngle(axis,yaw).multiply(held.homeWorldRotation);
+      held.back=new THREE.Quaternion().setFromAxisAngle(axis,yaw+Math.PI).multiply(held.homeWorldRotation);
+      held.faceRotation.copy(held.back);
+    }
     tethers?.hold(object,overlay);controls.enabled=false;audio.click('detach');onChange?.(held);return true;
   }
   function flip(){
@@ -128,7 +149,7 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
         held=null;tethers?.hold(null,overlay);controls.enabled=true;audio.click('attach');onChange?.(null);onReturned?.(h.record.id);
       }else if(!back&&held.progress===1){held.phase='held';onChange?.(held);}
     }else if(held.flip){
-      const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));tethers?.constrain(held.object);if(f.time===1)held.flip=null;
+      const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));if(held.tetherPivot)positionOnCord(held,1);tethers?.constrain(held.object);if(f.time===1)held.flip=null;
     }
     if(held?.phase==='held')frameTether();
   }
