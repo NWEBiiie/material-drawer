@@ -1,4 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=1';
+import {createFinishPicker} from './case-finishes.js?v=2';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
 import './study-nav.js?v=3';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
@@ -6,6 +6,7 @@ import * as THREE from './three.module.min.js';
 import { GLTFLoader } from './binder-loader.js';
 import { OrbitControls } from './binder-orbit.js';
 import { createSampleInspection } from './binder-inspection.js?v=5';
+import {createBinderCover} from './binder-cover.js?v=1';
 
 const $=id=>document.getElementById(id), canvas=$('binderScene');
 const requestedVolume=Number(new URLSearchParams(location.search).get('volume'));
@@ -15,14 +16,30 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let tethers,dimensions,finishes;
 let renderer,scene,camera,controls,model,mixer,clip,data,action,inspection;
 let pendingPage=null,pendingSample=null;
+let cover,fold=0,foldTarget=0,pendingClose=false;
 let position=0,target=0,last=performance.now(),lastWheel=0,ready=false;
 const picks=[],ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const statusNames={'manufacturer-exact':'Manufacturer product texture','retailer-exact':'Matching retailer product texture','manufacturer-color-reference':'Manufacturer color reference','illustrative-placeholder':'Illustrative color placeholder'};
 const fraction=n=>{const whole=Math.floor(n),den=32,num=Math.round((n-whole)*den);if(!num)return String(whole);let a=num,b=den;while(b){[a,b]=[b,a%b]}return `${whole?whole+' ':''}${num/a}/${den/a}`;};
 const size=a=>a.slice(0,2).map(fraction).join(' × ')+'″';
-function go(n){n=Math.max(0,Math.min(data?.pages.length||4,n));if(inspection?.active){pendingPage=n;inspection.putBack();return;}target=n;if(reduced.matches)position=target;updateUI();$('hover').hidden=true;}
+function go(n){n=Math.max(0,Math.min(data?.pages.length||4,n));if(fold>0||foldTarget){foldTarget=0;pendingClose=false;pendingPage=n;return;}if(inspection?.active){pendingPage=n;inspection.putBack();return;}target=n;if(reduced.matches)position=target;updateUI();$('hover').hidden=true;}
+function toggleCover(){
+ if(foldTarget||fold>0){foldTarget=0;pendingClose=false;return;}
+ pendingClose=true;pendingSample=null;go(0);
+}
+function updateCover(dt){
+ if(pendingClose&&!inspection.active&&position===0&&target===0){foldTarget=1;pendingClose=false;}
+ const step=reduced.matches?1:dt/.85;
+ fold+=Math.sign(foldTarget-fold)*Math.min(Math.abs(foldTarget-fold),step);
+ const smooth=fold*fold*(3-2*fold);cover.set(smooth);
+ $('foldCover').textContent=foldTarget||pendingClose?'Open cover':'Close cover';
+ $('foldCover').setAttribute('aria-expanded',String(!foldTarget&&!pendingClose));
+ $('pageFooter').hidden=inspection.active||fold>0;
+ if(fold===0&&pendingPage!==null&&!inspection.active){const next=pendingPage;pendingPage=null;go(next);}
+}
 function pickSample(id){
  const record=data.materials.find(s=>s.id===id);if(!record)return;inspection.audio.unlock();
+ if(fold>0||foldTarget){pendingSample=id;go(record.page);return;}
  if(inspection.active){if(inspection.selection.record.id===id)inspection.flip();else{pendingSample=id;inspection.putBack();}return;}
  if(target!==record.page||Math.abs(position-target)>.001){pendingSample=id;go(record.page);return;}
  pendingSample=null;const object=picks.find(o=>o.userData.material_id===id);if(object)inspection.pick(object,record);
@@ -39,7 +56,7 @@ function showSample(id){const s=data.materials.find(s=>s.id===id);if(!s)return;$
 function sampleHit(event){const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(model.children,true).filter(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});if(!hits.length)return null;let o=hits[0].object;while(o&&!o.userData.material_id)o=o.parent;return o?.userData.material_id||null;}
 function reset(){const aspect=canvas.clientWidth/canvas.clientHeight;camera.zoom=aspect<.8?.84:1;camera.position.set(.50,.72,.66);controls.target.set(-.04,.018,0);camera.lookAt(controls.target);controls.update();resize();}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);const aspect=w/h,span=aspect<.8?.82/aspect:.62;camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();inspection?.resize();}
-function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!inspection?.active){if(!reduced.matches){const step=dt*1.12;position+=Math.sign(target-position)*Math.min(Math.abs(target-position),step);}else position=target;if(mixer){action.time=Math.min(clip.duration,position*clip.duration/data.pages.length);mixer.update(0);}}controls.update();inspection?.update(dt);if(pendingSample&&!inspection.active&&Math.abs(position-target)<.001)pickSample(pendingSample);tethers?.update();dimensions?.update(!inspection?.active);finishes?.update(!inspection?.active);renderer.render(scene,inspection?.active?inspection.camera:camera);inspection?.render();requestAnimationFrame(animate);}
+function animate(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!inspection?.active){if(!reduced.matches){const step=dt*1.12;position+=Math.sign(target-position)*Math.min(Math.abs(target-position),step);}else position=target;if(mixer){action.time=Math.min(clip.duration,position*clip.duration/data.pages.length);mixer.update(0);}}controls.update();inspection?.update(dt);updateCover(dt);if(pendingSample&&!inspection.active&&fold===0&&Math.abs(position-target)<.001)pickSample(pendingSample);tethers?.update();dimensions?.update(!inspection?.active&&fold===0);finishes?.update(!inspection?.active);renderer.render(scene,inspection?.active?inspection.camera:camera);inspection?.render();requestAnimationFrame(animate);}
 
 async function boot(){
  try{
@@ -49,8 +66,9 @@ async function boot(){
   const key=new THREE.DirectionalLight(0xfff9ed,3.2);key.position.set(.25,.9,.5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-.5;key.shadow.camera.right=.5;key.shadow.camera.top=.5;key.shadow.camera.bottom=-.5;key.shadow.camera.near=.01;key.shadow.camera.far=2;key.shadow.normalBias=.001;key.shadow.bias=-.0001;scene.add(key);
   const fill=new THREE.DirectionalLight(0xe6efff,1.5);fill.position.set(-.5,.4,-.5);scene.add(fill);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x405045,opacity:.15}));floor.rotation.x=-Math.PI/2;floor.position.y=-.006;floor.receiveShadow=true;scene.add(floor);
-  const results=await Promise.all([new GLTFLoader().loadAsync(modelFile+'.glb?v='+ (volume===1?'5':'1')),fetch((volume===1?'binder-data':'volume-'+volume+'-data')+'.json?v='+ (volume===1?'4':'1')).then(r=>{if(!r.ok)throw Error('Missing schedule');return r.json();})]);
+  const results=await Promise.all([new GLTFLoader().loadAsync(modelFile+'.glb?v=workshop1'),fetch((volume===1?'binder-data':'volume-'+volume+'-data')+'.json?v=workshop1').then(r=>{if(!r.ok)throw Error('Missing schedule');return r.json();})]);
   const gltf=results[0];data=results[1];model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material?.map)o.material.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}if(o.userData.material_id)picks.push(o);});
+  cover=createBinderCover(model);$('foldCover').onclick=toggleCover;$('foldCover').disabled=!cover.available;
   clip=gltf.animations[0];if(!clip||picks.length!==data.materials.length)throw Error('Incomplete binder model');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
   if(volume!==1){const about=$('about');about.querySelector('h2').textContent=data.volume.name+' · Volume '+volume;about.querySelector('p').textContent=`${data.materials.length} samples on ${data.pages.length} mounting pages, with four corner snaps and a retractable tether per sample.`;about.querySelector('.note').textContent='Color mockups only. Known sample thicknesses are preserved. Unspecified thickness uses a labeled 0.02″ display proxy; unspecified plan dimensions use a 2½″ square proxy.';about.querySelector(':scope > a').hidden=true;const downloads=about.querySelector('.downloads');downloads.replaceChildren();for(const [ext,label] of [['blend','Blender'],['glb','GLB']]){const a=document.createElement('a');a.href=modelFile+'.'+ext;a.download='';a.textContent='Volume '+volume+' '+label+' ↓';downloads.append(a);}$('failure').querySelector('a').href=modelFile+'.blend';}
   finishes=await createFinishPicker({kind:'binder'});finishes.attach(model,'binder');
@@ -67,7 +85,7 @@ async function boot(){
   canvas.addEventListener('pointermove',e=>{if(inspection.active||down||Math.abs(position-target)>.02){$('hover').hidden=true;return;}const id=sampleHit(e);canvas.style.cursor=id?'pointer':'grab';$('hover').hidden=!id;if(id){const s=data.materials.find(s=>s.id===id);$('hover').querySelector('b').textContent=id+' · '+s.color;$('hover').querySelector('span').textContent='Pick up · '+(s.thicknessKnown===false?'thickness unknown':fraction(s.cut[2])+'″ thick');$('hover').style.left=Math.min(innerWidth-250,e.clientX+16)+'px';$('hover').style.top=Math.min(innerHeight-70,e.clientY+16)+'px';}});canvas.addEventListener('pointerleave',()=>{$('hover').hidden=true;});
   reset();addEventListener('resize',resize);updateUI();$('loading').hidden=true;ready=true;requestAnimationFrame(animate);
   // Read-only diagnostics for geometry and animation QA.
-  window.binderStudy={get ready(){return ready},get position(){return position},get target(){return target},data,model,clip,renderer,camera,go,inspection,dimensions,finishes};
+  window.binderStudy={get ready(){return ready},get position(){return position},get target(){return target},get fold(){return fold},data,model,clip,renderer,camera,go,inspection,dimensions,finishes,toggleCover};
  }catch(err){console.error(err);$('loading').hidden=true;$('failure').hidden=false;}
 }
 $('info').onclick=()=>$('about').showModal();document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').onclick=()=>d.close();d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});});boot();
