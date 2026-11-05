@@ -521,6 +521,135 @@ def rename_brand():
     return changed
 
 
+def rear_pocket_magnets(data):
+    for sample in [o for o in bpy.data.objects if 'material_id' in o]:
+        ident = sample['material_id']
+        remove([o for o in sample.children if o.name.startswith(('Snap_cap_', 'Snap_stud_'))])
+        board = bpy.data.objects['Host_board_' + ident]
+        rear = (board.location.z - board.dimensions.z / 2) / INCH
+        # Keep both the ID sleeve and the tether saddle clear of the corner discs.
+        label = bpy.data.objects['Back_card_' + ident]
+        label.scale.x = label.scale.y = .70
+        spacer = bpy.data.objects['Foam_spacer_' + ident]
+        x, y, seat_z = spacer.location / INCH
+        seat_z += spacer.dimensions.z / (2 * INCH)
+        cut(spacer, box('Label relief', (x, y, seat_z), (1.09, 1.09, .14), STEEL, bevel=0))
+        for dx in [-.625, .625]:
+            for dy in [-.625, .625]:
+                pos = (dx, dy, rear + .0075)
+                cut(board, disk('Magnet recess', pos, .089, .038, STEEL, sample))
+                disk('Rear_magnet_' + ident, pos, .087, .035, STEEL, sample)
+                strike_top = sample.location.z / INCH + rear - .011
+                disk('Strike_plate_' + ident, (x + dx, y + dy, (seat_z + strike_top) / 2),
+                     .09, strike_top - seat_z, STEEL, sample.parent)
+        del sample['snap_count']
+        sample['rear_magnets'] = 4
+    data['validation'].pop('snapsPerSample', None)
+    data['validation']['rearMagnetsPerSample'] = 4
+
+
+def case_card_sleeves(data):
+    divider = bpy.data.objects['Center_divider']
+    inside_x = abs(bpy.data.objects['Tray_side'].location.x) - bpy.data.objects['Tray_side'].dimensions.x / 2
+    inside_y = abs(bpy.data.objects['Tray_end'].location.y) - bpy.data.objects['Tray_end'].dimensions.y / 2
+    # Extend only perimeter vertices. Scaling the cut insert would shift its sockets.
+    for foam in [o for o in bpy.data.objects if o.name.startswith('Foam_insert')]:
+        xs = [v.co.x for v in foam.data.vertices]
+        ys = [v.co.y for v in foam.data.vertices]
+        xmin, xmax, ymax = min(xs), max(xs), max(ys)
+        left, right = (-inside_x, -divider.dimensions.x / 2) if foam.location.x < 0 else (divider.dimensions.x / 2, inside_x)
+        for v in foam.data.vertices:
+            if abs(v.co.x - xmin) < 1e-6:
+                v.co.x = left - foam.location.x
+            elif abs(v.co.x - xmax) < 1e-6:
+                v.co.x = right - foam.location.x
+            if abs(abs(v.co.y) - ymax) < 1e-6:
+                v.co.y = math.copysign(inside_y, v.co.y)
+        foam.data.update()
+    resize(divider, (divider.dimensions.x / INCH, 2 * inside_y / INCH, divider.dimensions.z / INCH))
+    pet = material('Clear blue PET sleeve', (.35, .70, .85), roughness=.18, alpha=.28)
+    edge = material('Welded PET edge', (.24, .53, .66), roughness=.28, alpha=.66)
+    for board in [o for o in bpy.data.objects if 'material_id' in o]:
+        ident = board['material_id']
+        root = bpy.data.objects['Label_sleeve_Name_tag_' + ident]
+        remove(root.children)
+        root['finish_locked'] = True
+        tag = bpy.data.objects['Name_tag_' + ident]
+        width = 2.58
+        resize(tag, (width, .36, .014))
+        tag.location.y = 1.60 * INCH
+        root.location = Vector((0, 1.55, .046)) * INCH
+        # Three welded edges and a lowered, thumb-notched mouth expose the paper.
+        half = width / 2 + .06
+        outline = [(-half, -.205), (half, -.205), (half, .158), (.24, .158)]
+        outline += [(.24 * math.cos(i * math.pi / 12), .158 - .092 * math.sin(i * math.pi / 12)) for i in range(1, 13)]
+        outline.append((-half, .158))
+        n = len(outline)
+        verts = [(x * INCH, y * INCH, z * INCH) for z in [.038, .048] for x, y in outline]
+        faces = [tuple(reversed(range(n))), tuple(range(n, 2*n))]
+        faces += [(i, (i+1)%n, (i+1)%n+n, i+n) for i in range(n)]
+        mesh = bpy.data.meshes.new('Notched sleeve face')
+        mesh.from_pydata(verts, [], faces)
+        mesh.update()
+        film = bpy.data.objects.new('Clear_film_Name_tag_' + ident, mesh)
+        bpy.context.scene.collection.objects.link(film)
+        film.parent = root
+        mesh.materials.append(pet)
+        mesh.materials.append(edge)
+        for polygon in list(mesh.polygons)[2:]:
+            polygon.material_index = 1
+        for x in [-half + .018, half - .018]:
+            box('Sleeve_side_' + ident, (x, -.024, .018), (.036, .362, .036), edge, root)
+        box('Sleeve_bottom_' + ident, (0, -.192, .018), (2*half, .026, .036), edge, root)
+        insert = empty('Sliding_name_card_' + ident, board)
+        insert['card_travel_inches'] = .43
+        for obj in [tag, bpy.data.objects['Front_ID_' + ident], bpy.data.objects['Front_name_' + ident]]:
+            obj.parent = insert  # Identity transform in board space.
+        bpy.data.objects['Front_ID_' + ident].location.x = -1.22 * INCH
+        bpy.data.objects['Front_name_' + ident].location.x = -.59 * INCH
+    data['validation'].update(foamMeetsTrayWalls=True, removableFrontNameCards=True)
+
+
+def binder_reel_clearance(data):
+    guides = {o['tether_guide']: o for o in bpy.data.objects if 'tether_guide' in o}
+    ends = {o['tether_end']: o for o in bpy.data.objects if 'tether_end' in o}
+    for page in [o for o in bpy.data.objects if 'page_index' in o]:
+        # Shift the entire mounting pattern, including the vacant stations, off the ring line.
+        for obj in page.children:
+            if obj.name.startswith(('Sample_', 'Color_', 'Label_', 'Page_snap_', 'Page_stud_', 'Vacant_cell', 'Parked_eyelet_', 'Empty_terminal_')):
+                obj.location.x += .48 * INCH
+        bpy.context.view_layer.update()
+        for reel in [o for o in page.children if 'tether_reel' in o]:
+            ident = reel['tether_reel']
+            end = page.matrix_world.inverted() @ ends[ident].matrix_world.translation / INCH
+            # Stagger within the left-hand gutter so even the middle row clears its ring.
+            side = -1 if end.y > 2 else 1
+            center = Vector((end.x - .51, end.y + side * .80, .03 + .0045 / INCH))
+            reel.location = center * INCH
+            direction = end - center
+            reel.rotation_euler.z = math.atan2(direction.y, direction.x) + math.pi / 2
+            outlet = center + Vector((direction.x, direction.y, 0)).normalized() * (.0146 / INCH)
+            guide = guides[ident]
+            guide.location = outlet.lerp(end, .50) * INCH
+            ferrule = bpy.data.objects.get('Cable_guide_' + ident)
+            if ferrule:
+                ferrule.location = guide.location
+                ferrule.rotation_mode = 'QUATERNION'
+                ferrule.rotation_quaternion = direction.to_track_quat('Z', 'Y')
+            reel['on_binder_page'] = True
+    update_cords()
+    data['tether']['mounting'] = 'Individual page-mounted reels offset from the rings, with a guide aimed at the left eyelet of each sample.'
+
+
+def revise_mounts(prefix, kind, data):
+    edits = {'pockets': rear_pocket_magnets, 'case': case_card_sleeves, 'binder': binder_reel_clearance}
+    if kind not in edits or bpy.context.scene.get('mount_revision', 0) >= 1:
+        return False
+    edits[kind](data)
+    bpy.context.scene['mount_revision'] = data['mountRevision'] = 1
+    return True
+
+
 def save_model(prefix):
     bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / (prefix + '-model.blend')), compress=True)
     bpy.ops.export_scene.gltf(filepath=str(ROOT / (prefix + '-model.glb')), export_format='GLB', export_animations=True, export_extras=True, export_apply=True, export_cameras=False, export_lights=False, export_frame_range=True, export_force_sampling=True, export_animation_mode='SCENE', export_anim_scene_split_object=False)
@@ -560,17 +689,21 @@ def export_storage(prefix, kind):
 for prefix in PREFIXES:
     bpy.ops.wm.open_mainfile(filepath=str(SOURCE / (prefix + '-model.blend')))
     scene = bpy.context.scene
+    kind = 'binder' if prefix.startswith(('binder', 'volume-')) else prefix.split('-')[0]
+    data = json.loads((SOURCE / (prefix + '-data.json')).read_text())
     if scene.get('workshop_revision', 0) >= REVISION:
         scene.frame_set(0)
-        if rename_brand():
+        bpy.context.view_layer.update()
+        STEEL = bpy.data.materials.get('Workshop satin nickel')
+        mounts_changed = revise_mounts(prefix, kind, data)
+        if rename_brand() or mounts_changed:
             save_model(prefix)
-            print('TITLE_UPDATED', prefix, flush=True)
+            (ROOT / (prefix + '-data.json')).write_text(json.dumps(data, separators=(',', ':')))
+            print('MODEL_UPDATED', prefix, flush=True)
         print('ALREADY_REVISED', prefix)
         continue
     scene.frame_set(0)
     bpy.context.view_layer.update()
-    data = json.loads((SOURCE / (prefix + '-data.json')).read_text())
-    kind = 'binder' if prefix.startswith(('binder', 'volume-')) else prefix.split('-')[0]
     if kind == 'belt':
         kind = 'wave'
     STEEL = material('Workshop satin nickel', (.50, .55, .59), .85, .3)
@@ -591,6 +724,7 @@ for prefix in PREFIXES:
             assert all(abs(a - b) < .000001 for a, b in zip(before[identifier], obj.dimensions)), 'Changed sample ' + identifier
     scene['workshop_revision'] = REVISION
     data['workshopRevision'] = REVISION
+    revise_mounts(prefix, kind, data)
     save_model(prefix)
     data['storageEnvelope'] = export_storage(prefix, kind)
     (ROOT / (prefix + '-data.json')).write_text(json.dumps(data, separators=(',', ':')))
