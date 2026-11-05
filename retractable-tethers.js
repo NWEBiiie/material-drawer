@@ -38,11 +38,14 @@ export function createRetractableTethers({model,scene}){
  }
  function hold(object,overlay){
   for(const e of entries.values()){
-   const held=e.id===object?.userData.material_id;(held?overlay:scene).add(e.wire);e.held=held;
+   const held=e.id===object?.userData.material_id;
+   // The binder's exposed reel and cable use the page's normal depth ordering.
+   const reveal=held&&!e.reel.userData.on_binder_page;
+   (reveal?overlay:scene).add(e.wire);e.held=held;
    if(e.reelFocus){e.reelFocus.removeFromParent();e.reelFocus=null;}
    // Reveal the selected recessed reel in place, along with its continuous cord.
    // The real reel and all mounting anchors retain their original transforms.
-   if(held){e.reelFocus=e.reel.clone(true);e.reelFocus.name='Inspection_reel_'+e.id;e.reelFocus.matrixAutoUpdate=false;e.reel.updateWorldMatrix(true,false);e.reelFocus.matrix.copy(e.reel.matrixWorld);overlay.add(e.reelFocus);}
+   if(reveal){e.reelFocus=e.reel.clone(true);e.reelFocus.name='Inspection_reel_'+e.id;e.reelFocus.matrixAutoUpdate=false;e.reel.updateWorldMatrix(true,false);e.reelFocus.matrix.copy(e.reel.matrixWorld);overlay.add(e.reelFocus);}
   }
  }
  update();return {entries,update,constrain,hold,limit,radius};

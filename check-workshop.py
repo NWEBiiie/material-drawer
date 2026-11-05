@@ -5,10 +5,42 @@ import math
 import pathlib
 import sys
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 root = pathlib.Path(sys.argv[sys.argv.index('--') + 1]).resolve()
 inch = .0254
 count = 0
+
+
+def world_bounds(obj):
+    corners = [obj.matrix_world @ Vector(v) for v in obj.bound_box]
+    return [(min(v[i] for v in corners), max(v[i] for v in corners)) for i in range(3)]
+
+
+def tree(obj):
+    mesh = obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).data
+    return BVHTree.FromPolygons([obj.matrix_world @ v.co for v in mesh.vertices],
+                                [p.vertices[:] for p in mesh.polygons])
+
+
+def check_reels(scene):
+    housings = [o for o in scene.objects if o.name.startswith(('Reel_body_', 'Reel_outlet_'))]
+    fixed = [(o, world_bounds(o), tree(o)) for o in scene.objects
+             if o.name.startswith(('Round_ring', 'Ring mechanism', 'Cover_box_', 'Inside_right'))]
+    pages = [o for o in scene.objects if o.name.startswith('Mounting_page_')]
+    for frame in range(0, scene.frame_end + 1, 4):
+        scene.frame_set(frame)
+        obstacles = fixed + [(o, world_bounds(o), tree(o)) for o in pages]
+        for housing in housings:
+            bounds = world_bounds(housing)
+            for obj, other, obstacle in obstacles:
+                if obj.parent == housing.parent.parent:
+                    continue  # The reel's adhesive foot rests on its own page.
+                if all(a < d and c < b for (a,b),(c,d) in zip(bounds, other)):
+                    assert not tree(housing).overlap(obstacle), (frame, housing.name, obj.name)
+    scene.frame_set(0)
+
+
 for path in sorted(root.glob('*-model.blend')):
     prefix = path.name.removesuffix('-model.blend')
     data = json.loads((root / (prefix + '-data.json')).read_text())
@@ -25,6 +57,7 @@ for path in sorted(root.glob('*-model.blend')):
         sample = next(o for o in scene.objects if o.type == 'MESH' and o.get('sample_id', o.get('material_id')) == record['id'])
         assert abs(sample.dimensions.z / inch - record['cut'][2]) < .00001, (prefix, record['id'], 'thickness')
     if kind == 'binder':
+        check_reels(scene)
         cells = len(data['pages']) * 6
         assert len([o for o in scene.objects if 'tether_reel' in o]) == cells
         assert len([o for o in scene.objects if o.get('snap_half') == 'stud']) == cells * 4
@@ -41,7 +74,15 @@ for path in sorted(root.glob('*-model.blend')):
         assert min(v.z for v in corners) > 2.99 * inch
     elif kind == 'case':
         assert data['case'] == [9, 12, 6]
+        foam_bounds = [world_bounds(o) for o in scene.objects if o.name.startswith('Foam_insert')]
+        assert abs(min(b[0][0] for b in foam_bounds) / inch + 4.26) < .001
+        assert abs(max(b[0][1] for b in foam_bounds) / inch - 4.26) < .001
+        assert all(abs(b[1][0]/inch + 5.76) < .001 and abs(b[1][1]/inch - 5.76) < .001 for b in foam_bounds)
         for carrier in [o for o in scene.objects if 'material_id' in o]:
+            ident = carrier['material_id']
+            card = bpy.data.objects['Sliding_name_card_' + ident]
+            assert card.parent == carrier and bpy.data.objects['Name_tag_' + ident].parent == card
+            assert bpy.data.objects['Clear_film_Name_tag_' + ident].parent.parent == carrier
             assert carrier['board_width_inches'] == 2.9
             assert carrier['board_height_inches'] == 3.65
             assert abs(carrier.rotation_euler.x - math.radians(65)) < .00001
@@ -54,7 +95,16 @@ for path in sorted(root.glob('*-model.blend')):
         assert len([o for o in scene.objects if o.name.startswith('Foam_spacer_')]) == len(materials)
         for record in materials:
             carrier = bpy.data.objects['Carrier_' + record['id']]
-            assert len([o for o in carrier.children if o.name.startswith('Snap_cap_')]) == 4
+            magnets = [o for o in carrier.children if o.name.startswith('Rear_magnet_')]
+            plates = [o for o in scene.objects if o.name.split('.')[0] == 'Strike_plate_' + record['id']]
+            assert len(magnets) == len(plates) == 4
+            assert not any(o.name.startswith(('Snap_cap_', 'Snap_stud_')) for o in carrier.children)
+            for magnet in magnets:
+                assert magnet.location.z + magnet.dimensions.z / 2 < -record['cut'][2] * inch / 2
+                lower = world_bounds(magnet)[2][0]
+                plate = min(plates, key=lambda p: (p.matrix_world.translation - magnet.matrix_world.translation).length)
+                assert (plate.matrix_world.translation.xy - magnet.matrix_world.translation.xy).length < 1e-6
+                assert 0 < lower - world_bounds(plate)[2][1] < .002 * inch
     else:
         assert len([o for o in scene.objects if o.name.startswith('Carrier_magnet_')]) == len(materials) * 2
         for frame in [0, 24, 48]:

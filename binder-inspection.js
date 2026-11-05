@@ -67,7 +67,13 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
   }
   function pose(p){
     const h=held,move=smooth((p-.18)/.82),lift=smooth(p/.22),end=h.destination;
-    if(h.tetherPivot){
+    if(h.pageMount){
+      const mount=h.pageMount;
+      const pivot=mount.home.clone().addScaledVector(mount.normal,.135*smooth(p/.55))
+        .addScaledVector(mount.right,.085*smooth((p-.36)/.48));
+      h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.55)/.45));
+      h.object.position.copy(pivot).sub(mount.local.clone().multiply(h.object.scale).applyQuaternion(h.object.quaternion));
+    }else if(h.tetherPivot){
       // Extract straight up. Once clear of the adjoining cards, present either
       // face by turning around the vertical cord through the bottom eyelet.
       h.object.quaternion.copy(h.homeWorldRotation).slerp(h.faceRotation,smooth((p-.62)/.38));
@@ -110,6 +116,11 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
       liftVector:object.userData.extraction_axis?new THREE.Vector3(...object.userData.extraction_axis).applyQuaternion(object.quaternion).normalize():new THREE.Vector3(0,1,0),
       liftDistance:object.userData.extraction_distance||.055,
       progress:0,phase:'lifting',face:'back',flip:null};
+    if(entry?.reel.userData.on_binder_page){
+      const pivot=entry.end.getWorldPosition(new THREE.Vector3());
+      held.pageMount={home:pivot,local:object.worldToLocal(pivot.clone()),right,
+        normal:new THREE.Vector3(0,1,0).transformDirection(home.parent.matrixWorld)};
+    }
     if(object.userData.inspection_clearance_path){
       held.clearancePath=true;held.outward=new THREE.Vector3(0,0,1).transformDirection(home.parent.matrixWorld);
       // Parent coordinates in the exported drawer have +Z toward its opening.
@@ -149,7 +160,13 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
         held=null;tethers?.hold(null,overlay);controls.enabled=true;audio.click('attach');onChange?.(null);onReturned?.(h.record.id);
       }else if(!back&&held.progress===1){held.phase='held';onChange?.(held);}
     }else if(held.flip){
-      const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));if(held.tetherPivot)positionOnCord(held,1);tethers?.constrain(held.object);if(f.time===1)held.flip=null;
+      const f=held.flip;f.time=reduced.matches?1:clamp(f.time+dt/.55);held.object.quaternion.copy(f.from).slerp(f.to,smooth(f.time));
+      if(held.pageMount){
+        const m=held.pageMount;
+        held.object.position.copy(m.home).addScaledVector(m.normal,.135).addScaledVector(m.right,.085)
+          .sub(m.local.clone().multiply(held.object.scale).applyQuaternion(held.object.quaternion));
+      }else if(held.tetherPivot)positionOnCord(held,1);
+      tethers?.constrain(held.object);if(f.time===1)held.flip=null;
     }
     if(held?.phase==='held')frameTether();
   }
@@ -157,7 +174,7 @@ export function createSampleInspection({renderer,scene,camera,controls,tethers,o
     if(!held)return;
     renderer.autoClear=false;renderer.render(veilScene,veilCamera);
     // The drawer must occlude a sample while it is still in its slot.
-    if(!held.clearancePath)renderer.clearDepth();
+    if(!held.clearancePath&&!held.pageMount)renderer.clearDepth();
     renderer.render(overlay,inspectionCamera);renderer.autoClear=true;
   }
   function resize(){if(!held)return;inspectionCamera.copy(camera);held.baseCamera.copy(camera);held.baseZoom=camera.zoom;frameTether();}
