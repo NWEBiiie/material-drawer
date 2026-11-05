@@ -21,6 +21,7 @@ if args[:1] == ['--source']:
 PREFIXES = args or [p.name.removesuffix('-model.blend') for p in ROOT.glob('*-model.blend')]
 INCH = .0254
 REVISION = 1
+SITE_TITLE = '<insert title here>'
 
 
 def empty(name, parent=None, position=(0, 0, 0)):
@@ -70,7 +71,7 @@ def disk(name, position, radius, depth, mat, parent=None):
     return obj
 
 
-def text(name, value, position, size, parent=None):
+def text(name, value, position, size, parent=None, ink=None):
     curve = bpy.data.curves.new(name, 'FONT')
     curve.body = value
     curve.size = size * INCH
@@ -78,7 +79,7 @@ def text(name, value, position, size, parent=None):
     bpy.context.scene.collection.objects.link(obj)
     obj.parent = parent
     obj.location = Vector(position) * INCH
-    curve.materials.append(INK)
+    curve.materials.append(ink if ink is not None else INK)
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
@@ -506,13 +507,23 @@ def edit_wave(data):
 
 
 def rename_brand():
+    changed = False
     for name in ['Brand', 'Case_brand', 'Inner_cover_mark']:
         old = bpy.data.objects.get(name)
-        if old:
+        if old and old.get('brand_text') != SITE_TITLE:
             parent, position, rotation = old.parent, old.location.copy(), old.rotation_euler.copy()
+            ink = old.data.materials[0]
             remove([old])
-            obj = text(name, 'MATERIAL LIBRARY', position / INCH, .25, parent)
+            obj = text(name, SITE_TITLE, position / INCH, .25, parent, ink)
             obj.rotation_euler = rotation
+            obj['brand_text'] = SITE_TITLE
+            changed = True
+    return changed
+
+
+def save_model(prefix):
+    bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / (prefix + '-model.blend')), compress=True)
+    bpy.ops.export_scene.gltf(filepath=str(ROOT / (prefix + '-model.glb')), export_format='GLB', export_animations=True, export_extras=True, export_apply=True, export_cameras=False, export_lights=False, export_frame_range=True, export_force_sampling=True, export_animation_mode='SCENE', export_anim_scene_split_object=False)
 
 
 def export_storage(prefix, kind):
@@ -550,6 +561,10 @@ for prefix in PREFIXES:
     bpy.ops.wm.open_mainfile(filepath=str(SOURCE / (prefix + '-model.blend')))
     scene = bpy.context.scene
     if scene.get('workshop_revision', 0) >= REVISION:
+        scene.frame_set(0)
+        if rename_brand():
+            save_model(prefix)
+            print('TITLE_UPDATED', prefix, flush=True)
         print('ALREADY_REVISED', prefix)
         continue
     scene.frame_set(0)
@@ -576,8 +591,7 @@ for prefix in PREFIXES:
             assert all(abs(a - b) < .000001 for a, b in zip(before[identifier], obj.dimensions)), 'Changed sample ' + identifier
     scene['workshop_revision'] = REVISION
     data['workshopRevision'] = REVISION
-    bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / (prefix + '-model.blend')), compress=True)
-    bpy.ops.export_scene.gltf(filepath=str(ROOT / (prefix + '-model.glb')), export_format='GLB', export_animations=True, export_extras=True, export_apply=True, export_cameras=False, export_lights=False, export_frame_range=True, export_force_sampling=True, export_animation_mode='SCENE', export_anim_scene_split_object=False)
+    save_model(prefix)
     data['storageEnvelope'] = export_storage(prefix, kind)
     (ROOT / (prefix + '-data.json')).write_text(json.dumps(data, separators=(',', ':')))
     print('WORKSHOP_VALIDATED', prefix, json.dumps(data['validation']), flush=True)
