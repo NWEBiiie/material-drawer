@@ -702,16 +702,101 @@ def square_binder_mounts(data, shift_columns):
     data['tether']['mounting'] = 'Page-mounted reels face right. Each cord meets the midpoint of its material sample’s left edge.'
 
 
+def uniform_binder_layout(data):
+    # Reserve a spine gutter, then use the same pitch along both page axes.
+    side, pitch, first_x = 2.0, 3.60, 3.66
+    inset = side / 2 - .22
+    records = {r['id']: r for r in data['materials']}
+    anchors = {o['tether_anchor']: o for o in bpy.data.objects if 'tether_anchor' in o}
+    guides = {o['tether_guide']: o for o in bpy.data.objects if 'tether_guide' in o}
+    ends = {o['tether_end']: o for o in bpy.data.objects if 'tether_end' in o}
+    for page in [o for o in bpy.data.objects if 'page_index' in o]:
+        ids = data['pages'][page['page_index']]['materials']
+        remove(o for o in page.children if o.name.startswith('Vacant_cell'))
+        for reel in [o for o in page.children if 'tether_reel' in o]:
+            ident = reel['tether_reel']
+            slot = ids.index(ident) if ident in ids else int(ident.rsplit('_', 1)[1])
+            x, y = first_x + (slot % 2) * pitch, (1 - slot // 2) * pitch
+            posts = [o for o in page.children if o.name.split('.')[0] in ('Page_snap_' + ident, 'Page_stud_' + ident)]
+            old_center = sum((o.location for o in posts), Vector()) / len(posts)
+            for post in posts:
+                post.location.x = (x + math.copysign(inset, post.location.x - old_center.x)) * INCH
+                post.location.y = (y + math.copysign(inset, post.location.y - old_center.y)) * INCH
+            end = ends[ident]
+            if ident in records:
+                record = records[ident]
+                sample = bpy.data.objects['Sample_' + ident]
+                old_side = record['cut'][0]
+                ratio = side / old_side
+                assert ratio <= 1
+                for vertex in sample.data.vertices:
+                    vertex.co.x *= ratio
+                    vertex.co.y *= ratio
+                for uv in sample.data.uv_layers.active.data:
+                    uv.uv = tuple(.5 + (v - .5) * ratio for v in uv.uv)
+                sample.data.update()
+                record['cut'][:2] = [side, side]
+                sample['cut_width_inches'] = sample['cut_height_inches'] = side
+                sample.location.x, sample.location.y = x * INCH, y * INCH
+                for socket in [o for o in sample.children if o.name.startswith('Sample_socket_')]:
+                    socket.location.x = math.copysign(inset * INCH, socket.location.x)
+                    socket.location.y = math.copysign(inset * INCH, socket.location.y)
+                old_board = bpy.data.objects['Host_board_' + ident]
+                board_z, board_mat = old_board.location.z / INCH, old_board.data.materials[0]
+                remove([old_board])
+                board = box('Host_board_' + ident, (0, 0, board_z), (side, side, .04), board_mat, sample)
+                cut(board, box('Eyelet relief cutter', (-side / 2 + .14, 0, board_z), (.36, .28, .12), STEEL, sample, 0))
+                adapter = bpy.data.objects['Tether_adapter_' + ident]
+                adapter.location.x = -side * INCH / 2 - .0025
+                card = bpy.data.objects['Back_card_' + ident]
+                card_ratio = (side - .80) / (old_side - .80)
+                card.scale.x *= card_ratio
+                card.scale.y *= card_ratio
+                if record.get('planKnown', True) and old_side != side:
+                    old_text = bpy.data.objects['Back_cut_' + ident]
+                    pos, ink = old_text.location.copy() / INCH, old_text.data.materials[0]
+                    remove([old_text])
+                    text('Back_cut_' + ident, 'CUT  2 x 2 in', pos, .09 * (old_side - .80) / 1.70, card, ink)
+                for stem, drop in [('Label_', .23), ('Color_', .43)]:
+                    label = bpy.data.objects[stem + ident]
+                    label.location.x, label.location.y = (x - side / 2) * INCH, (y - side / 2 - drop) * INCH
+            else:
+                ink = bpy.data.materials['Workshop navy ink']
+                for sign in (-1, 1):
+                    box('Vacant_cell', (x + sign * side / 2, y, .034), (.012, side, .006), ink, page, 0)
+                    box('Vacant_cell', (x, y + sign * side / 2, .034), (side, .012, .006), ink, page, 0)
+                end.location.x = (x - side / 2 - .09) * INCH - .0025
+                end.location.y = y * INCH
+                bpy.data.objects['Parked_eyelet_' + ident].location = end.location
+            bpy.context.view_layer.update()
+            local = page.matrix_world.inverted()
+            dock = local @ end.matrix_world.translation
+            reel.location.x, reel.location.y = dock.x - .77 * INCH, dock.y
+            bpy.context.view_layer.update()
+            start = local @ anchors[ident].matrix_world.translation
+            guides[ident].location = start.lerp(dock, .5)
+            ferrule = bpy.data.objects.get('Cable_guide_' + ident)
+            if ferrule:
+                ferrule.location = guides[ident].location
+                ferrule.rotation_quaternion = (dock - start).to_track_quat('Z', 'Y')
+    update_cords()
+    data['binder']['sampleGrid'] = {'cutInches': side, 'pitchInches': pitch, 'firstColumnInches': first_x}
+    if 'unknownPlanProxyInches' in data['validation']:
+        data['validation']['unknownPlanProxyInches'] = [side, side]
+
+
 def revise_mounts(prefix, kind, data):
     edits = {'pockets': rear_pocket_magnets, 'case': case_card_sleeves, 'binder': binder_reel_clearance}
     revision = bpy.context.scene.get('mount_revision', 0)
-    target = 3 if kind == 'binder' else 1
+    target = 4 if kind == 'binder' else 1
     if kind not in edits or revision >= target:
         return False
     if revision < 1:
         edits[kind](data)
     if kind == 'binder':
-        square_binder_mounts(data, shift_columns=revision < 2)
+        if revision < 3:
+            square_binder_mounts(data, shift_columns=revision < 2)
+        uniform_binder_layout(data)
     bpy.context.scene['mount_revision'] = data['mountRevision'] = target
     return True
 

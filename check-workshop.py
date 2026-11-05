@@ -41,21 +41,34 @@ def check_reels(scene):
     scene.frame_set(0)
 
 
-def check_binder_stations(scene):
+def check_binder_stations(scene, data):
     guides = {o['tether_guide']: o for o in scene.objects if 'tether_guide' in o}
     ends = {o['tether_end']: o for o in scene.objects if 'tether_end' in o}
     anchors = {o['tether_anchor']: o for o in scene.objects if 'tether_anchor' in o}
     for reel in [o for o in scene.objects if 'tether_reel' in o]:
         ident = reel['tether_reel']
         page = reel.parent
+        ids = data['pages'][page['page_index']]['materials']
+        slot = ids.index(ident) if ident in ids else int(ident.rsplit('_', 1)[1])
+        grid = data['binder']['sampleGrid']
+        pitch = grid['pitchInches']
+        x = grid['firstColumnInches'] + slot % 2 * pitch
+        y = (1 - slot // 2) * pitch
+        studs = [o for o in page.children if o.name.split('.')[0] == 'Page_stud_' + ident]
+        assert len(studs) == 4
+        assert {(round(o.location.x / inch - x, 2), round(o.location.y / inch - y, 2)) for o in studs} == {
+            (a, b) for a in (-.78, .78) for b in (-.78, .78)}, ident
         local = page.matrix_world.inverted()
         station = [local @ o.matrix_world.translation for o in [reel, anchors[ident], guides[ident], ends[ident]]]
         assert max(v.y for v in station) - min(v.y for v in station) < .00001, ident
         assert all(a.x < b.x for a, b in zip(station, station[1:])), ident
         assert .75 < (station[-1].x - station[0].x) / inch < 1.04, ident
+        assert abs(station[-1].y / inch - y) < .001, ident
         adapter = bpy.data.objects.get('Tether_adapter_' + ident)
         if adapter:
             sample = adapter.parent
+            assert abs(sample.location.x / inch - x) < .001, ident
+            assert all(abs(s / inch - 2) < .001 for s in sample.dimensions[:2]), ident
             ring = bpy.data.objects['Ring_terminal_' + ident]
             corners = [sample.matrix_world.inverted() @ ring.matrix_world @ Vector(v) for v in ring.bound_box]
             assert abs(max(v.x for v in corners) + sample.dimensions.x / 2) < .001 * inch, ident
@@ -63,9 +76,6 @@ def check_binder_stations(scene):
             assert abs(station[-1].y - sample.location.y) < .001 * inch, ident
             board = bpy.data.objects['Host_board_' + ident]
             assert not tree(board).overlap(tree(ring)), ident
-        else:
-            slot = int(ident.rsplit('_', 1)[1])
-            assert abs(station[-1].y / inch - (3.48, -.60, -3.56)[slot // 2]) < .001, ident
         body = next(o for o in reel.children if o.name.startswith('Reel_body_'))
         for sample in [o for o in page.children if 'material_id' in o]:
             board = next(o for o in sample.children if o.name.startswith('Host_board_'))
@@ -94,7 +104,7 @@ for path in sorted(root.glob('*-model.blend')):
         assert abs(sample.dimensions.z / inch - record['cut'][2]) < .00001, (prefix, record['id'], 'thickness')
     if kind == 'binder':
         check_reels(scene)
-        check_binder_stations(scene)
+        check_binder_stations(scene, data)
         cells = len(data['pages']) * 6
         assert len([o for o in scene.objects if 'tether_reel' in o]) == cells
         assert len([o for o in scene.objects if o.get('snap_half') == 'stud']) == cells * 4
