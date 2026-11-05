@@ -42,7 +42,7 @@ export async function createFinishPicker({kind=null}={}){
   materials.set(key,m);return m;
  }
  function apply(id){for(const {mesh,role} of registry.get(id)||[])mesh.material=material(role,state[id]);}
- function attach(model,id){const surfaces=[];model.traverse(mesh=>{if(!mesh.isMesh)return;let owner=mesh;while(owner!==model&&!owner.userData.name)owner=owner.parent;const role=finishRole(owner?.userData.name||mesh.name,id,config);if(!role)return;surfaceUV(mesh);surfaces.push({mesh,role});});registry.set(id,surfaces);apply(id);return surfaces.length;}
+ function attach(model,id){const surfaces=[];model.traverse(mesh=>{if(!mesh.isMesh)return;let ancestor=mesh;while(ancestor){if(ancestor.userData.finish_locked)return;ancestor=ancestor.parent;}let owner=mesh;while(owner!==model&&!owner.userData.name)owner=owner.parent;const role=mesh.userData.finish_role||finishRole(owner?.userData.name||mesh.name,id,config);if(!role)return;surfaceUV(mesh);surfaces.push({mesh,role});});registry.set(id,[...(registry.get(id)||[]),...surfaces]);apply(id);return surfaces.length;}
  function persist(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
  const link=document.createElement('link');link.rel='stylesheet';link.href=new URL('./case-finishes.css?v=1',import.meta.url);document.head.append(link);
  const root=document.createElement('aside');root.className='case-finish-picker';root.setAttribute('aria-label','Case finishes');root.dataset.view=kind||'shelf';

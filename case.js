@@ -1,4 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=1';
+import {createFinishPicker} from './case-finishes.js?v=2';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
 import './study-nav.js?v=3';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
@@ -41,7 +41,7 @@ async function boot(){try{
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.5,right:.5,top:.6,bottom:-.5,near:.01,far:2});key.shadow.normalBias=.0006;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const results=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v=6'),fetch(recordsPrefix+'-data.json?v=5').then(r=>{if(!r.ok)throw Error('Missing materials');return r.json();}),fetch(prefix+'-data.json?v=5').then(r=>{if(!r.ok)throw Error('Missing case');return r.json();})]);
+ const results=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v=workshop1'),fetch(recordsPrefix+'-data.json?v=workshop1').then(r=>{if(!r.ok)throw Error('Missing materials');return r.json();}),fetch(prefix+'-data.json?v=workshop1').then(r=>{if(!r.ok)throw Error('Missing case');return r.json();})]);
  const gltf=results[0];data=results[1];caseData=results[2];model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material.map)o.material.map.anisotropy=8;}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.lid)lid=o;});
  clip=gltf.animations[0];if(carriers.length!==data.materials.length||!clip||!lid)throw Error('Incomplete case');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
  finishes=await createFinishPicker({kind:'case'});finishes.attach(model,'case');

@@ -8,7 +8,7 @@ for(const kind of ['binder','case','wave','pockets']){
  let stacks={};const own=[];
  for(let v=1;v<=6;v++){
   const prefix=kind==='binder'?(v===1?'binder':'volume-'+v):kind+(v===1?'':'-volume-'+v),data=read(prefix+'-data.json');
-  const size=kind==='binder'?[data.binder.cover[0],data.binder.cover[1],data.binder.spine+.32]:data.case;
+  const size=data.storageEnvelope||(kind==='binder'?[data.binder.cover[0],data.binder.cover[1],data.binder.spine+.32]:data.case);
   // Pocket cases are turned on the shelf; their modeled dimensions are unchanged.
   const dims=kind==='pockets'?[size[1],size[0],size[2]]:size;
   const col=kind==='wave'?v-1:kind==='binder'?Math.floor((v-1)/3):Math.floor((v-1)/2);

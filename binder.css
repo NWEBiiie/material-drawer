@@ -5,3 +5,5 @@
 .mini-link svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.2}.mini-link+.info{margin-left:0}
 
 @media(max-width:600px){header:has(.mini-link){gap:8px}header:has(.mini-link) h1{font-size:15px}header:has(.mini-link) .icon{width:34px;height:34px;flex-shrink:0}header:has(.mini-link) .eyebrow{font-size:8px}}
+
+#foldCover{width:auto;padding:0 16px;font-size:11px;letter-spacing:.04em}#foldCover:disabled{opacity:.45}
