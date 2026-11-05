@@ -41,6 +41,29 @@ def check_reels(scene):
     scene.frame_set(0)
 
 
+def check_binder_stations(scene):
+    guides = {o['tether_guide']: o for o in scene.objects if 'tether_guide' in o}
+    ends = {o['tether_end']: o for o in scene.objects if 'tether_end' in o}
+    anchors = {o['tether_anchor']: o for o in scene.objects if 'tether_anchor' in o}
+    for reel in [o for o in scene.objects if 'tether_reel' in o]:
+        ident = reel['tether_reel']
+        page = reel.parent
+        local = page.matrix_world.inverted()
+        station = [local @ o.matrix_world.translation for o in [reel, anchors[ident], guides[ident], ends[ident]]]
+        assert max(v.y for v in station) - min(v.y for v in station) < .00001, ident
+        assert all(a.x < b.x for a, b in zip(station, station[1:])), ident
+        assert abs((station[-1].x - station[0].x) / inch - .77) < .001, ident
+        body = next(o for o in reel.children if o.name.startswith('Reel_body_'))
+        for sample in [o for o in page.children if 'material_id' in o]:
+            board = next(o for o in sample.children if o.name.startswith('Host_board_'))
+            x_bounds = [(local @ board.matrix_world @ Vector(v)).x / inch for v in board.bound_box]
+            assert .09 <= min(x_bounds) and max(x_bounds) <= 8.41, sample.name
+            if abs(sample.location.y - reel.location.y) < 1.25 * inch:
+                center = reel.location.x / inch
+                radius = body.dimensions.x / (2 * inch)
+                assert center + radius < min(x_bounds) or center - radius > max(x_bounds), (ident, sample.name)
+
+
 for path in sorted(root.glob('*-model.blend')):
     prefix = path.name.removesuffix('-model.blend')
     data = json.loads((root / (prefix + '-data.json')).read_text())
@@ -58,6 +81,7 @@ for path in sorted(root.glob('*-model.blend')):
         assert abs(sample.dimensions.z / inch - record['cut'][2]) < .00001, (prefix, record['id'], 'thickness')
     if kind == 'binder':
         check_reels(scene)
+        check_binder_stations(scene)
         cells = len(data['pages']) * 6
         assert len([o for o in scene.objects if 'tether_reel' in o]) == cells
         assert len([o for o in scene.objects if o.get('snap_half') == 'stud']) == cells * 4
