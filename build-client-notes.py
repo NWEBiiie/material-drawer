@@ -641,12 +641,58 @@ def binder_reel_clearance(data):
     data['tether']['mounting'] = 'Individual page-mounted reels offset from the rings, with a guide aimed at the left eyelet of each sample.'
 
 
+def square_binder_mounts(data):
+    # The outer column can move farther towards the edge of the 8½-inch page.
+    # The extra space between columns leaves room for the right-hand reels.
+    anchors = {o['tether_anchor']: o for o in bpy.data.objects if 'tether_anchor' in o}
+    guides = {o['tether_guide']: o for o in bpy.data.objects if 'tether_guide' in o}
+    ends = {o['tether_end']: o for o in bpy.data.objects if 'tether_end' in o}
+    for page in [o for o in bpy.data.objects if 'page_index' in o]:
+        for obj in page.children:
+            if obj.name.startswith(('Sample_', 'Color_', 'Label_', 'Page_snap_', 'Page_stud_',
+                                    'Vacant_cell', 'Parked_eyelet_', 'Empty_terminal_')):
+                obj.location.x += (.20 if obj.location.x < 4.8 * INCH else .52) * INCH
+        for reel in [o for o in page.children if 'tether_reel' in o]:
+            ident = reel['tether_reel']
+            end = ends[ident]
+            # Dock along the sample's left edge, away from the three ring positions.
+            # Move the parked eyelets on empty stations with their matching terminals.
+            y_offset = (-.60 if reel.location.y > 2 * INCH else .60) * INCH
+            adapter = bpy.data.objects.get('Tether_adapter_' + ident)
+            if adapter:
+                adapter.location.y += y_offset
+            else:
+                end.location.y += y_offset
+                bpy.data.objects['Parked_eyelet_' + ident].location.y += y_offset
+            bpy.context.view_layer.update()
+            dock = page.matrix_world.inverted() @ end.matrix_world.translation
+            reel.location.x = dock.x - .77 * INCH
+            reel.location.y = dock.y
+            reel.rotation_euler.z = math.pi / 2
+            guide = guides[ident]
+            bpy.context.view_layer.update()
+            outlet = anchors[ident]
+            start = page.matrix_world.inverted() @ outlet.matrix_world.translation
+            guide.location = start.lerp(dock, .5)
+            ferrule = bpy.data.objects.get('Cable_guide_' + ident)
+            if ferrule:
+                ferrule.location = guide.location
+                ferrule.rotation_quaternion = (dock - start).to_track_quat('Z', 'Y')
+    update_cords()
+    data['tether']['mounting'] = 'Page-mounted reels face right. Each cord runs straight across the page to a left-edge eyelet.'
+
+
 def revise_mounts(prefix, kind, data):
     edits = {'pockets': rear_pocket_magnets, 'case': case_card_sleeves, 'binder': binder_reel_clearance}
-    if kind not in edits or bpy.context.scene.get('mount_revision', 0) >= 1:
+    revision = bpy.context.scene.get('mount_revision', 0)
+    target = 2 if kind == 'binder' else 1
+    if kind not in edits or revision >= target:
         return False
-    edits[kind](data)
-    bpy.context.scene['mount_revision'] = data['mountRevision'] = 1
+    if revision < 1:
+        edits[kind](data)
+    if kind == 'binder':
+        square_binder_mounts(data)
+    bpy.context.scene['mount_revision'] = data['mountRevision'] = target
     return True
 
 
