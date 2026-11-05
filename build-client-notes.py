@@ -641,7 +641,7 @@ def binder_reel_clearance(data):
     data['tether']['mounting'] = 'Individual page-mounted reels offset from the rings, with a guide aimed at the left eyelet of each sample.'
 
 
-def square_binder_mounts(data):
+def square_binder_mounts(data, shift_columns):
     # The outer column can move farther towards the edge of the 8½-inch page.
     # The extra space between columns leaves room for the right-hand reels.
     anchors = {o['tether_anchor']: o for o in bpy.data.objects if 'tether_anchor' in o}
@@ -651,22 +651,42 @@ def square_binder_mounts(data):
         for obj in page.children:
             if obj.name.startswith(('Sample_', 'Color_', 'Label_', 'Page_snap_', 'Page_stud_',
                                     'Vacant_cell', 'Parked_eyelet_', 'Empty_terminal_')):
-                obj.location.x += (.20 if obj.location.x < 4.8 * INCH else .52) * INCH
+                if shift_columns:
+                    obj.location.x += (.20 if obj.location.x < 4.8 * INCH else .52) * INCH
+                # Shift the whole middle mounting row below the center ring's sweep.
+                # These boundaries fall halfway between the original row centers.
+                if -1.80 * INCH < obj.location.y < 1.72 * INCH:
+                    obj.location.y -= .56 * INCH
         for reel in [o for o in page.children if 'tether_reel' in o]:
             ident = reel['tether_reel']
             end = ends[ident]
-            # Dock along the sample's left edge, away from the three ring positions.
-            # Move the parked eyelets on empty stations with their matching terminals.
-            y_offset = (-.60 if reel.location.y > 2 * INCH else .60) * INCH
             adapter = bpy.data.objects.get('Tether_adapter_' + ident)
             if adapter:
-                adapter.location.y += y_offset
+                sample = adapter.parent
+                board = bpy.data.objects['Host_board_' + ident]
+                edge_x = -sample.dimensions.x / (2 * INCH)
+                # The eyelet touches the middle of the cut edge. The flat saddle
+                # seats on the underside, including on the narrower two-inch cuts.
+                adapter.location.x = edge_x * INCH - .0025
+                adapter.location.y = 0
+                adapter.location.z = -sample.dimensions.z / 2 - .0007
+                board_left = -board.dimensions.x / (2 * INCH)
+                recess_start, recess_end = board_left - .04, edge_x + .32
+                cut(board, box('Eyelet relief cutter', ((recess_start + recess_end) / 2,
+                                   0, board.location.z / INCH),
+                               (recess_end - recess_start, .28, .12), STEEL, sample, 0))
+                # Keep the reel in the hardware lane even when a narrower cut
+                # leaves a longer length of exposed cord across the carrier.
+                reel_x = sample.location.x - (board.dimensions.x / 2 + .09 * INCH + .0025 + .77 * INCH)
             else:
-                end.location.y += y_offset
-                bpy.data.objects['Parked_eyelet_' + ident].location.y += y_offset
+                slot = int(ident.rsplit('_', 1)[1])
+                row_y = (3.48, -.60, -3.56)[slot // 2] * INCH
+                end.location.y = row_y
+                bpy.data.objects['Parked_eyelet_' + ident].location.y = row_y
+                reel_x = end.location.x - .77 * INCH
             bpy.context.view_layer.update()
             dock = page.matrix_world.inverted() @ end.matrix_world.translation
-            reel.location.x = dock.x - .77 * INCH
+            reel.location.x = reel_x
             reel.location.y = dock.y
             reel.rotation_euler.z = math.pi / 2
             guide = guides[ident]
@@ -679,19 +699,19 @@ def square_binder_mounts(data):
                 ferrule.location = guide.location
                 ferrule.rotation_quaternion = (dock - start).to_track_quat('Z', 'Y')
     update_cords()
-    data['tether']['mounting'] = 'Page-mounted reels face right. Each cord runs straight across the page to a left-edge eyelet.'
+    data['tether']['mounting'] = 'Page-mounted reels face right. Each cord meets the midpoint of its material sample’s left edge.'
 
 
 def revise_mounts(prefix, kind, data):
     edits = {'pockets': rear_pocket_magnets, 'case': case_card_sleeves, 'binder': binder_reel_clearance}
     revision = bpy.context.scene.get('mount_revision', 0)
-    target = 2 if kind == 'binder' else 1
+    target = 3 if kind == 'binder' else 1
     if kind not in edits or revision >= target:
         return False
     if revision < 1:
         edits[kind](data)
     if kind == 'binder':
-        square_binder_mounts(data)
+        square_binder_mounts(data, shift_columns=revision < 2)
     bpy.context.scene['mount_revision'] = data['mountRevision'] = target
     return True
 

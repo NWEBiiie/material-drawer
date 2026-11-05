@@ -28,7 +28,7 @@ def check_reels(scene):
     fixed = [(o, world_bounds(o), tree(o)) for o in scene.objects
              if o.name.startswith(('Round_ring', 'Ring mechanism', 'Cover_box_', 'Inside_right'))]
     pages = [o for o in scene.objects if o.name.startswith('Mounting_page_')]
-    for frame in range(0, scene.frame_end + 1, 4):
+    for frame in range(scene.frame_end + 1):
         scene.frame_set(frame)
         obstacles = fixed + [(o, world_bounds(o), tree(o)) for o in pages]
         for housing in housings:
@@ -52,7 +52,20 @@ def check_binder_stations(scene):
         station = [local @ o.matrix_world.translation for o in [reel, anchors[ident], guides[ident], ends[ident]]]
         assert max(v.y for v in station) - min(v.y for v in station) < .00001, ident
         assert all(a.x < b.x for a, b in zip(station, station[1:])), ident
-        assert abs((station[-1].x - station[0].x) / inch - .77) < .001, ident
+        assert .75 < (station[-1].x - station[0].x) / inch < 1.04, ident
+        adapter = bpy.data.objects.get('Tether_adapter_' + ident)
+        if adapter:
+            sample = adapter.parent
+            ring = bpy.data.objects['Ring_terminal_' + ident]
+            corners = [sample.matrix_world.inverted() @ ring.matrix_world @ Vector(v) for v in ring.bound_box]
+            assert abs(max(v.x for v in corners) + sample.dimensions.x / 2) < .001 * inch, ident
+            assert abs((max(v.y for v in corners) + min(v.y for v in corners)) / 2) < .001 * inch, ident
+            assert abs(station[-1].y - sample.location.y) < .001 * inch, ident
+            board = bpy.data.objects['Host_board_' + ident]
+            assert not tree(board).overlap(tree(ring)), ident
+        else:
+            slot = int(ident.rsplit('_', 1)[1])
+            assert abs(station[-1].y / inch - (3.48, -.60, -3.56)[slot // 2]) < .001, ident
         body = next(o for o in reel.children if o.name.startswith('Reel_body_'))
         for sample in [o for o in page.children if 'material_id' in o]:
             board = next(o for o in sample.children if o.name.startswith('Host_board_'))
