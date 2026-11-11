@@ -1,4 +1,4 @@
-const volumes=[['Flooring',18],['Paint',11],['Tile & grout',10],['Surfaces',16],['Wall protection',7],['Specialties',10]];
+const volumes=[['Flooring',21],['Paint',11],['Tile & grout',10],['Surfaces',16],['Wall protection',7],['Specialties',10]];
 const params=new URLSearchParams(location.search),n=Number(params.get('volume')),current=Number.isInteger(n)&&n>=1&&n<=6?n:1,wave=location.pathname.endsWith('mini.html')&&params.get('view')!=='pockets';
 const root=document.createElement('aside');root.className='binder-volumes';root.setAttribute('aria-label','Material volumes');
 const label=document.createElement('label');label.textContent='Volume ';const select=document.createElement('select');select.setAttribute('aria-label','Collection volume');

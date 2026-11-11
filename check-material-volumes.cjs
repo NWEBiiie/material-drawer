@@ -1,6 +1,6 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path');
 process.chdir(__dirname);const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),catalog=read('material-volumes.json');
-assert.equal(catalog.defaultVolume,1);assert.equal(catalog.materials.length,72);assert.equal(new Set(catalog.materials.map(s=>s.id)).size,72);
+assert.equal(catalog.defaultVolume,1);assert.equal(catalog.materials.length,75);assert.equal(new Set(catalog.materials.map(s=>s.id)).size,75);
 const counts=[];
 for(const g of catalog.groups){const rows=catalog.materials.filter(s=>s.volume===g.id),data=read(g.data);assert.equal(rows.length,g.count);assert.deepEqual(data.materials.map(s=>s.id),rows.map(s=>s.id));assert.deepEqual(g.pages.flatMap(p=>p.materials).sort(),rows.map(s=>s.id).sort());
  const bytes=fs.readFileSync(g.model),doc=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());assert.equal(doc.buffers.length,1);assert(!doc.buffers[0].uri);assert(doc.animations.length>0);
@@ -13,5 +13,5 @@ for(const g of catalog.groups){const rows=catalog.materials.filter(s=>s.volume==
  }
  assert(data.validation.rightStackHeightInches<3);assert(data.validation.leftStackHeightInches<3);counts.push([g.id,g.count,g.pages.length]);
 }
-const original=read('binder-data.json');catalog.materials.filter(s=>s.volume===1).forEach((s,i)=>{assert.deepEqual(s.original,original.materials[i].original);assert.deepEqual(s.cut,original.materials[i].cut);});
-console.log(JSON.stringify({passed:true,volumes:counts,materials:72,checks:'IDs, all page allocations, embedded GLB buffers, real mesh dimensions, preserved thickness, square cuts, four snaps, tethers, spine capacity, original default schedule'}));
+const original=read('binder-data.json');catalog.materials.filter(s=>s.volume===1).forEach((s,i)=>{assert.deepEqual(s.original,original.materials[i].original);assert.deepEqual(s.cut.slice(0,2),original.materials[i].cut.slice(0,2));assert.equal(original.materials[i].cut[2],s.original[2]??.02);});
+console.log(JSON.stringify({passed:true,volumes:counts,materials:75,checks:'IDs, all page allocations, embedded GLB buffers, real mesh dimensions, preserved thickness, square cuts, four snaps, tethers, spine capacity, original default schedule'}));

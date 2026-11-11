@@ -259,7 +259,7 @@ for v in range(1,7):
     data['mechanism']['socketAdjustment']=INDEX_STEP
     data['mechanism']['screwTravel']=SCREW_TRAVEL
     data['mechanism']['note']='Each gray holder bolts through a horizontal slot near the top of both blue panels. Loosen the two side bolts to reposition the holder, then tighten them against the washers and inside nuts.'
-    scene.frame_set(96);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(prefix+'-model.blend')));scene.frame_set(0)
+    scene.frame_set(96);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/(prefix+'-model.blend')),compress=True);scene.frame_set(0)
     bpy.ops.export_scene.gltf(filepath=str(ROOT/(prefix+'-model.glb')),export_format='GLB',export_animations=True,export_extras=True,export_apply=True,export_cameras=False,export_lights=False,export_frame_range=True,export_force_sampling=True,export_animation_mode='SCENE',export_anim_scene_split_object=False)
     (ROOT/(prefix+'-data.json')).write_text(json.dumps(data,separators=(',',':')))
     print('BELT_ALTERNATIVE_COMPLETE',v,flush=True)
