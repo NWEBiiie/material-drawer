@@ -1,7 +1,7 @@
-"""Build volumes 2–6 from the original Blender binder construction.
+"""Build all six volumes from the original Blender binder construction.
 blender --background --factory-startup --python build-volume-binders.py -- REPO
 Unknown dimensions use clearly identified display proxies. Known thicknesses
-and maximum sample dimensions are preserved. Volume 1 is never regenerated.
+and maximum sample dimensions are preserved.
 """
 import bpy, pathlib, sys, json, shutil, zipfile
 ROOT=pathlib.Path(sys.argv[sys.argv.index('--')+1]).resolve()
@@ -12,17 +12,20 @@ else:
     with zipfile.ZipFile(ROOT/'binder-source.zip') as z:
         name=next(n for n in z.namelist() if n.endswith('build_binder.py'))
         template=z.read(name).decode()
-for group in catalog['groups'][1:]:
+for group in catalog['groups']:
     rows=[s for s in catalog['materials'] if s['volume']==group['id']]
     dest=ROOT/'.volume-build'/str(group['id']);(dest/'binder/textures').mkdir(parents=True,exist_ok=True)
     schedule=[];sources=[];unknown={s['id'] for s in rows if s['original'][2] is None};unknown_plan={s['id'] for s in rows if s['original'][0] is None}
     for s in rows:
         dims=[v if v is not None else (0.02 if i==2 else 2.5) for i,v in enumerate(s['original'])]
         schedule.append((s['id'],s['manufacturer'],s['series'],s['color'],*dims))
-        h=s['hex'].lstrip('#');rgb=[int(h[i:i+2],16)/255 for i in (0,2,4)]
-        im=bpy.data.images.new(s['id']+' placeholder',width=8,height=8);im.pixels=list((*rgb,1))*64
-        im.filepath_raw=str(dest/'binder/textures'/(s['id']+'.png'));im.file_format='PNG';im.save();bpy.data.images.remove(im)
-        sources.append({'id':s['id'],'path':'binder/textures/'+s['id']+'.png','colorHex':s['hex'],'status':'illustrative-placeholder','pageURL':None,'notes':'Approximate color only; verified product texture not yet added.'})
+        if s.get('source'):
+            entry=dict(s['source']);entry['path']=str(ROOT / entry['path']);sources.append(entry)
+        else:
+            h=s['hex'].lstrip('#');rgb=[int(h[i:i+2],16)/255 for i in (0,2,4)]
+            im=bpy.data.images.new(s['id']+' placeholder',width=8,height=8);im.pixels=list((*rgb,1))*64
+            im.filepath_raw=str(dest/'binder/textures'/(s['id']+'.png'));im.file_format='PNG';im.save();bpy.data.images.remove(im)
+            sources.append({'id':s['id'],'path':'binder/textures/'+s['id']+'.png','colorHex':s['hex'],'status':'illustrative-placeholder','pageURL':None,'notes':'Display placeholder only; verified product texture not yet added.'})
     (dest/'binder/texture-sources.json').write_text(json.dumps({'materials':sources}))
     pages=[(p['title'],p['materials']) for p in group['pages']];frames=len(pages)*48
     source=template.replace('scene.frame_end=192','scene.frame_end='+str(frames)).replace('range(0,193,2)','range(0,'+str(frames+1)+',2)')
@@ -46,10 +49,12 @@ for group in catalog['groups'][1:]:
     data['volume']={'id':group['id'],'name':group['name']};data['animation']={'duration':frames/24,'turnDuration':2,'frames':frames+1,'fps':24}
     for record in data['materials']:
         s=byid[record['id']];record['original']=s['original'];record['thicknessKnown']=s['original'][2] is not None;record['planKnown']=s['original'][0] is not None
-        record['preview']=record['preview'].replace('data:image/jpeg','data:image/png');record['scheduleNote']=s.get('scheduleNote','')
+        if not s.get('source'):record['preview']=record['preview'].replace('data:image/jpeg','data:image/png')
+        record['scheduleNote']=s.get('scheduleNote','')
+        if record.get('source'):record['source']['path']='binder/textures/'+pathlib.Path(record['source']['path']).name
     data['validation'].pop('allThicknessesPreserved',None);data['validation'].pop('allCutsWithinOriginal',None)
     data['validation'].update({'knownThicknessesPreserved':True,'knownCutsWithinOriginal':True,'unknownThicknessProxyInches':.02,'unknownPlanProxyInches':[2.5,2.5],'unknownThicknessIds':sorted(unknown),'unknownPlanIds':sorted(unknown_plan)})
-    prefix='volume-'+str(group['id'])
+    prefix='binder' if group['id']==1 else 'volume-'+str(group['id'])
     (ROOT/(prefix+'-data.json')).write_text(json.dumps(data,separators=(',',':')))
     for ext in ['glb','blend']:shutil.copyfile(dest/('binder-model.'+ext),ROOT/(prefix+'-model.'+ext))
     print('VOLUME_COMPLETE',group['id'],len(rows),flush=True)

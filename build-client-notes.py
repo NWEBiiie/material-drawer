@@ -234,7 +234,7 @@ def edit_pockets(data):
             obj.location.z += .5 * INCH
     remove([bpy.data.objects['Pocket_foam']])
     top, floor = 2.25, 1.06
-    foam = box('Pocket_foam', (0, 0, (top + .25) / 2), (11.42, 7.42, top - .25), FOAM, case, 0)
+    foam = box('Pocket_foam', (0, 0, (top + .25) / 2), (data['case'][0] - .58, data['case'][1] - .58, top - .25), FOAM, case, 0)
     records = {r['id']: r for r in data['materials']}
     for index, slot in enumerate(data['slots']):
         x, y = slot['center']
@@ -271,7 +271,7 @@ def edit_pockets(data):
     for record in data['samples']:
         record['board'] = [1.5, 1.5, .06]
         record['pocket'] = [1.565, 1.565, top - floor]
-    data.update(case=[12, 8, 3], foamTop=top, foamSpacerPerSample=True)
+    data.update(case=[data['case'][0], data['case'][1], 3], foamTop=top, foamSpacerPerSample=True)
     data['validation'].update(snapsPerSample=4, closedHeightInches=3, allPocketsSameDepth=True)
 
 
@@ -802,6 +802,17 @@ def revise_mounts(prefix, kind, data):
 
 
 def save_model(prefix):
+    records = {s['id']: s for s in data.get('materials', [])}
+    for obj in bpy.data.objects:
+        key = obj.get('sample_id', obj.get('material_id'))
+        if obj.type == 'MESH' and key in records:
+            record = records[key]
+            obj['thickness_known'] = record.get('thicknessKnown', True)
+            obj['plan_known'] = record.get('planKnown', True)
+            obj['display_proxy'] = not obj['thickness_known'] or not obj['plan_known']
+            if not obj['plan_known']:
+                for attr in ['original_width_inches', 'original_height_inches']:
+                    if attr in obj: del obj[attr]
     bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / (prefix + '-model.blend')), compress=True)
     bpy.ops.export_scene.gltf(filepath=str(ROOT / (prefix + '-model.glb')), export_format='GLB', export_animations=True, export_extras=True, export_apply=True, export_cameras=False, export_lights=False, export_frame_range=True, export_force_sampling=True, export_animation_mode='SCENE', export_anim_scene_split_object=False)
 
