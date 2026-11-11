@@ -1,7 +1,7 @@
 {
   "version": 2,
   "received": "2026-11-11",
-  "source": "Three user-supplied revised schedule screenshots (1000122649–1000122651).",
+  "source": "Three user-supplied revised schedule screenshots (1000122649â€“1000122651).",
   "materials": [
     {
       "id": "LVT-1",
@@ -34,7 +34,16 @@
           "width": 768,
           "height": 768
         },
-        "bytes": 66713
+        "bytes": 66713,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.interface.com/US/en-US/collections/brushed-lines-drawn-lines",
+          "https://prd-sites.interface.com/content/dam/interfaceinc/interface/products/a-e/brushed-lines/viewbook/AMS_Brushed%20Lines%20and%20Drawn%20Lines%20Viewbook.pdf"
+        ]
       }
     },
     {
@@ -60,7 +69,7 @@
         "status": "illustrative-placeholder",
         "pageURL": "https://www.interface.com/US/en-US/collections/brushed-lines-drawn-lines",
         "imageURL": null,
-        "notes": "Custom UTSW color not located publicly. Procedural charcoal-gray brushed texture is an illustrative placeholder, not a verified manufacturer match.",
+        "notes": "UTSW Custom Gray is project-specific. Illustrative texture until an approved custom sample is supplied.",
         "retrievedAt": "2026-10-29",
         "width": 768,
         "height": 768,
@@ -68,7 +77,15 @@
           "width": 768,
           "height": 768
         },
-        "bytes": 71930
+        "bytes": 71930,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Unresolved",
+        "sources": [
+          "https://www.interface.com/US/en-US/collections/brushed-lines-drawn-lines"
+        ]
       }
     },
     {
@@ -82,27 +99,24 @@
         6,
         0.125
       ],
-      "hex": "#9a897b",
+      "hex": "#a9a196",
       "scheduleNote": "",
       "source": {
         "id": "LVT-3",
-        "manufacturer": "Tarkett",
-        "product": "iD Latitude Abstract",
-        "color": "Greige 5103",
-        "colorHex": "#9a897b",
-        "path": "binder/textures/lvt-3.jpg",
-        "status": "retailer-exact",
-        "pageURL": "https://yaletownfloor.com/products/tarkett-id-latitude-abstract-5103-finelines-greige",
-        "imageURL": "https://yaletownfloor.com/cdn/shop/files/tarkett-id-latitude-abstract-5103-finelines-greige-vinyl-399891.webp?v=1729560682",
-        "notes": "Matching product and color swatch from retailer; manufacturer confirms color in https://tarketthospitality.com/Products/Abstract .",
-        "retrievedAt": "2026-10-29",
-        "width": 768,
-        "height": 768,
-        "originalSize": {
-          "width": 512,
-          "height": 512
-        },
-        "bytes": 107406
+        "path": "binder/textures/lvt-3-verified.jpg",
+        "colorHex": "#a9a196",
+        "status": "manufacturer-exact",
+        "imageURL": "https://media.tarkett-image.com/docs/BR_TNA_EN_iDLATITUDE.pdf#page=20",
+        "pageURL": "https://media.tarkett-image.com/docs/BR_TNA_EN_iDLATITUDE.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 20. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://media.tarkett-image.com/docs/BR_TNA_EN_iDLATITUDE.pdf"
+        ]
       }
     },
     {
@@ -116,27 +130,24 @@
         6,
         0.125
       ],
-      "hex": "#7d6d5f",
+      "hex": "#867f77",
       "scheduleNote": "",
       "source": {
         "id": "LVT-4",
-        "manufacturer": "Tarkett",
-        "product": "iD Latitude Abstract",
-        "color": "Cool Beige 3542",
-        "colorHex": "#7d6d5f",
-        "path": "binder/textures/lvt-4.jpg",
-        "status": "retailer-exact",
-        "pageURL": "https://stoneandtileshoppe.com/products/id-latitude-abstract-texgrain-3542-cool-beige-polyurethane-luxury-vinyl-plank-flooring",
-        "imageURL": "https://stoneandtileshoppe.com/cdn/shop/products/Cool_Beige_faf2d71e-7433-4430-a7c8-bd6738debc55_1200x1200.png?v=1709226236",
-        "notes": "Matching product and color swatch from retailer; manufacturer confirms color in https://tarketthospitality.com/Products/Abstract .",
-        "retrievedAt": "2026-10-29",
-        "width": 768,
-        "height": 768,
-        "originalSize": {
-          "width": 512,
-          "height": 512
-        },
-        "bytes": 147166
+        "path": "binder/textures/lvt-4-verified.jpg",
+        "colorHex": "#867f77",
+        "status": "manufacturer-exact",
+        "imageURL": "https://media.tarkett-image.com/docs/BR_TNA_EN_iDLATITUDE.pdf#page=20",
+        "pageURL": "https://media.tarkett-image.com/docs/BR_TNA_EN_iDLATITUDE.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 20. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://media.tarkett-image.com/docs/BR_TNA_EN_iDLATITUDE.pdf"
+        ]
       }
     },
     {
@@ -170,7 +181,15 @@
           "width": 768,
           "height": 768
         },
-        "bytes": 119356
+        "bytes": 119356,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://shop.interface.com/US/en-US/resilient/nora-rubber/norament-992/N0016N.html"
+        ]
       }
     },
     {
@@ -193,10 +212,10 @@
         "color": "5303 Frankincense",
         "colorHex": "#92918b",
         "path": "binder/textures/rt-2.jpg",
-        "status": "manufacturer-exact",
-        "pageURL": "https://shop.interface.com/US/en-US/resilient/nora-rubber/norament-992/N0016N.html",
+        "status": "manufacturer-color-reference",
+        "pageURL": "https://www.interface.com/US/en-US/collections/norament-xp.html",
         "imageURL": "https://s7d1.scene7.com/is/image/interfaceprd/grano_5303-27?wid=768&hei=768&fit=crop",
-        "notes": "Same official Frankincense 5303 swatch as RT-1. User-supplied thickness controls model.",
+        "notes": "Frankincense 5303 color reference. Image is from 992 grano; confirm the specified 926 surface.",
         "retrievedAt": "2026-10-29",
         "width": 768,
         "height": 768,
@@ -204,7 +223,15 @@
           "width": 768,
           "height": 768
         },
-        "bytes": 119356
+        "bytes": 119356,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.interface.com/US/en-US/collections/norament-xp.html"
+        ]
       }
     },
     {
@@ -238,7 +265,15 @@
           "width": 768,
           "height": 768
         },
-        "bytes": 104096
+        "bytes": 104096,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.interface.com/content/dam/interfaceinc/interface/products/l-p/norament-926-castello/product-flyer/AMS_NoramentCastello_ProductFlyer.pdf"
+        ]
       }
     },
     {
@@ -272,7 +307,15 @@
           "width": 1536,
           "height": 2048
         },
-        "bytes": 187350
+        "bytes": 187350,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.manningtoncommercial.com/en/products/hard-surface/resilient-sheet/biospec-md/?colorway=CW_BSMD_15421"
+        ]
       }
     },
     {
@@ -306,7 +349,15 @@
           "width": 1536,
           "height": 2048
         },
-        "bytes": 192081
+        "bytes": 192081,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.manningtoncommercial.com/en/products/hard-surface/resilient-sheet/biospec-md/?colorway=CW_BSMD_15364"
+        ]
       }
     },
     {
@@ -340,7 +391,15 @@
           "width": 1536,
           "height": 2048
         },
-        "bytes": 162430
+        "bytes": 162430,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.manningtoncommercial.com/en/products/hard-surface/resilient-sheet/biospec-md/?colorway=CW_BSMD_15521"
+        ]
       }
     },
     {
@@ -374,7 +433,15 @@
           "width": 960,
           "height": 960
         },
-        "bytes": 229044
+        "bytes": 229044,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://professionals.tarkett.com/en_EU/collection-C000122-iq-granit-sd/granit-black-grey-0950"
+        ]
       }
     },
     {
@@ -408,7 +475,15 @@
           "width": 500,
           "height": 280
         },
-        "bytes": 79856
+        "bytes": 79856,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.stonhard.com/products/stonclad/gs/"
+        ]
       }
     },
     {
@@ -442,7 +517,15 @@
           "width": 500,
           "height": 280
         },
-        "bytes": 62603
+        "bytes": 62603,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.stonhard.com/products/stonclad/gs/"
+        ]
       }
     },
     {
@@ -456,8 +539,25 @@
         null,
         null
       ],
-      "hex": "#aaaaaa",
-      "scheduleNote": "Dimensions N/A in the chart. Neutral display placeholder; product image not supplied."
+      "hex": "#bab2a6",
+      "scheduleNote": "Dimensions N/A in the chart. Official Fjord 7508 texture applied; dimensions remain a display proxy.",
+      "source": {
+        "id": "RS-1",
+        "path": "binder/textures/rs-1-verified.jpg",
+        "colorHex": "#bab2a6",
+        "status": "manufacturer-exact",
+        "imageURL": "https://media.interface.com/is/image/interfaceprd/nv-timber_7508-fjord_va0:c960x960?wid=768&hei=768",
+        "pageURL": "https://www.interface.com/US/en-US/collections/noravant",
+        "notes": "Official Fjord 7508 woodgrain swatch. Sample dimensions remain unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.interface.com/US/en-US/collections/noravant"
+        ]
+      }
     },
     {
       "id": "RS-2",
@@ -470,8 +570,25 @@
         null,
         null
       ],
-      "hex": "#aaaaaa",
-      "scheduleNote": "Dimensions N/A in the chart. Proposed filename specifies noraplan dariva. Neutral display placeholder; product image not supplied."
+      "hex": "#adafa4",
+      "scheduleNote": "Dimensions N/A in the chart. Official noraplan dariva Pepperwood 7165 texture applied; dimensions remain a display proxy.",
+      "source": {
+        "id": "RS-2",
+        "path": "binder/textures/rs-2-verified.jpg",
+        "colorHex": "#adafa4",
+        "status": "manufacturer-exact",
+        "imageURL": "https://www.interface.com/content/dam/interfaceinc/interface/publications/brochures-collateral/ams/f-k/healthcare-brochure/healthcare-catalog-2024/AMS_Healthcare_Catalog_2024_US.pdf#page=16",
+        "pageURL": "https://www.interface.com/content/dam/interfaceinc/interface/publications/brochures-collateral/ams/f-k/healthcare-brochure/healthcare-catalog-2024/AMS_Healthcare_Catalog_2024_US.pdf",
+        "notes": "Pepperwood 7165 swatch from the official healthcare catalog (printed page 31). Directional streaked rubber visual; dimensions remain unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.interface.com/content/dam/interfaceinc/interface/publications/brochures-collateral/ams/f-k/healthcare-brochure/healthcare-catalog-2024/AMS_Healthcare_Catalog_2024_US.pdf"
+        ]
+      }
     },
     {
       "id": "TZ-1",
@@ -485,7 +602,21 @@
         null
       ],
       "hex": "#aaaaaa",
-      "scheduleNote": "Dimensions N/A; series and color not specified. Neutral display placeholder; product image not supplied."
+      "scheduleNote": "Dimensions N/A; series and color not specified. Neutral display placeholder; product image not supplied.",
+      "source": {
+        "id": "TZ-1",
+        "path": "binder/textures/tz-1-placeholder.jpg",
+        "colorHex": "#aaaaaa",
+        "status": "illustrative-placeholder",
+        "pageURL": null,
+        "notes": "American Terrazzo mix/color/aggregate is unspecified. Illustrative placeholder only.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Unresolved",
+        "sources": []
+      }
     },
     {
       "id": "CPT-1",
@@ -508,7 +639,7 @@
         "colorHex": "#363330",
         "path": "binder/textures/cpt-1.jpg",
         "status": "manufacturer-exact",
-        "pageURL": "https://cricket.newprod.manningtoncommercial.com/en/products/carpet/modular/estio/",
+        "pageURL": "https://www.manningtoncommercial.com/en/products/carpet/modular/estio/",
         "imageURL": "https://images1.cmp.optimizely.com/Zz1mMWJhMjgwMjdkZDYxMWYxOTdjMjMyMzJiNWJlNDYwMA==",
         "notes": "Official Grand Cayman product swatch from manufacturer catalog.",
         "retrievedAt": "2026-10-29",
@@ -518,7 +649,15 @@
           "width": 7155,
           "height": 7155
         },
-        "bytes": 342455
+        "bytes": 342455,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.manningtoncommercial.com/en/products/carpet/modular/estio/"
+        ]
       }
     },
     {
@@ -542,7 +681,7 @@
         "colorHex": "#5f5a4f",
         "path": "binder/textures/cpt-2.jpg",
         "status": "manufacturer-exact",
-        "pageURL": "https://cricket.newprod.manningtoncommercial.com/en/products/carpet/modular/stock/",
+        "pageURL": "https://www.manningtoncommercial.com/en/products/carpet/modular/stock/",
         "imageURL": "https://images4.cmp.optimizely.com/Zz1hYTRhZjk4NjdlMTQxMWYxYjEwNjRlYTFhNDc0NDllZg==",
         "notes": "Official Bonds product swatch from manufacturer catalog.",
         "retrievedAt": "2026-10-29",
@@ -552,7 +691,15 @@
           "width": 7155,
           "height": 7155
         },
-        "bytes": 280661
+        "bytes": 280661,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.manningtoncommercial.com/en/products/carpet/modular/stock/"
+        ]
       }
     },
     {
@@ -576,7 +723,7 @@
         "colorHex": "#59564b",
         "path": "binder/textures/cpt-3.jpg",
         "status": "manufacturer-exact",
-        "pageURL": "https://cricket.newprod.manningtoncommercial.com/en/products/carpet/modular/block-brights/",
+        "pageURL": "https://www.manningtoncommercial.com/en/products/carpet/modular/block-brights/",
         "imageURL": "https://images4.cmp.optimizely.com/Zz1jMTJkOTY2ZTdkZDIxMWYxODVmZTkyZjcwNTc4MWRlNw==",
         "notes": "Official FDIC product swatch from manufacturer catalog.",
         "retrievedAt": "2026-10-29",
@@ -586,7 +733,15 @@
           "width": 7155,
           "height": 7155
         },
-        "bytes": 318890
+        "bytes": 318890,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.manningtoncommercial.com/en/products/carpet/modular/block-brights/"
+        ]
       }
     },
     {
@@ -612,7 +767,7 @@
         "status": "manufacturer-exact",
         "pageURL": "https://www.patcraft.com/product/detail/I0317/00595",
         "imageURL": "https://shawfloors.widen.net/content/purbknszja/jpeg/I0317_00595.jpg?w=768",
-        "notes": "Official Obsidian 00595 swatch from Patcraft product page.",
+        "notes": "Previously sourced Patcraft/Shaw I0317 Obsidian 00595 product image retained.",
         "retrievedAt": "2026-10-29",
         "width": 768,
         "height": 768,
@@ -620,7 +775,15 @@
           "width": 768,
           "height": 768
         },
-        "bytes": 381332
+        "bytes": 381332,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Unresolved",
+        "sources": [
+          "https://www.patcraft.com/product/detail/I0317/00595"
+        ]
       }
     },
     {
@@ -643,10 +806,10 @@
         "color": "193 Black-Brown",
         "colorHex": "#3e403b",
         "path": "binder/textures/rb-1.jpg",
-        "status": "manufacturer-exact",
+        "status": "manufacturer-color-reference",
         "pageURL": "https://roppe.com/pinnacle-rubber-base/",
         "imageURL": "https://roppe.com/wp-content/uploads/2016/12/193_blackbrown.jpg",
-        "notes": "Official 193 Black Brown color swatch.",
+        "notes": "Official Roppe 193 Black Brown color chip; base profile and series are unspecified.",
         "retrievedAt": "2026-10-29",
         "width": 768,
         "height": 768,
@@ -654,7 +817,15 @@
           "width": 1500,
           "height": 1500
         },
-        "bytes": 7181
+        "bytes": 7181,
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://roppe.com/wp-content/uploads/2017/06/Roppe_Product_Catalog.pdf"
+        ]
       }
     },
     {
@@ -668,8 +839,25 @@
         11,
         null
       ],
-      "hex": "#f1eee5",
-      "scheduleNote": ""
+      "hex": "#EDECE6",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-1",
+        "path": "binder/textures/pt-1-verified.jpg",
+        "colorHex": "#EDECE6",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #EDECE6. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-2",
@@ -682,8 +870,25 @@
         11,
         null
       ],
-      "hex": "#eeeee5",
-      "scheduleNote": ""
+      "hex": "#EEEDE4",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-2",
+        "path": "binder/textures/pt-2-verified.jpg",
+        "colorHex": "#EEEDE4",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.ppgpaints.com/ppg-colors/gypsum",
+        "pageURL": "https://www.ppgpaints.com/ppg-colors/gypsum",
+        "notes": "Manufacturer digital color #EEEDE4. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.ppgpaints.com/ppg-colors/gypsum"
+        ]
+      }
     },
     {
       "id": "PT-3",
@@ -696,8 +901,25 @@
         11,
         null
       ],
-      "hex": "#d9d2bf",
-      "scheduleNote": ""
+      "hex": "#E5E0D0",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-3",
+        "path": "binder/textures/pt-3-verified.jpg",
+        "colorHex": "#E5E0D0",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.benjaminmoore.com/en-us/paint-colors/color/oc-9",
+        "pageURL": "https://www.benjaminmoore.com/en-us/paint-colors/color/oc-9",
+        "notes": "Manufacturer digital color #E5E0D0. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.benjaminmoore.com/en-us/paint-colors/color/oc-9"
+        ]
+      }
     },
     {
       "id": "PT-4",
@@ -710,8 +932,25 @@
         11,
         null
       ],
-      "hex": "#c6c0b5",
-      "scheduleNote": ""
+      "hex": "#CEC6BB",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-4",
+        "path": "binder/textures/pt-4-verified.jpg",
+        "colorHex": "#CEC6BB",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #CEC6BB. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-5",
@@ -724,8 +963,25 @@
         11,
         null
       ],
-      "hex": "#bfb8a8",
-      "scheduleNote": ""
+      "hex": "#BEB5A9",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-5",
+        "path": "binder/textures/pt-5-verified.jpg",
+        "colorHex": "#BEB5A9",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #BEB5A9. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-6",
@@ -738,8 +994,25 @@
         11,
         null
       ],
-      "hex": "#bdb8ad",
-      "scheduleNote": ""
+      "hex": "#BCB7AD",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-6",
+        "path": "binder/textures/pt-6-verified.jpg",
+        "colorHex": "#BCB7AD",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #BCB7AD. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-7",
@@ -752,8 +1025,25 @@
         11,
         null
       ],
-      "hex": "#575954",
-      "scheduleNote": ""
+      "hex": "#57534C",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-7",
+        "path": "binder/textures/pt-7-verified.jpg",
+        "colorHex": "#57534C",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #57534C. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-8",
@@ -766,8 +1056,25 @@
         11,
         null
       ],
-      "hex": "#292929",
-      "scheduleNote": ""
+      "hex": "#2F2F30",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-8",
+        "path": "binder/textures/pt-8-verified.jpg",
+        "colorHex": "#2F2F30",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #2F2F30. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-9",
@@ -780,8 +1087,25 @@
         11,
         null
       ],
-      "hex": "#6d818a",
-      "scheduleNote": ""
+      "hex": "#6D7E89",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-9",
+        "path": "binder/textures/pt-9-verified.jpg",
+        "colorHex": "#6D7E89",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.benjaminmoore.com/en-us/product/aura-bath-spa-waterborne-interior-paint-matte-1-gallon-normandy-2129-40/0532/ZWB100000000272676",
+        "pageURL": "https://www.benjaminmoore.com/en-us/product/aura-bath-spa-waterborne-interior-paint-matte-1-gallon-normandy-2129-40/0532/ZWB100000000272676",
+        "notes": "Manufacturer digital color #6D7E89. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.benjaminmoore.com/en-us/product/aura-bath-spa-waterborne-interior-paint-matte-1-gallon-normandy-2129-40/0532/ZWB100000000272676"
+        ]
+      }
     },
     {
       "id": "PT-10",
@@ -794,8 +1118,25 @@
         11,
         null
       ],
-      "hex": "#5389a0",
-      "scheduleNote": ""
+      "hex": "#5389A1",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-10",
+        "path": "binder/textures/pt-10-verified.jpg",
+        "colorHex": "#5389A1",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #5389A1. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "PT-11",
@@ -808,8 +1149,25 @@
         11,
         null
       ],
-      "hex": "#24617a",
-      "scheduleNote": ""
+      "hex": "#215772",
+      "scheduleNote": "",
+      "source": {
+        "id": "PT-11",
+        "path": "binder/textures/pt-11-verified.jpg",
+        "colorHex": "#215772",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "pageURL": "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf",
+        "notes": "Manufacturer digital color #215772. Paint product and sheen are unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.sherwin-williams.com/content_images/sw-pdf-sherwin-williams-colorc.pdf"
+        ]
+      }
     },
     {
       "id": "T-1",
@@ -823,7 +1181,23 @@
         0.375
       ],
       "hex": "#d1c9b8",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "T-1",
+        "path": "binder/textures/t-1-placeholder.jpg",
+        "colorHex": "#d1c9b8",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://new.conceptsurfaces.com/product/oz/",
+        "notes": "Oz Fair is confirmed. Manufacturer swatch downloads were unavailable; placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://new.conceptsurfaces.com/product/oz/"
+        ]
+      }
     },
     {
       "id": "T-2",
@@ -836,8 +1210,25 @@
         8,
         0.375
       ],
-      "hex": "#c5c2b5",
-      "scheduleNote": ""
+      "hex": "#e3e2e1",
+      "scheduleNote": "",
+      "source": {
+        "id": "T-2",
+        "path": "binder/textures/t-2-verified.jpg",
+        "colorHex": "#e3e2e1",
+        "status": "manufacturer-exact",
+        "imageURL": "https://digitalassets.daltile.com/content/dam/Daltile/website/resources/products/sales-sheets/fabrique/DAL_Fabrique_SS.pdf#page=3",
+        "pageURL": "https://www.daltile.com/products/fabric-look/fabrique/blanc-linen",
+        "notes": "Named manufacturer catalog swatch.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.daltile.com/products/fabric-look/fabrique/blanc-linen"
+        ]
+      }
     },
     {
       "id": "T-3",
@@ -851,7 +1242,23 @@
         0.375
       ],
       "hex": "#8b9186",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "T-3",
+        "path": "binder/textures/t-3-placeholder.jpg",
+        "colorHex": "#8b9186",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://new.conceptsurfaces.com/product/oche/",
+        "notes": "Oche Aqua is confirmed. Manufacturer swatch downloads were unavailable; placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://new.conceptsurfaces.com/product/oche/"
+        ]
+      }
     },
     {
       "id": "T-4",
@@ -865,7 +1272,23 @@
         0.375
       ],
       "hex": "#72736c",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "T-4",
+        "path": "binder/textures/t-4-placeholder.jpg",
+        "colorHex": "#72736c",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://new.conceptsurfaces.com/product/harmony/",
+        "notes": "Harmony Ash is confirmed; matte versus ribbed surface needs confirmation. Manufacturer swatch downloads were unavailable; placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://new.conceptsurfaces.com/product/harmony/"
+        ]
+      }
     },
     {
       "id": "T-5",
@@ -878,8 +1301,25 @@
         9.5,
         0.25
       ],
-      "hex": "#989c97",
-      "scheduleNote": ""
+      "hex": "#d2c9bd",
+      "scheduleNote": "",
+      "source": {
+        "id": "T-5",
+        "path": "binder/textures/t-5-verified.jpg",
+        "colorHex": "#d2c9bd",
+        "status": "manufacturer-exact",
+        "imageURL": "https://s1.img-b.com/build.com/mediabase/specifications/medici_and_co/1803353/medici-and-co-glnrmatv1-specification-sheet.pdf#page=1",
+        "pageURL": "https://mediciandco.com/wp-content/uploads/2024/03/GLNRPANMAT_spec.pdf",
+        "notes": "Named manufacturer catalog swatch. Manufacturer sheet hosted by a retailer; low-resolution Pantheon swatch.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://mediciandco.com/wp-content/uploads/2024/03/GLNRPANMAT_spec.pdf"
+        ]
+      }
     },
     {
       "id": "T-6",
@@ -892,8 +1332,25 @@
         8.5,
         0.25
       ],
-      "hex": "#d9d3c1",
-      "scheduleNote": ""
+      "hex": "#deddd5",
+      "scheduleNote": "",
+      "source": {
+        "id": "T-6",
+        "path": "binder/textures/t-6-verified.jpg",
+        "colorHex": "#deddd5",
+        "status": "manufacturer-exact",
+        "imageURL": "https://s7d9.scene7.com/is/image/daltile/DAL_RV06_2x8_Ripple_Cream_GL_Detail?wid=768&hei=768",
+        "pageURL": "https://www.daltile.com/products/wall/revalia-remix/ripple-cream",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.daltile.com/products/wall/revalia-remix/ripple-cream"
+        ]
+      }
     },
     {
       "id": "T-7",
@@ -906,8 +1363,26 @@
         4,
         0.25
       ],
-      "hex": "#798d96",
-      "scheduleNote": ""
+      "hex": "#9ea3a8",
+      "scheduleNote": "",
+      "source": {
+        "id": "T-7",
+        "path": "binder/textures/t-7-verified.jpg",
+        "colorHex": "#9ea3a8",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.interstyleglass.com/pages/color-chart",
+        "pageURL": "https://www.interstyleglass.com/pages/color-chart",
+        "notes": "Component palette only: Breezy / Barely Blue / Coal Grey. Stripes do not specify installation pattern or proportions.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.interstyleglass.com/pages/color-chart",
+          "https://knoxtile.com/interstyle/"
+        ]
+      }
     },
     {
       "id": "T-8",
@@ -920,8 +1395,26 @@
         10,
         0.1875
       ],
-      "hex": "#728395",
-      "scheduleNote": ""
+      "hex": "#8696a3",
+      "scheduleNote": "",
+      "source": {
+        "id": "T-8",
+        "path": "binder/textures/t-8-verified.jpg",
+        "colorHex": "#8696a3",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://cdn.bfldr.com/7MRZCZ9Y/as/p5rtcmgv7sfwnpf7rzxfwrsx/Trinity-Tile-Arabella-Brochure#page=2",
+        "pageURL": "https://www.trinitysurfaces.com/collections/377",
+        "notes": "Official Arabella Tide glossy color reference. Confirm the scheduled Stairs/fluted combination and random installation mix.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.trinitysurfaces.com/collections/377",
+          "https://cdn.bfldr.com/7MRZCZ9Y/as/p5rtcmgv7sfwnpf7rzxfwrsx/Trinity-Tile-Arabella-Brochure"
+        ]
+      }
     },
     {
       "id": "TS-1",
@@ -935,7 +1428,23 @@
         null
       ],
       "hex": "#b7b9b8",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "TS-1",
+        "path": "binder/textures/ts-1-placeholder.jpg",
+        "colorHex": "#b7b9b8",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://assets.schluter.com/asset/570120892212/document_5ipq4i4va102jei49183aim20h/profiles-walls.pdf?content-disposition=inline",
+        "notes": "Brushed stainless steel 304 (EB) is confirmed; trim profile and exact surface image are unspecified. Placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://assets.schluter.com/asset/570120892212/document_5ipq4i4va102jei49183aim20h/profiles-walls.pdf?content-disposition=inline"
+        ]
+      }
     },
     {
       "id": "GR-1",
@@ -948,8 +1457,25 @@
         null,
         null
       ],
-      "hex": "#e3e1d8",
-      "scheduleNote": ""
+      "hex": "#ffffff",
+      "scheduleNote": "",
+      "source": {
+        "id": "GR-1",
+        "path": "binder/textures/gr-1-verified.jpg",
+        "colorHex": "#ffffff",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://cdn-global.laticrete.com/-/media/project/laticrete-international/north-america/product-documents/marketing-information/catalogs-and-brochures/tsis_product_selection_catalog_ds1213.pdf?hash=0AD6D34B1D2BEC7869566D6851FFB55C&rev=f9fc4af88b1d43af853b3a5408c52db9#page=98",
+        "pageURL": "https://cdn-global.laticrete.com/-/media/project/laticrete-international/north-america/product-documents/marketing-information/catalogs-and-brochures/tsis_product_selection_catalog_ds1213.pdf?hash=0AD6D34B1D2BEC7869566D6851FFB55C&rev=f9fc4af88b1d43af853b3a5408c52db9",
+        "notes": "44 Bright White color chip. Grout product and surface texture are not specified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://cdn-global.laticrete.com/-/media/project/laticrete-international/north-america/product-documents/marketing-information/catalogs-and-brochures/tsis_product_selection_catalog_ds1213.pdf?hash=0AD6D34B1D2BEC7869566D6851FFB55C&rev=f9fc4af88b1d43af853b3a5408c52db9"
+        ]
+      }
     },
     {
       "id": "PL-1",
@@ -962,8 +1488,25 @@
         5,
         0.03125
       ],
-      "hex": "#bca281",
-      "scheduleNote": ""
+      "hex": "#dbc7b1",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-1",
+        "path": "binder/textures/pl-1-verified.jpg",
+        "colorHex": "#dbc7b1",
+        "status": "manufacturer-exact",
+        "imageURL": "https://assetlibrary.wilsonart.com/transform/PDP_HPL_Carousel_Main_8x8/49d11e20-34aa-4c9e-9ea4-c2f03d94976e/7850_8x8-Beigewood-tif",
+        "pageURL": "https://www.wilsonart.com/beigewood-7850",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.wilsonart.com/beigewood-7850"
+        ]
+      }
     },
     {
       "id": "PL-2",
@@ -976,8 +1519,26 @@
         5,
         0.03125
       ],
-      "hex": "#705444",
-      "scheduleNote": ""
+      "hex": "#704d32",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-2",
+        "path": "binder/textures/pl-2-verified.jpg",
+        "colorHex": "#704d32",
+        "status": "manufacturer-exact",
+        "imageURL": "https://assetlibrary.wilsonart.com/transform/PDP_HPL_Carousel_Main_8x8/0ed08e6c-478b-412d-bf83-33f11b169460/7965_8x8-Walnut-Heights-tif",
+        "pageURL": "https://www.wilsonart.com/laminate/thermally-fused-laminate/walnut-heights-7965",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.wilsonart.com/laminate/thermally-fused-laminate/walnut-heights-7965",
+          "https://www.wilsonart.com/media/Technical_Resources/en/wilsonart_alphanumeric_standards.pdf"
+        ]
+      }
     },
     {
       "id": "PL-3",
@@ -990,8 +1551,25 @@
         5,
         0.03125
       ],
-      "hex": "#6d5745",
-      "scheduleNote": ""
+      "hex": "#3f3028",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-3",
+        "path": "binder/textures/pl-3-verified.jpg",
+        "colorHex": "#3f3028",
+        "status": "manufacturer-exact",
+        "imageURL": "https://assetlibrary.wilsonart.com/transform/PDP_HPL_Carousel_Main_8x8/b860fd8a-cf0d-4bac-999b-14cba215b76f/7985_8x8-Morelia-Mango-tif",
+        "pageURL": "https://www.wilsonart.com/morelia-mango-7985",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.wilsonart.com/morelia-mango-7985"
+        ]
+      }
     },
     {
       "id": "PL-4",
@@ -1004,8 +1582,26 @@
         5,
         0.03125
       ],
-      "hex": "#ba8c5b",
-      "scheduleNote": ""
+      "hex": "#d29b6f",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-4",
+        "path": "binder/textures/pl-4-verified.jpg",
+        "colorHex": "#d29b6f",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://assetlibrary.wilsonart.com/transform/PDP_HPL_Carousel_Main_8x8/e56dc6ee-761a-47ab-a137-545ccdf32c66/7925_8x8-Monticello-Maple-tif",
+        "pageURL": "https://www.wilsonart.com/monticello-maple-7925",
+        "notes": "Monticello Maple 7925 design reference. Chart specifies finish -35; manufacturer currently lists -38. Finish remains unconfirmed.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.wilsonart.com/monticello-maple-7925",
+          "https://www.wilsonart.com/media/Technical_Resources/en/wilsonart_alphanumeric_standards.pdf"
+        ]
+      }
     },
     {
       "id": "PL-5",
@@ -1018,22 +1614,57 @@
         5,
         0.03125
       ],
-      "hex": "#826044",
-      "scheduleNote": ""
+      "hex": "#684432",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-5",
+        "path": "binder/textures/pl-5-verified.jpg",
+        "colorHex": "#684432",
+        "status": "manufacturer-exact",
+        "imageURL": "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf#page=7",
+        "pageURL": "https://www.wilsonart.com/media/Technical_Resources/en/wilsonart_alphanumeric_standards.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 7. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.wilsonart.com/media/Technical_Resources/en/wilsonart_alphanumeric_standards.pdf",
+          "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf"
+        ]
+      }
     },
     {
       "id": "PL-6",
       "previousId": "PL-4",
       "manufacturer": "Wilsonart",
       "series": "",
-      "color": "Columbian Walnut – 7943K-07",
+      "color": "Colombian Walnut 7943K-07",
       "original": [
         3.5,
         5,
         0.03125
       ],
-      "hex": "#60453d",
-      "scheduleNote": ""
+      "hex": "#422620",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-6",
+        "path": "binder/textures/pl-6-verified.jpg",
+        "colorHex": "#422620",
+        "status": "manufacturer-exact",
+        "imageURL": "https://assetlibrary.wilsonart.com/transform/PDP_HPL_Carousel_Main_8x8/fa1f28a4-f115-4e22-b608-dbb6074312d5/7943_8x8-Colombian-Walnut-tif",
+        "pageURL": "https://www.wilsonart.com/laminate/species/colombian-walnut-7943",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.wilsonart.com/laminate/species/colombian-walnut-7943"
+        ]
+      }
     },
     {
       "id": "PL-7",
@@ -1046,8 +1677,26 @@
         5,
         0.03125
       ],
-      "hex": "#f2f1e8",
-      "scheduleNote": ""
+      "hex": "#f9f8f4",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-7",
+        "path": "binder/textures/pl-7-verified.jpg",
+        "colorHex": "#f9f8f4",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf#page=15",
+        "pageURL": "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf",
+        "notes": "Designer White D354-60 color reference. Confirm the Chemsurf product/finish combination.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf",
+          "https://www.wilsonart.com/media/Technical_Resources/en/wilsonart_alphanumeric_standards.pdf"
+        ]
+      }
     },
     {
       "id": "PL-8",
@@ -1060,8 +1709,25 @@
         5,
         0.03125
       ],
-      "hex": "#eee8d6",
-      "scheduleNote": ""
+      "hex": "#fffeec",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-8",
+        "path": "binder/textures/pl-8-verified.jpg",
+        "colorHex": "#fffeec",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://assetlibrary.wilsonart.com/transform/PDP_HPL_Carousel_Main_8x8/1c767fe6-a505-4cc7-aac8-1ee0deba5a72/15511_8x8-Linen-Velvet-PRINT-tif",
+        "pageURL": "https://www.wilsonart.com/linen-velvet-15511",
+        "notes": "Linen Velvet 15511 is a warm-white solid, not a woven linen pattern. Manufacturer lists Traceless finish 31.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.wilsonart.com/linen-velvet-15511"
+        ]
+      }
     },
     {
       "id": "PL-9",
@@ -1074,8 +1740,25 @@
         5,
         0.03125
       ],
-      "hex": "#d8d7c9",
-      "scheduleNote": ""
+      "hex": "#e2ddcd",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-9",
+        "path": "binder/textures/pl-9-verified.jpg",
+        "colorHex": "#e2ddcd",
+        "status": "manufacturer-exact",
+        "imageURL": "https://broadviewmaterials.bynder.com/match/Brand/Formica/AssetType/ImagePhotography/AssetSubtype/Decor_Swatch/ProductCategory/Colorcore2/Decor_Code/09285/?preset=Large&io=transform%3Afit%2Cwidth%3A1200%2Cheight%3A1200",
+        "pageURL": "https://www.formica.com/products/ccore/09285",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.formica.com/en-us/-/media/project/formica/north-america/document-library/literature/national-product-guide.pdf?rev=04f0663230d14636a7fd37f8378701b8"
+        ]
+      }
     },
     {
       "id": "PL-10",
@@ -1088,8 +1771,26 @@
         5,
         0.03125
       ],
-      "hex": "#858d8d",
-      "scheduleNote": ""
+      "hex": "#8e8c87",
+      "scheduleNote": "",
+      "source": {
+        "id": "PL-10",
+        "path": "binder/textures/pl-10-verified.jpg",
+        "colorHex": "#8e8c87",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf#page=15",
+        "pageURL": "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 15. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://images.wilsonart.com/media/Technical_Resources/en/2024_laminate_standards_brochure.pdf",
+          "https://www.wilsonart.com/media/Technical_Resources/en/wilsonart_alphanumeric_standards.pdf"
+        ]
+      }
     },
     {
       "id": "SSM-1",
@@ -1102,8 +1803,25 @@
         2,
         0.375
       ],
-      "hex": "#e1ded7",
-      "scheduleNote": ""
+      "hex": "#f8f8f9",
+      "scheduleNote": "",
+      "source": {
+        "id": "SSM-1",
+        "path": "binder/textures/ssm-1-verified.jpg",
+        "colorHex": "#f8f8f9",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf#page=6",
+        "pageURL": "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 6. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf"
+        ]
+      }
     },
     {
       "id": "SSM-2",
@@ -1116,8 +1834,26 @@
         2,
         0.375
       ],
-      "hex": "#9c9d98",
-      "scheduleNote": ""
+      "hex": "#918a84",
+      "scheduleNote": "",
+      "source": {
+        "id": "SSM-2",
+        "path": "binder/textures/ssm-2-verified.jpg",
+        "colorHex": "#918a84",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf#page=6",
+        "pageURL": "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 6. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf",
+          "https://www.corian.com/sites/corian.com/IMG/pdf/k-26833_dupont_corian_solid_surface_directional_aesthetics.pdf"
+        ]
+      }
     },
     {
       "id": "SSM-3",
@@ -1131,7 +1867,23 @@
         1
       ],
       "hex": "#9d9f9b",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "SSM-3",
+        "path": "binder/textures/ssm-3-placeholder.jpg",
+        "colorHex": "#9d9f9b",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://kewaunee.com/product/epoxy-resin/kemresin/",
+        "notes": "Kemresin Grey is confirmed and differs from Slate Grey. A labeled flat Grey swatch was not retrieved; placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://kewaunee.com/product/epoxy-resin/kemresin/"
+        ]
+      }
     },
     {
       "id": "SSM-4",
@@ -1144,8 +1896,26 @@
         2,
         0.375
       ],
-      "hex": "#25282b",
-      "scheduleNote": ""
+      "hex": "#060708",
+      "scheduleNote": "",
+      "source": {
+        "id": "SSM-4",
+        "path": "binder/textures/ssm-4-verified.jpg",
+        "colorHex": "#060708",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf#page=6",
+        "pageURL": "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 6. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.exteriors.corian.com/IMG/pdf/k-28998_exterior_cladding_na_technical_bulletin_final.pdf",
+          "https://www.corian.com/tincan-soho"
+        ]
+      }
     },
     {
       "id": "QTZ-1",
@@ -1158,8 +1928,25 @@
         2,
         0.75
       ],
-      "hex": "#e9e5dc",
-      "scheduleNote": ""
+      "hex": "#e8e2d3",
+      "scheduleNote": "",
+      "source": {
+        "id": "QTZ-1",
+        "path": "binder/textures/qtz-1-verified.jpg",
+        "colorHex": "#e8e2d3",
+        "status": "manufacturer-exact",
+        "imageURL": "https://www.tools.corianquartz.com/IMG/jpg/corianquartz-calacatta-natura.jpg",
+        "pageURL": "https://www.tools.corianquartz.com/-dupont-corian-color-tool-",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.corianquartz.com/IMG/pdf/corian-inspirational-brochure-na.pdf"
+        ]
+      }
     },
     {
       "id": "QTZ-2",
@@ -1172,8 +1959,26 @@
         3,
         0.5
       ],
-      "hex": "#e6e4da",
-      "scheduleNote": ""
+      "hex": "#eaeae6",
+      "scheduleNote": "",
+      "source": {
+        "id": "QTZ-2",
+        "path": "binder/textures/qtz-2-verified.jpg",
+        "colorHex": "#eaeae6",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://www.cambriausa.com/content/dam/cusa/sales-marketing-collateral/tear-sheets/tear-sheet-weybourne.pdf#page=1",
+        "pageURL": "https://www.cambriausa.com/quartz-countertops/quartz-colors/wave-designs/designs/weybourne",
+        "notes": "Official Weybourne detail image. Polished versus matte finish remains unspecified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.cambriausa.com/quartz-countertops/quartz-colors/wave-designs/designs/weybourne",
+          "https://www.cambriausa.com/content/dam/cusa/sales-marketing-collateral/tear-sheets/tear-sheet-weybourne.pdf"
+        ]
+      }
     },
     {
       "id": "WP-1",
@@ -1186,8 +1991,25 @@
         8,
         0.03125
       ],
-      "hex": "#e4e5dc",
-      "scheduleNote": ""
+      "hex": "#fefefe",
+      "scheduleNote": "",
+      "source": {
+        "id": "WP-1",
+        "path": "binder/textures/wp-1-verified.jpg",
+        "colorHex": "#fefefe",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://cosp-p-001-delivery.sitecorecontenthub.cloud/api/public/content/418e29e3e5ce43babe27d6b2a9a394b7?v=4623ec9c&la=en&h=240&w=320",
+        "pageURL": "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures",
+        "notes": "Official Acrovyn color chip. Wall-protection product and surface texture are not specified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures"
+        ]
+      }
     },
     {
       "id": "WP-2",
@@ -1200,8 +2022,25 @@
         8,
         0.03125
       ],
-      "hex": "#e9e8e0",
-      "scheduleNote": ""
+      "hex": "#fafafa",
+      "scheduleNote": "",
+      "source": {
+        "id": "WP-2",
+        "path": "binder/textures/wp-2-verified.jpg",
+        "colorHex": "#fafafa",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://cosp-p-001-delivery.sitecorecontenthub.cloud/api/public/content/8b24eb7c01454e50a396daad81a23fa4?v=876f2a65&la=en&h=240&w=320",
+        "pageURL": "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures",
+        "notes": "Official Acrovyn color chip. Wall-protection product and surface texture are not specified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures"
+        ]
+      }
     },
     {
       "id": "WP-3",
@@ -1214,8 +2053,25 @@
         8,
         0.03125
       ],
-      "hex": "#b9b5a7",
-      "scheduleNote": ""
+      "hex": "#c8beaf",
+      "scheduleNote": "",
+      "source": {
+        "id": "WP-3",
+        "path": "binder/textures/wp-3-verified.jpg",
+        "colorHex": "#c8beaf",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://cosp-p-001-delivery.sitecorecontenthub.cloud/api/public/content/5648e424212240efaa5ac3e1a4785b73?v=aba7b687&la=en&h=240&w=320",
+        "pageURL": "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures",
+        "notes": "Official Acrovyn color chip. Wall-protection product and surface texture are not specified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures"
+        ]
+      }
     },
     {
       "id": "WP-4",
@@ -1228,8 +2084,25 @@
         8,
         0.03125
       ],
-      "hex": "#202324",
-      "scheduleNote": ""
+      "hex": "#010101",
+      "scheduleNote": "",
+      "source": {
+        "id": "WP-4",
+        "path": "binder/textures/wp-4-verified.jpg",
+        "colorHex": "#010101",
+        "status": "manufacturer-color-reference",
+        "imageURL": "https://cosp-p-001-delivery.sitecorecontenthub.cloud/api/public/content/58c15952bec94dbab3dd3ab5c399d87c?v=3c60e661&la=en&h=240&w=320",
+        "pageURL": "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures",
+        "notes": "Official Acrovyn color chip. Wall-protection product and surface texture are not specified.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.c-sgroup.com/resources/finishes-and-colors/wall-protection-color-options/acrovyn-colors-and-textures"
+        ]
+      }
     },
     {
       "id": "WP-5",
@@ -1243,7 +2116,23 @@
         null
       ],
       "hex": "#adb4b7",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "WP-5",
+        "path": "binder/textures/wp-5-placeholder.jpg",
+        "colorHex": "#adb4b7",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.c-sgroup.com/product/wall-covering/stainless-steel-wall-covering",
+        "notes": "Type 304 stainless is confirmed; exact finish image and product selection remain unspecified. Placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.c-sgroup.com/product/wall-covering/stainless-steel-wall-covering"
+        ]
+      }
     },
     {
       "id": "FRP-1",
@@ -1256,8 +2145,25 @@
         null,
         null
       ],
-      "hex": "#d8cfba",
-      "scheduleNote": ""
+      "hex": "#f0eadc",
+      "scheduleNote": "",
+      "source": {
+        "id": "FRP-1",
+        "path": "binder/textures/frp-1-verified.jpg",
+        "colorHex": "#f0eadc",
+        "status": "manufacturer-exact",
+        "imageURL": "https://www.stabilitamerica.com/wp-content/uploads/2022/02/Glasliner-Brochure.pdf#page=6",
+        "pageURL": "https://www.stabilitamerica.com/wp-content/uploads/2022/02/Glasliner-Brochure.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 6. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.stabilitamerica.com/wp-content/uploads/2022/02/Glasliner-Brochure.pdf"
+        ]
+      }
     },
     {
       "id": "FRP-2",
@@ -1270,8 +2176,25 @@
         null,
         null
       ],
-      "hex": "#e8e3d1",
-      "scheduleNote": ""
+      "hex": "#e0e0da",
+      "scheduleNote": "",
+      "source": {
+        "id": "FRP-2",
+        "path": "binder/textures/frp-2-verified.jpg",
+        "colorHex": "#e0e0da",
+        "status": "manufacturer-exact",
+        "imageURL": "https://www.stabilitamerica.com/wp-content/uploads/2022/02/Glasliner-Brochure.pdf#page=6",
+        "pageURL": "https://www.stabilitamerica.com/wp-content/uploads/2022/02/Glasliner-Brochure.pdf",
+        "notes": "Named swatch extracted from manufacturer catalog, PDF page 6. Pattern scale is representative.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.stabilitamerica.com/wp-content/uploads/2022/02/Glasliner-Brochure.pdf"
+        ]
+      }
     },
     {
       "id": "ACT-1",
@@ -1284,8 +2207,25 @@
         6,
         1
       ],
-      "hex": "#e7e7df",
-      "scheduleNote": ""
+      "hex": "#e3e3e3",
+      "scheduleNote": "",
+      "source": {
+        "id": "ACT-1",
+        "path": "binder/textures/act-1-verified.jpg",
+        "colorHex": "#e3e3e3",
+        "status": "manufacturer-exact",
+        "imageURL": "https://s7-images.armstrongceilings.com/is/image/Armstrong/OptimaSqLay_Teg_006_cropped?wid=768&hei=768",
+        "pageURL": "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/optima-lay-in-and-tegular-ceiling-tiles/item/3253.html",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/optima-lay-in-and-tegular-ceiling-tiles/item/3253.html"
+        ]
+      }
     },
     {
       "id": "ACT-2",
@@ -1298,8 +2238,25 @@
         6,
         0.75
       ],
-      "hex": "#d9dcd7",
-      "scheduleNote": ""
+      "hex": "#e0e0e0",
+      "scheduleNote": "",
+      "source": {
+        "id": "ACT-2",
+        "path": "binder/textures/act-2-verified.jpg",
+        "colorHex": "#e0e0e0",
+        "status": "manufacturer-exact",
+        "imageURL": "https://s7-images.armstrongceilings.com/is/image/Armstrong/CleanRoomVLUnperforatedSqLayIn_039_cropped?wid=768&hei=768",
+        "pageURL": "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/clean-room-vl-ceiling-tiles/item/868.html",
+        "notes": "Named manufacturer swatch. Pattern crop is a visual reference; physical scale and finish should be checked against the approved sample.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/clean-room-vl-ceiling-tiles/item/868.html"
+        ]
+      }
     },
     {
       "id": "ACT-3",
@@ -1313,7 +2270,23 @@
         null
       ],
       "hex": "#e7e8e2",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "ACT-3",
+        "path": "binder/textures/act-3-placeholder.jpg",
+        "colorHex": "#e7e8e2",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/ultima-health-zone-ceiling-tiles/item/1935.html",
+        "notes": "Chart code 1395 has not been matched to an official Ultima Health Zone item. Do not substitute 1935 without confirmation.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Unresolved",
+        "sources": [
+          "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/ultima-health-zone-ceiling-tiles/item/1935.html"
+        ]
+      }
     },
     {
       "id": "ACT-4",
@@ -1327,7 +2300,23 @@
         null
       ],
       "hex": "#dce0dc",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "ACT-4",
+        "path": "binder/textures/act-4-placeholder.jpg",
+        "colorHex": "#dce0dc",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/ultima-health-zone-ceiling-tiles/item/1935.html",
+        "notes": "Chart code 171935UC1 has not been matched to an official item. Exact texture needs sample-label confirmation.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Unresolved",
+        "sources": [
+          "https://www.armstrongceilings.com/commercial/en/commercial-ceilings-walls/ultima-health-zone-ceiling-tiles/item/1935.html"
+        ]
+      }
     },
     {
       "id": "WT-1",
@@ -1340,8 +2329,25 @@
         11,
         null
       ],
-      "hex": "#777169",
-      "scheduleNote": "Product cell: Mocha 1622; proposed filename: Mocha 1922."
+      "hex": "#55504b",
+      "scheduleNote": "Mocha 1622 from the product cell is used (3% openness); the proposed 1922 filename was inconsistent.",
+      "source": {
+        "id": "WT-1",
+        "path": "binder/textures/wt-1-verified.jpg",
+        "colorHex": "#55504b",
+        "status": "manufacturer-exact",
+        "imageURL": "https://embed.widencdn.net/img/springswindowfashions/phltv0bs8x/768x768px/S_19_1622.jpg",
+        "pageURL": "https://www.mechoshade.com/products/shadecloth/solar-collections/",
+        "notes": "Official SoHo 1600 Mocha 1622 swatch (3% openness). The former 1922 filename referred to a different openness.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.mechoshade.com/products/shadecloth/solar-collections/"
+        ]
+      }
     },
     {
       "id": "DF-1",
@@ -1355,7 +2361,23 @@
         null
       ],
       "hex": "#d8dfe0",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "DF-1",
+        "path": "binder/textures/df-1-placeholder.jpg",
+        "colorHex": "#d8dfe0",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://multimedia.3m.com/mws/media/902596O/3m-tm-crystal-tm-glass-finishes-dusted-7725se-314.pdf",
+        "notes": "3M Dusted Crystal 7725SE-314 is a translucent frosted film. Exact digital texture was not retrieved; opaque placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://multimedia.3m.com/mws/media/902596O/3m-tm-crystal-tm-glass-finishes-dusted-7725se-314.pdf"
+        ]
+      }
     },
     {
       "id": "DF-2",
@@ -1369,7 +2391,23 @@
         null
       ],
       "hex": "#73534e",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "DF-2",
+        "path": "binder/textures/df-2-placeholder.jpg",
+        "colorHex": "#73534e",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.coloredfilms.com/shop/p/rc3-vivarium-window-film-formally-rose-chocolate",
+        "notes": "RC-3 Vivarium is a translucent red-brown film. Available manufacturer photo shows a roll, not a flat swatch; placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.coloredfilms.com/shop/p/rc3-vivarium-window-film-formally-rose-chocolate"
+        ]
+      }
     },
     {
       "id": "CC-1",
@@ -1382,8 +2420,25 @@
         36,
         null
       ],
-      "hex": "#c9c1b2",
-      "scheduleNote": "Chart length is 36+ inches; 36 is the stated minimum."
+      "hex": "#cecfce",
+      "scheduleNote": "Chart length is 36+ inches; 36 is the stated minimum.",
+      "source": {
+        "id": "CC-1",
+        "path": "binder/textures/cc-1-verified.jpg",
+        "colorHex": "#cecfce",
+        "status": "manufacturer-exact",
+        "imageURL": "https://assets-maharam-prod.s3.amazonaws.com/images/sku_detail_images/large/12341/Maharam_Immerse_511505_007_detail.jpg?1557856682=",
+        "pageURL": "https://www.maharam.com/products/immerse/colors/007-fader",
+        "notes": "Official Immerse 511505-007 Fader detail image, shown railroaded by Maharam. Beige mesh header is a separate component.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.maharam.com/products/immerse/colors/007-fader"
+        ]
+      }
     },
     {
       "id": "CC-2",
@@ -1397,7 +2452,24 @@
         null
       ],
       "hex": "#a4aab0",
-      "scheduleNote": "Chart length is 36+ inches; 36 is the stated minimum. Series cell: Carry 251518; proposed filename: Eventide 511466-004."
+      "scheduleNote": "Chart length is 36+ inches; 36 is the stated minimum. Series cell: Carry 251518; proposed filename: Eventide 511466-004.",
+      "source": {
+        "id": "CC-2",
+        "path": "binder/textures/cc-2-placeholder.jpg",
+        "colorHex": "#a4aab0",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.maharam.com/maharam/products/carry-2/colors/004-eventide",
+        "notes": "Version conflict: main chart appears to say Carry 2 511518-004; filename says older Carry 511466-004. Exact version needs confirmation.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Review detail",
+        "sources": [
+          "https://www.maharam.com/maharam/products/carry-2/colors/004-eventide",
+          "https://documents.maharam.com/511466_spec.pdf"
+        ]
+      }
     },
     {
       "id": "CCT-1",
@@ -1411,7 +2483,23 @@
         null
       ],
       "hex": "#c9cecb",
-      "scheduleNote": ""
+      "scheduleNote": "",
+      "source": {
+        "id": "CCT-1",
+        "path": "binder/textures/cct-1-placeholder.jpg",
+        "colorHex": "#c9cecb",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.c-sgroup.com/product/track-systems/standard-track-6062",
+        "notes": "Standard Track 6062 anodized aluminum is confirmed. No flat finish swatch applied; placeholder retained.",
+        "checked": "2026-11-11"
+      },
+      "textureVerification": {
+        "checked": "2026-11-11",
+        "identity": "Confirmed",
+        "sources": [
+          "https://www.c-sgroup.com/product/track-systems/standard-track-6062"
+        ]
+      }
     }
   ]
 }
