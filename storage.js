@@ -14,7 +14,7 @@ function url(item){const u=new URL(item.url,location.href);if(item.kind==='wave'
 async function buildItem(item,scene,pickables){
  const group=new THREE.Group();group.position.set(...item.position);group.userData.item=item;scene.add(group);pickables.push(group);
  const prefix=item.kind==='binder'?(item.volume===1?'binder':'volume-'+item.volume):(item.kind==='wave'&&$('drive').value==='belt'?'belt':item.kind)+(item.volume===1?'':'-volume-'+item.volume);
- const file=prefix+'-storage.glb?v=chart2';
+ const file=prefix+'-storage.glb?v='+(prefix.startsWith('pockets')?'slots21':'chart2');
  if(!assets.has(file))assets.set(file,loader.loadAsync(file));
  const gltf=await assets.get(file),model=gltf.scene.clone(true);model.scale.setScalar(1/.0254);
  if(item.kind==='pockets')model.rotation.y=Math.PI/2;
@@ -55,7 +55,7 @@ async function createView(shelf,rack,items){
 }
 function show(kind){document.querySelectorAll('[data-show]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.show===kind)));$('shelves').classList.toggle('focused',kind!=='all');for(const v of views)v.card.hidden=kind!=='all'&&v.card.dataset.kind!==kind;requestAnimationFrame(()=>views.forEach(v=>v.resize()));}
 function render(){for(const v of views){if(v.card.hidden)continue;v.controls.update();for(const l of v.labels){const pt=l.point.clone().project(v.camera);l.element.style.left=(pt.x+1)*v.canvas.clientWidth/2+'px';l.element.style.top=(1-pt.y)*v.canvas.clientHeight/2+'px';}v.renderer.render(v.scene,v.camera);}requestAnimationFrame(render);}
-async function boot(){try{const data=await fetch('storage-data.json?v=chart2').then(r=>{if(!r.ok)throw Error('Missing shelf sizes');return r.json();});finishes=await createFinishPicker();const {shelf}=data;$('shelfSize').textContent=[shelf.width,shelf.depth,shelf.height].join(' × ')+'″';await Promise.all(data.racks.map(rack=>createView(shelf,rack,data.items.filter(i=>i.kind===rack.kind))));
+async function boot(){try{const data=await fetch('storage-data.json?v=slots21').then(r=>{if(!r.ok)throw Error('Missing shelf sizes');return r.json();});finishes=await createFinishPicker();const {shelf}=data;$('shelfSize').textContent=[shelf.width,shelf.depth,shelf.height].join(' × ')+'″';await Promise.all(data.racks.map(rack=>createView(shelf,rack,data.items.filter(i=>i.kind===rack.kind))));
  $('drive').onchange=async()=>{const view=views.find(v=>v.card.dataset.kind==='wave');$('drive').disabled=true;try{for(const group of view.items)group.removeFromParent();view.items.length=0;await Promise.all(data.items.filter(i=>i.kind==='wave').map(item=>buildItem(item,view.scene,view.items)));document.querySelectorAll('[data-kind="wave"][data-volume]').forEach(a=>a.href=url(data.items.find(i=>i.kind==='wave'&&i.volume===Number(a.dataset.volume))));}catch(error){console.error(error);$('error').hidden=false;}finally{$('drive').disabled=false;}};
  document.querySelectorAll('[data-show]').forEach(b=>b.onclick=()=>show(b.dataset.show));addEventListener('resize',()=>views.forEach(v=>v.resize()));show('all');$('loading').hidden=true;window.storageStudy={views,data};render();
  }catch(e){console.error(e);$('loading').hidden=true;$('error').hidden=false;}}

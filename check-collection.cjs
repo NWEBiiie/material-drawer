@@ -9,7 +9,7 @@ for(const kind of ['case','wave','pockets','belt'])for(let v=1;v<=6;v++){
  if(kind==='wave'||kind==='belt'){const slots=data.slotPositions||records.map((_,i)=>-5.45+i*.64);for(let i=1;i<slots.length;i++)assert(slots[i]-slots[i-1]>records[i].cut[2]+.13,`${prefix} slot gap ${i}`);assert.equal(g.nodes.filter(n=>n.extras?.wave_follower!==undefined).length,records.length);}
  if(kind==='belt'){assert(!g.nodes.some(n=>n.extras?.wave_shaft||n.extras?.cam_index!==undefined));assert(g.nodes.some(n=>n.extras?.sliding_belt));assert(g.nodes.some(n=>n.extras?.belt_control));const m=data.mechanism;for(const c of data.slotPositions){for(const y of [m.beltStart,m.beltEnd]){const w=Math.min(m.halfWidth,y<c?c-m.beltStart:m.beltEnd-c);const lift=w>0&&Math.abs(y-c)<w?.5*(1+Math.cos(Math.PI*(y-c)/w)):0;assert(Math.abs(lift)<1e-10);}}}
  if(kind==='pockets'){
-  const capacity=v===1?21:18;assert.deepEqual(data.case,[v===1?13.5:12,8,3]);assert.deepEqual(data.pocketGrid,[3,v===1?7:6]);assert.equal(data.slots.length,capacity);
+  const capacity=21;assert.deepEqual(data.case,[13.5,8,3]);assert.deepEqual(data.pocketGrid,[3,7]);assert.equal(data.slots.length,capacity);
   assert.equal(data.pockets,capacity);assert.equal(new Set(data.slots.map(s=>s.center.join(','))).size,capacity);
   assert.deepEqual(data.slots.map(s=>s.sample).filter(Boolean),records.map(r=>r.id));
   assert.equal(g.nodes.filter(n=>Number.isInteger(n.extras?.pocket_index)).length,capacity);

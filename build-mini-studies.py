@@ -36,6 +36,9 @@ def back_label(id,s,parent,z,width=1.5,height=1.5):
 def prepare():
  global scene,data,samples,wood,darkwood,foam,paper,ink,metal,carrierMat
  bpy.ops.wm.open_mainfile(filepath=str(ROOT/'binder-model.blend'));scene=bpy.context.scene;data=json.loads((ROOT/'binder-data.json').read_text());samples={o['material_id']:o for o in list(bpy.data.objects) if 'material_id' in o}
+ # The rebuilt enclosure still needs its own workshop and mount revisions.
+ for key in ['workshop_revision','mount_revision']:
+  if key in scene:del scene[key]
  for o in list(bpy.data.objects):
   if o not in samples.values():bpy.data.objects.remove(o,do_unlink=True)
  for s in data['materials']:
@@ -60,8 +63,8 @@ def export(mode,motion,records,extra):
 
 def build_pockets():
  prepare()
- W,D,H,LH=12.,8.,1.85,.65
- rows,cols=3,6
+ W,D,H,LH=13.5,8.,1.85,.65
+ rows,cols=3,7
  foam_top,foam_base=1.75,.25
  base=empty('Pocket_case');lid=empty('Pocket_lid');lid.location=(0,m(D/2-.1),m(H));lid['motion']='lid'
  box('Case_base',(0,0,.11),(W,D,.22),wood,base,.045)
@@ -83,7 +86,7 @@ def build_pockets():
  materials=data['materials'];records=[];slots=[]
  assert len(materials)<=rows*cols
  for i in range(rows*cols):
-  row,col=divmod(i,cols);x=(col-(cols-1)/2)*1.88;y=(row-(rows-1)/2)*2.30
+  row,col=divmod(i,cols);x=(col-(cols-1)/2)*1.80;y=(row-(rows-1)/2)*2.30
   sample=materials[i] if i<len(materials) else None
   slot_id=sample['id'] if sample else 'Open_%02d'%(i+1)
   t=sample['cut'][2] if sample else 0

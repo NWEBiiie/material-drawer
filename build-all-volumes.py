@@ -41,8 +41,6 @@ for group in catalog['groups']:
     shift=-(wave_y[0]+wave_y[-1])/2;wave_y=[round(y+shift,6) for y in wave_y]
     assert wave_y[0]-build['materials'][0]['cut'][2]-.055>-6.08
     code=(ROOT/'build-mini-studies.py').read_text().replace('limit_denominator(16)','limit_denominator(32)')
-    if v==1:
-        code=code.replace('W,D,H,LH=12.,8.,1.85,.65','W,D,H,LH=13.5,8.,1.85,.65').replace('rows,cols=3,6','rows,cols=3,7').replace(')*1.88',')*1.80')
     code=replace(code,"'sampleCount':18",f"'sampleCount':{N}")
     code=replace(code,"y=-5.45+i*.64",f"y={wave_y!r}[i]")
     code=code.replace('math.tau/18',f'math.tau/{N}').replace("'cams':18",f"'cams':{N}").replace("'phaseDegrees':20",f"'phaseDegrees':{360/N!r}").replace("'camPhaseDegrees':i*20",f"'camPhaseDegrees':i*360/{N}")
