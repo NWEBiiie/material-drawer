@@ -7,10 +7,10 @@ const canvas=document.querySelector('#shelfScene'),links=[...document.querySelec
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 // GLBs are in metres. Keep every model at the same physical scale.
 const studies=[
- {id:'binder',file:'binder-model.glb?v=binder4',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
- {id:'case',file:'case-model.glb?v=mount1',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
- {id:'pockets',file:'pockets-model.glb?v=mount1',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'wave-model.glb?v=title2',x:.19,y:0,z:.045,label:[.19,.015,.42]}
+ {id:'binder',file:'binder-model.glb?v=chart2',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
+ {id:'case',file:'case-model.glb?v=chart2',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
+ {id:'pockets',file:'pockets-model.glb?v=chart2',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
+ {id:'wave',file:'wave-model.glb?v=chart2',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
 const scaleBar=document.querySelector('#scaleBar'),scaleValue=document.querySelector('#scaleValue');
@@ -59,7 +59,7 @@ async function boot(){try{
  const loader=new GLTFLoader(),finishes=await createFinishPicker();
  frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
-  const [gltf,data]=await Promise.all([loader.loadAsync(s.file),fetch(s.id+'-data.json?v=workshop1').then(r=>r.json())]),model=gltf.scene;
+  const [gltf,data]=await Promise.all([loader.loadAsync(s.file),fetch(s.id+'-data.json?v=chart2').then(r=>r.json())]),model=gltf.scene;
   // Keep the cases square to the rack and the drawer opening toward its front.
   if(gltf.animations[0]){const mixer=new THREE.AnimationMixer(model),action=mixer.clipAction(gltf.animations[0]);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();const duration=s.id==='wave'?2:gltf.animations[0].duration;mixer.setTime(s.id==='binder'?0:duration);}
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat?.map)mat.map.anisotropy=4;}if(o.userData.tether_rest)o.visible=false;});
