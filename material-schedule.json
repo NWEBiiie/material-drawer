@@ -1,0 +1,1417 @@
+{
+  "version": 2,
+  "received": "2026-11-11",
+  "source": "Three user-supplied revised schedule screenshots (1000122649–1000122651).",
+  "materials": [
+    {
+      "id": "LVT-1",
+      "previousId": "LVT-1",
+      "manufacturer": "Interface",
+      "series": "Brushed Lines 3mm",
+      "color": "Sandalwood C00705",
+      "original": [
+        4.5,
+        19.5,
+        0.1875
+      ],
+      "hex": "#b1a89f",
+      "scheduleNote": "Product cell: C00705; proposed filename: A01608 Sandalwood. Existing Sandalwood image retained as a reference.",
+      "source": {
+        "id": "LVT-1",
+        "manufacturer": "Interface",
+        "product": "Brushed Lines",
+        "color": "A01608 Sandalwood",
+        "colorHex": "#b1a89f",
+        "path": "binder/textures/lvt-1.jpg",
+        "status": "manufacturer-color-reference",
+        "pageURL": "https://www.interface.com/US/en-US/collections/brushed-lines-drawn-lines",
+        "imageURL": "https://media.interface.com/is/image/interfaceprd/brushed-lines_sandalwood_va1:c960x960?wid=768&hei=768",
+        "notes": "Official Sandalwood swatch.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 768,
+          "height": 768
+        },
+        "bytes": 66713
+      }
+    },
+    {
+      "id": "LVT-2",
+      "previousId": "LVT-2",
+      "manufacturer": "Interface",
+      "series": "Brushed Lines 3mm",
+      "color": "UTSW Custom Gray",
+      "original": [
+        9.5,
+        9.5,
+        0.125
+      ],
+      "hex": "#474948",
+      "scheduleNote": "",
+      "source": {
+        "id": "LVT-2",
+        "manufacturer": "Interface",
+        "product": "Brushed Lines",
+        "color": "UTSW Custom Dark Grey",
+        "colorHex": "#474948",
+        "path": "binder/textures/lvt-2.jpg",
+        "status": "illustrative-placeholder",
+        "pageURL": "https://www.interface.com/US/en-US/collections/brushed-lines-drawn-lines",
+        "imageURL": null,
+        "notes": "Custom UTSW color not located publicly. Procedural charcoal-gray brushed texture is an illustrative placeholder, not a verified manufacturer match.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 768,
+          "height": 768
+        },
+        "bytes": 71930
+      }
+    },
+    {
+      "id": "LVT-3",
+      "previousId": "LVT-3",
+      "manufacturer": "Tarkett",
+      "series": "ID Latitude Abstract",
+      "color": "Greige 5103",
+      "original": [
+        6,
+        6,
+        0.125
+      ],
+      "hex": "#9a897b",
+      "scheduleNote": "",
+      "source": {
+        "id": "LVT-3",
+        "manufacturer": "Tarkett",
+        "product": "iD Latitude Abstract",
+        "color": "Greige 5103",
+        "colorHex": "#9a897b",
+        "path": "binder/textures/lvt-3.jpg",
+        "status": "retailer-exact",
+        "pageURL": "https://yaletownfloor.com/products/tarkett-id-latitude-abstract-5103-finelines-greige",
+        "imageURL": "https://yaletownfloor.com/cdn/shop/files/tarkett-id-latitude-abstract-5103-finelines-greige-vinyl-399891.webp?v=1729560682",
+        "notes": "Matching product and color swatch from retailer; manufacturer confirms color in https://tarketthospitality.com/Products/Abstract .",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 512,
+          "height": 512
+        },
+        "bytes": 107406
+      }
+    },
+    {
+      "id": "LVT-4",
+      "previousId": "LVT-4",
+      "manufacturer": "Tarkett",
+      "series": "ID Latitude Abstract",
+      "color": "Cool Beige 3542",
+      "original": [
+        6,
+        6,
+        0.125
+      ],
+      "hex": "#7d6d5f",
+      "scheduleNote": "",
+      "source": {
+        "id": "LVT-4",
+        "manufacturer": "Tarkett",
+        "product": "iD Latitude Abstract",
+        "color": "Cool Beige 3542",
+        "colorHex": "#7d6d5f",
+        "path": "binder/textures/lvt-4.jpg",
+        "status": "retailer-exact",
+        "pageURL": "https://stoneandtileshoppe.com/products/id-latitude-abstract-texgrain-3542-cool-beige-polyurethane-luxury-vinyl-plank-flooring",
+        "imageURL": "https://stoneandtileshoppe.com/cdn/shop/products/Cool_Beige_faf2d71e-7433-4430-a7c8-bd6738debc55_1200x1200.png?v=1709226236",
+        "notes": "Matching product and color swatch from retailer; manufacturer confirms color in https://tarketthospitality.com/Products/Abstract .",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 512,
+          "height": 512
+        },
+        "bytes": 147166
+      }
+    },
+    {
+      "id": "RT-1",
+      "previousId": "RT-1",
+      "manufacturer": "Nora",
+      "series": "Norament 992 Grano",
+      "color": "Frankincense 5303",
+      "original": [
+        6,
+        6,
+        0.375
+      ],
+      "hex": "#92918b",
+      "scheduleNote": "",
+      "source": {
+        "id": "RT-1",
+        "manufacturer": "Nora by Interface",
+        "product": "Norament 992 Grano",
+        "color": "5303 Frankincense",
+        "colorHex": "#92918b",
+        "path": "binder/textures/rt-1.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://shop.interface.com/US/en-US/resilient/nora-rubber/norament-992/N0016N.html",
+        "imageURL": "https://s7d1.scene7.com/is/image/interfaceprd/grano_5303-27?wid=768&hei=768&fit=crop",
+        "notes": "Official Frankincense 5303 swatch. User-supplied thickness controls model.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 768,
+          "height": 768
+        },
+        "bytes": 119356
+      }
+    },
+    {
+      "id": "RT-2",
+      "previousId": "RT-2",
+      "manufacturer": "Nora",
+      "series": "Norament 926 Grano",
+      "color": "Frankincense 5303",
+      "original": [
+        5.5,
+        5.5,
+        0.125
+      ],
+      "hex": "#92918b",
+      "scheduleNote": "",
+      "source": {
+        "id": "RT-2",
+        "manufacturer": "Nora by Interface",
+        "product": "Norament 926 Grano",
+        "color": "5303 Frankincense",
+        "colorHex": "#92918b",
+        "path": "binder/textures/rt-2.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://shop.interface.com/US/en-US/resilient/nora-rubber/norament-992/N0016N.html",
+        "imageURL": "https://s7d1.scene7.com/is/image/interfaceprd/grano_5303-27?wid=768&hei=768&fit=crop",
+        "notes": "Same official Frankincense 5303 swatch as RT-1. User-supplied thickness controls model.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 768,
+          "height": 768
+        },
+        "bytes": 119356
+      }
+    },
+    {
+      "id": "RT-3",
+      "previousId": "RT-3",
+      "manufacturer": "Nora",
+      "series": "Norament Castello",
+      "color": "Manor 5354",
+      "original": [
+        6,
+        6,
+        0.125
+      ],
+      "hex": "#969084",
+      "scheduleNote": "",
+      "source": {
+        "id": "RT-3",
+        "manufacturer": "Nora by Interface",
+        "product": "Norament Castello",
+        "color": "5354 Manor",
+        "colorHex": "#969084",
+        "path": "binder/textures/rt-3.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://shop.interface.com/US/en-US/resilient/nora-rubber/norament-castello/N0045N.html",
+        "imageURL": "https://s7d1.scene7.com/is/image/interfaceprd/nm-castello_5354-manor_va0?wid=768&hei=768&fit=crop",
+        "notes": "Official Manor 5354 swatch.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 768,
+          "height": 768
+        },
+        "bytes": 104096
+      }
+    },
+    {
+      "id": "SV-1",
+      "previousId": "SV-4",
+      "manufacturer": "Mannington",
+      "series": "BioSpec MD",
+      "color": "Salt 15421",
+      "original": [
+        9,
+        12,
+        0.0625
+      ],
+      "hex": "#ccc9c0",
+      "scheduleNote": "",
+      "source": {
+        "id": "SV-1",
+        "manufacturer": "Mannington",
+        "product": "BioSpec MD",
+        "color": "15421 Salt",
+        "colorHex": "#ccc9c0",
+        "path": "binder/textures/sv-4.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://www.manningtoncommercial.com/en/products/hard-surface/resilient-sheet/biospec-md/?colorway=CW_BSMD_15421",
+        "imageURL": "https://images3.cmp.optimizely.com/Zz1jZjBlNTY1NjVlMDYxMWYxYWFmMTgyYzkwNzkyOGNmNg==",
+        "notes": "Official Salt swatch.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 1536,
+          "height": 2048
+        },
+        "bytes": 187350
+      }
+    },
+    {
+      "id": "SV-2",
+      "previousId": "SV-3",
+      "manufacturer": "Mannington",
+      "series": "BioSpec MD",
+      "color": "New Glacier 15364",
+      "original": [
+        9,
+        12,
+        0.0625
+      ],
+      "hex": "#c5bbab",
+      "scheduleNote": "",
+      "source": {
+        "id": "SV-2",
+        "manufacturer": "Mannington",
+        "product": "BioSpec MD",
+        "color": "New Glacier",
+        "colorHex": "#c5bbab",
+        "path": "binder/textures/sv-3.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://www.manningtoncommercial.com/en/products/hard-surface/resilient-sheet/biospec-md/?colorway=CW_BSMD_15364",
+        "imageURL": "https://images4.cmp.optimizely.com/Zz04YmNiZGEyNjVlMDYxMWYxOTExNzdlMjRjZWZjZGVmMw==",
+        "notes": "Official New Glacier swatch; current manufacturer color code 15364. Schedule omits code.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 1536,
+          "height": 2048
+        },
+        "bytes": 192081
+      }
+    },
+    {
+      "id": "SV-3",
+      "previousId": "SV-2",
+      "manufacturer": "Mannington",
+      "series": "BioSpec MD",
+      "color": "Blue Saturn 15521",
+      "original": [
+        9,
+        12,
+        0.0625
+      ],
+      "hex": "#848c95",
+      "scheduleNote": "",
+      "source": {
+        "id": "SV-3",
+        "manufacturer": "Mannington",
+        "product": "BioSpec MD",
+        "color": "15521 Blue Saturn",
+        "colorHex": "#848c95",
+        "path": "binder/textures/sv-2.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://www.manningtoncommercial.com/en/products/hard-surface/resilient-sheet/biospec-md/?colorway=CW_BSMD_15521",
+        "imageURL": "https://images2.cmp.optimizely.com/Zz01OGRhNDQ5NDVlMDcxMWYxOGFlYzBlYWFlMmM3MjljNQ==",
+        "notes": "Official Blue Saturn swatch.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 1536,
+          "height": 2048
+        },
+        "bytes": 162430
+      }
+    },
+    {
+      "id": "SV-4",
+      "previousId": "SV-1",
+      "manufacturer": "Tarkett",
+      "series": "IQ Granit SD",
+      "color": "Black Grey 0950",
+      "original": [
+        9,
+        12,
+        0.0625
+      ],
+      "hex": "#757579",
+      "scheduleNote": "",
+      "source": {
+        "id": "SV-4",
+        "manufacturer": "Tarkett",
+        "product": "iQ Granit SD",
+        "color": "950 Black Grey",
+        "colorHex": "#757579",
+        "path": "binder/textures/sv-1.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://professionals.tarkett.co.uk/en_GB/collection-C000122-iq-granit-sd/granit-black-grey-0950",
+        "imageURL": "https://media.tarkett-image.com/large/TH_HO_iQ_Granit_SD_Black_Grey.jpg",
+        "notes": "Official Black Grey 0950 swatch; product code 3096950.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 960,
+          "height": 960
+        },
+        "bytes": 229044
+      }
+    },
+    {
+      "id": "EF-1",
+      "previousId": "EF-1",
+      "manufacturer": "Stonhard",
+      "series": "",
+      "color": "Steel Gray Medium Texture",
+      "original": [
+        2.75,
+        2.75,
+        0.3125
+      ],
+      "hex": "#6b7883",
+      "scheduleNote": "",
+      "source": {
+        "id": "EF-1",
+        "manufacturer": "Stonhard",
+        "product": "Medium Texture",
+        "color": "Steel Gray",
+        "colorHex": "#6b7883",
+        "path": "binder/textures/ef-1.jpg",
+        "status": "manufacturer-color-reference",
+        "pageURL": "https://www.stonhard.com/products/stonclad/gs/",
+        "imageURL": "https://www.stonhard.com/media/b40k1g3n/clad_steel_gray.png",
+        "notes": "Official Stonclad Steel Gray color reference. Schedule does not identify the epoxy system; this texture is a color/pattern proxy, not an exact medium-texture system verification.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 500,
+          "height": 280
+        },
+        "bytes": 79856
+      }
+    },
+    {
+      "id": "EF-2",
+      "previousId": "EF-2",
+      "manufacturer": "Stonhard",
+      "series": "",
+      "color": "Silver Gray Medium Texture",
+      "original": [
+        2.75,
+        2.75,
+        0.3125
+      ],
+      "hex": "#bec2c5",
+      "scheduleNote": "",
+      "source": {
+        "id": "EF-2",
+        "manufacturer": "Stonhard",
+        "product": "Medium Texture",
+        "color": "Silver Gray",
+        "colorHex": "#bec2c5",
+        "path": "binder/textures/ef-2.jpg",
+        "status": "manufacturer-color-reference",
+        "pageURL": "https://www.stonhard.com/products/stonclad/gs/",
+        "imageURL": "https://www.stonhard.com/media/dacpupjr/clad_silver_gray.png",
+        "notes": "Official Stonclad Silver Gray color reference. Schedule does not identify the epoxy system; this texture is a color/pattern proxy, not an exact medium-texture system verification.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 500,
+          "height": 280
+        },
+        "bytes": 62603
+      }
+    },
+    {
+      "id": "RS-1",
+      "previousId": null,
+      "manufacturer": "Nora",
+      "series": "Noravant Timber",
+      "color": "Fjord 7508",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#aaaaaa",
+      "scheduleNote": "Dimensions N/A in the chart. Neutral display placeholder; product image not supplied."
+    },
+    {
+      "id": "RS-2",
+      "previousId": null,
+      "manufacturer": "Nora",
+      "series": "Dariva",
+      "color": "Pepperwood 7165",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#aaaaaa",
+      "scheduleNote": "Dimensions N/A in the chart. Proposed filename specifies noraplan dariva. Neutral display placeholder; product image not supplied."
+    },
+    {
+      "id": "TZ-1",
+      "previousId": null,
+      "manufacturer": "American Terrazzo",
+      "series": "",
+      "color": "",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#aaaaaa",
+      "scheduleNote": "Dimensions N/A; series and color not specified. Neutral display placeholder; product image not supplied."
+    },
+    {
+      "id": "CPT-1",
+      "previousId": "CPT-1",
+      "manufacturer": "Mannington",
+      "series": "Palma 2; Estio",
+      "color": "Grand Cayman 1413",
+      "original": [
+        24,
+        24,
+        0.25
+      ],
+      "hex": "#363330",
+      "scheduleNote": "",
+      "source": {
+        "id": "CPT-1",
+        "manufacturer": "Mannington",
+        "product": "Estio",
+        "color": "1413 Grand Cayman",
+        "colorHex": "#363330",
+        "path": "binder/textures/cpt-1.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://cricket.newprod.manningtoncommercial.com/en/products/carpet/modular/estio/",
+        "imageURL": "https://images1.cmp.optimizely.com/Zz1mMWJhMjgwMjdkZDYxMWYxOTdjMjMyMzJiNWJlNDYwMA==",
+        "notes": "Official Grand Cayman product swatch from manufacturer catalog.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 7155,
+          "height": 7155
+        },
+        "bytes": 342455
+      }
+    },
+    {
+      "id": "CPT-2",
+      "previousId": "CPT-2",
+      "manufacturer": "Mannington",
+      "series": "Frenemy; Stock",
+      "color": "Bonds 12288",
+      "original": [
+        24,
+        24,
+        0.25
+      ],
+      "hex": "#5f5a4f",
+      "scheduleNote": "",
+      "source": {
+        "id": "CPT-2",
+        "manufacturer": "Mannington",
+        "product": "Stock",
+        "color": "12288 Bonds",
+        "colorHex": "#5f5a4f",
+        "path": "binder/textures/cpt-2.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://cricket.newprod.manningtoncommercial.com/en/products/carpet/modular/stock/",
+        "imageURL": "https://images4.cmp.optimizely.com/Zz1hYTRhZjk4NjdlMTQxMWYxYjEwNjRlYTFhNDc0NDllZg==",
+        "notes": "Official Bonds product swatch from manufacturer catalog.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 7155,
+          "height": 7155
+        },
+        "bytes": 280661
+      }
+    },
+    {
+      "id": "CPT-3",
+      "previousId": "CPT-3",
+      "manufacturer": "Mannington",
+      "series": "Frenemy; Block Brights",
+      "color": "FDIC 12296",
+      "original": [
+        24,
+        24,
+        0.25
+      ],
+      "hex": "#59564b",
+      "scheduleNote": "",
+      "source": {
+        "id": "CPT-3",
+        "manufacturer": "Mannington",
+        "product": "Block Brights",
+        "color": "12296 FDIC",
+        "colorHex": "#59564b",
+        "path": "binder/textures/cpt-3.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://cricket.newprod.manningtoncommercial.com/en/products/carpet/modular/block-brights/",
+        "imageURL": "https://images4.cmp.optimizely.com/Zz1jMTJkOTY2ZTdkZDIxMWYxODVmZTkyZjcwNTc4MWRlNw==",
+        "notes": "Official FDIC product swatch from manufacturer catalog.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 7155,
+          "height": 7155
+        },
+        "bytes": 318890
+      }
+    },
+    {
+      "id": "CPT-4",
+      "previousId": "CPT-4",
+      "manufacturer": "Patcraft",
+      "series": "Beyond the Door; Prado I0317",
+      "color": "Obsidian 00595",
+      "original": [
+        24,
+        24,
+        0.25
+      ],
+      "hex": "#3d3d3b",
+      "scheduleNote": "",
+      "source": {
+        "id": "CPT-4",
+        "manufacturer": "Patcraft",
+        "product": "Prado Modular I0317",
+        "color": "00595 Obsidian",
+        "colorHex": "#3d3d3b",
+        "path": "binder/textures/cpt-4.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://www.patcraft.com/product/detail/I0317/00595",
+        "imageURL": "https://shawfloors.widen.net/content/purbknszja/jpeg/I0317_00595.jpg?w=768",
+        "notes": "Official Obsidian 00595 swatch from Patcraft product page.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 768,
+          "height": 768
+        },
+        "bytes": 381332
+      }
+    },
+    {
+      "id": "RB-1",
+      "previousId": "RB-1",
+      "manufacturer": "Roppe",
+      "series": "",
+      "color": "193 Black-Brown",
+      "original": [
+        2,
+        2.5,
+        0.0625
+      ],
+      "hex": "#3e403b",
+      "scheduleNote": "",
+      "source": {
+        "id": "RB-1",
+        "manufacturer": "Roppe",
+        "product": "Rubber Base",
+        "color": "193 Black-Brown",
+        "colorHex": "#3e403b",
+        "path": "binder/textures/rb-1.jpg",
+        "status": "manufacturer-exact",
+        "pageURL": "https://roppe.com/pinnacle-rubber-base/",
+        "imageURL": "https://roppe.com/wp-content/uploads/2016/12/193_blackbrown.jpg",
+        "notes": "Official 193 Black Brown color swatch.",
+        "retrievedAt": "2026-10-29",
+        "width": 768,
+        "height": 768,
+        "originalSize": {
+          "width": 1500,
+          "height": 1500
+        },
+        "bytes": 7181
+      }
+    },
+    {
+      "id": "PT-1",
+      "previousId": "PT-1",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW7005 Pure White",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#f1eee5",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-2",
+      "previousId": "PT-4",
+      "manufacturer": "PPG",
+      "series": "",
+      "color": "1006-1 Gypsum",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#eeeee5",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-3",
+      "previousId": "PT-6",
+      "manufacturer": "Benjamin Moore",
+      "series": "",
+      "color": "OC-9 Ballet White",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#d9d2bf",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-4",
+      "previousId": "PT-8",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW7043 Worldly Gray",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#c6c0b5",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-5",
+      "previousId": "PT-7",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW7044 Amazing Gray",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#bfb8a8",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-6",
+      "previousId": "PT-5",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW7016 Mindful Gray",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#bdb8ad",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-7",
+      "previousId": "PT-3",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW7645 Thunder Gray",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#575954",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-8",
+      "previousId": "PT-2",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW6258 Tricorn Black",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#292929",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-9",
+      "previousId": "PT-11",
+      "manufacturer": "Benjamin Moore",
+      "series": "",
+      "color": "2129-40 Normandy",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#6d818a",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-10",
+      "previousId": "PT-10",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW6508 Secure Blue",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#5389a0",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PT-11",
+      "previousId": "PT-9",
+      "manufacturer": "Sherwin Williams",
+      "series": "",
+      "color": "SW6517 Regatta",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#24617a",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-1",
+      "previousId": "T-3",
+      "manufacturer": "Concept Surfaces",
+      "series": "Oz",
+      "color": "Fair",
+      "original": [
+        12,
+        12,
+        0.375
+      ],
+      "hex": "#d1c9b8",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-2",
+      "previousId": "T-4",
+      "manufacturer": "Daltile",
+      "series": "Fabrique",
+      "color": "Blanc Linen P685",
+      "original": [
+        11.5,
+        8,
+        0.375
+      ],
+      "hex": "#c5c2b5",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-3",
+      "previousId": "T-1",
+      "manufacturer": "Concept Surfaces",
+      "series": "Oche",
+      "color": "Aqua",
+      "original": [
+        12,
+        24,
+        0.375
+      ],
+      "hex": "#8b9186",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-4",
+      "previousId": "T-2",
+      "manufacturer": "Concept Surfaces",
+      "series": "Harmony",
+      "color": "Ash",
+      "original": [
+        12,
+        12,
+        0.375
+      ],
+      "hex": "#72736c",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-5",
+      "previousId": "T-5",
+      "manufacturer": "Medici Mosaics",
+      "series": "Nova Roma; Matchstick",
+      "color": "Pantheon",
+      "original": [
+        5.5,
+        9.5,
+        0.25
+      ],
+      "hex": "#989c97",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-6",
+      "previousId": "T-6",
+      "manufacturer": "Daltile",
+      "series": "Revalia Remix",
+      "color": "Ripple Cream",
+      "original": [
+        2,
+        8.5,
+        0.25
+      ],
+      "hex": "#d9d3c1",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-7",
+      "previousId": "T-7",
+      "manufacturer": "Knoxtile",
+      "series": "Interstyle",
+      "color": "Breezy, Barely Blue, and Coal Gray",
+      "original": [
+        4,
+        4,
+        0.25
+      ],
+      "hex": "#798d96",
+      "scheduleNote": ""
+    },
+    {
+      "id": "T-8",
+      "previousId": "T-8",
+      "manufacturer": "Trinity Surfaces",
+      "series": "Arabella",
+      "color": "Tide, Stairs and Glossy Random Install",
+      "original": [
+        2,
+        10,
+        0.1875
+      ],
+      "hex": "#728395",
+      "scheduleNote": ""
+    },
+    {
+      "id": "TS-1",
+      "previousId": "TS-1",
+      "manufacturer": "Schluter",
+      "series": "",
+      "color": "Brushed Stainless Steel 304",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#b7b9b8",
+      "scheduleNote": ""
+    },
+    {
+      "id": "GR-1",
+      "previousId": "GR-1",
+      "manufacturer": "Laticrete",
+      "series": "",
+      "color": "44 Bright White",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#e3e1d8",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-1",
+      "previousId": "PL-3",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "Beigewood, textured 7850-60",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#bca281",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-2",
+      "previousId": "PL-2",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "Walnut Heights 7965K-12",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#705444",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-3",
+      "previousId": "PL-1",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "Morelia Mango, fine velvet texture 7985-38",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#6d5745",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-4",
+      "previousId": "PL-5",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "Monticello Maple 7925-35",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#ba8c5b",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-5",
+      "previousId": "PL-6",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "Zanzibar 7957K-78",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#826044",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-6",
+      "previousId": "PL-4",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "Columbian Walnut – 7943K-07",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#60453d",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-7",
+      "previousId": "PL-9",
+      "manufacturer": "Wilsonart",
+      "series": "Chemsurf",
+      "color": "Designer White D354-60",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#f2f1e8",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-8",
+      "previousId": "PL-10",
+      "manufacturer": "Wilsonart",
+      "series": "Linen Velvet",
+      "color": "Ultra Matte 15511",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#eee8d6",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-9",
+      "previousId": "PL-7",
+      "manufacturer": "Formica",
+      "series": "",
+      "color": "White Twill 9285-58",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#d8d7c9",
+      "scheduleNote": ""
+    },
+    {
+      "id": "PL-10",
+      "previousId": "PL-8",
+      "manufacturer": "Wilsonart",
+      "series": "",
+      "color": "North Sea D90-60",
+      "original": [
+        3.5,
+        5,
+        0.03125
+      ],
+      "hex": "#858d8d",
+      "scheduleNote": ""
+    },
+    {
+      "id": "SSM-1",
+      "previousId": "SSM-1",
+      "manufacturer": "Corian",
+      "series": "",
+      "color": "Modern White",
+      "original": [
+        2,
+        2,
+        0.375
+      ],
+      "hex": "#e1ded7",
+      "scheduleNote": ""
+    },
+    {
+      "id": "SSM-2",
+      "previousId": "SSM-3",
+      "manufacturer": "Corian",
+      "series": "",
+      "color": "Ash Concrete",
+      "original": [
+        2,
+        2,
+        0.375
+      ],
+      "hex": "#9c9d98",
+      "scheduleNote": ""
+    },
+    {
+      "id": "SSM-3",
+      "previousId": "SSM-4",
+      "manufacturer": "Kewaunee",
+      "series": "Kemresin Epoxy Countertop",
+      "color": "Grey",
+      "original": [
+        4,
+        4.5,
+        1
+      ],
+      "hex": "#9d9f9b",
+      "scheduleNote": ""
+    },
+    {
+      "id": "SSM-4",
+      "previousId": "SSM-2",
+      "manufacturer": "Corian",
+      "series": "",
+      "color": "Deep Nocturne",
+      "original": [
+        2,
+        2,
+        0.375
+      ],
+      "hex": "#25282b",
+      "scheduleNote": ""
+    },
+    {
+      "id": "QTZ-1",
+      "previousId": "QTZ-1",
+      "manufacturer": "Corian Quartz",
+      "series": "",
+      "color": "Calacatta Natura",
+      "original": [
+        2,
+        2,
+        0.75
+      ],
+      "hex": "#e9e5dc",
+      "scheduleNote": ""
+    },
+    {
+      "id": "QTZ-2",
+      "previousId": "QTZ-2",
+      "manufacturer": "Cambria",
+      "series": "",
+      "color": "Weybourne",
+      "original": [
+        3,
+        3,
+        0.5
+      ],
+      "hex": "#e6e4da",
+      "scheduleNote": ""
+    },
+    {
+      "id": "WP-1",
+      "previousId": "WP-3",
+      "manufacturer": "CS Acrovyn",
+      "series": "",
+      "color": "White 949",
+      "original": [
+        8,
+        8,
+        0.03125
+      ],
+      "hex": "#e4e5dc",
+      "scheduleNote": ""
+    },
+    {
+      "id": "WP-2",
+      "previousId": "WP-2",
+      "manufacturer": "CS Acrovyn",
+      "series": "",
+      "color": "Mission White 933",
+      "original": [
+        8,
+        8,
+        0.03125
+      ],
+      "hex": "#e9e8e0",
+      "scheduleNote": ""
+    },
+    {
+      "id": "WP-3",
+      "previousId": "WP-4",
+      "manufacturer": "CS Acrovyn",
+      "series": "",
+      "color": "Oyster Grey 929",
+      "original": [
+        8,
+        8,
+        0.03125
+      ],
+      "hex": "#b9b5a7",
+      "scheduleNote": ""
+    },
+    {
+      "id": "WP-4",
+      "previousId": "WP-1",
+      "manufacturer": "CS Acrovyn",
+      "series": "",
+      "color": "Black 108",
+      "original": [
+        8,
+        8,
+        0.03125
+      ],
+      "hex": "#202324",
+      "scheduleNote": ""
+    },
+    {
+      "id": "WP-5",
+      "previousId": "WP-5",
+      "manufacturer": "CS Acrovyn",
+      "series": "Stainless Steel",
+      "color": "Type 304 Alloy",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#adb4b7",
+      "scheduleNote": ""
+    },
+    {
+      "id": "FRP-1",
+      "previousId": "FRP-1",
+      "manufacturer": "Glasteel",
+      "series": "Glasliner",
+      "color": "Almond, Pebbled Finish",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#d8cfba",
+      "scheduleNote": ""
+    },
+    {
+      "id": "FRP-2",
+      "previousId": "FRP-2",
+      "manufacturer": "Glasteel",
+      "series": "Glasliner",
+      "color": "Ivory, Pebbled Finish",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#e8e3d1",
+      "scheduleNote": ""
+    },
+    {
+      "id": "ACT-1",
+      "previousId": "ACT-1",
+      "manufacturer": "Armstrong",
+      "series": "Optima Tegular",
+      "color": "3253",
+      "original": [
+        6,
+        6,
+        1
+      ],
+      "hex": "#e7e7df",
+      "scheduleNote": ""
+    },
+    {
+      "id": "ACT-2",
+      "previousId": "ACT-2",
+      "manufacturer": "Armstrong",
+      "series": "Clean Room VL",
+      "color": "868",
+      "original": [
+        6,
+        6,
+        0.75
+      ],
+      "hex": "#d9dcd7",
+      "scheduleNote": ""
+    },
+    {
+      "id": "ACT-3",
+      "previousId": "ACT-3",
+      "manufacturer": "Armstrong",
+      "series": "Ultima Health Zone Lay-in",
+      "color": "1395",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#e7e8e2",
+      "scheduleNote": ""
+    },
+    {
+      "id": "ACT-4",
+      "previousId": "ACT-4",
+      "manufacturer": "Armstrong",
+      "series": "Ultima Health Zone Lay-in",
+      "color": "171935UC1",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#dce0dc",
+      "scheduleNote": ""
+    },
+    {
+      "id": "WT-1",
+      "previousId": "WT-1",
+      "manufacturer": "Mechoshade",
+      "series": "Soho 1600 Series",
+      "color": "Mocha 1622",
+      "original": [
+        8.5,
+        11,
+        null
+      ],
+      "hex": "#777169",
+      "scheduleNote": "Product cell: Mocha 1622; proposed filename: Mocha 1922."
+    },
+    {
+      "id": "DF-1",
+      "previousId": "DF-1",
+      "manufacturer": "3M",
+      "series": "Crystal Glass Glazing",
+      "color": "Dusted Crystal (7725SE-314)",
+      "original": [
+        8,
+        11.5,
+        null
+      ],
+      "hex": "#d8dfe0",
+      "scheduleNote": ""
+    },
+    {
+      "id": "DF-2",
+      "previousId": "DF-2",
+      "manufacturer": "LightGard",
+      "series": "RC-3",
+      "color": "Vivarium Film",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#73534e",
+      "scheduleNote": ""
+    },
+    {
+      "id": "CC-1",
+      "previousId": "CC-1",
+      "manufacturer": "Maharam",
+      "series": "Immerse 511505",
+      "color": "007 Fader",
+      "original": [
+        8,
+        36,
+        null
+      ],
+      "hex": "#c9c1b2",
+      "scheduleNote": "Chart length is 36+ inches; 36 is the stated minimum."
+    },
+    {
+      "id": "CC-2",
+      "previousId": "CC-2",
+      "manufacturer": "Maharam",
+      "series": "Carry 251518",
+      "color": "004 Eventide",
+      "original": [
+        8,
+        36,
+        null
+      ],
+      "hex": "#a4aab0",
+      "scheduleNote": "Chart length is 36+ inches; 36 is the stated minimum. Series cell: Carry 251518; proposed filename: Eventide 511466-004."
+    },
+    {
+      "id": "CCT-1",
+      "previousId": "CCT-1",
+      "manufacturer": "Construction Specialties",
+      "series": "Standard Track 6062",
+      "color": "Anodized Aluminum",
+      "original": [
+        null,
+        null,
+        null
+      ],
+      "hex": "#c9cecb",
+      "scheduleNote": ""
+    }
+  ]
+}

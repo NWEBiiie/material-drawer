@@ -137,8 +137,8 @@ for path in sorted(root.glob('*-model.blend')):
             assert max(v.z for v in corners) < 5.73 * inch, (prefix, carrier.name, 'closed lid')
             assert all(abs(v.x) < 4.26 * inch and abs(v.y) < 5.76 * inch for v in corners), (prefix, carrier.name, 'side wall')
     elif kind == 'pockets':
-        assert data['case'] == [12, 8, 3]
-        assert len(data['slots']) == 18
+        assert data['case'] == [13.5 if prefix == 'pockets' else 12, 8, 3]
+        assert len(data['slots']) == (21 if prefix == 'pockets' else 18)
         assert len([o for o in scene.objects if o.name.startswith('Foam_spacer_')]) == len(materials)
         for record in materials:
             carrier = bpy.data.objects['Carrier_' + record['id']]
