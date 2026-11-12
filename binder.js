@@ -1,4 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=2';
+import {createFinishPicker} from './case-finishes.js?v=simple-controls1';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
 import './study-nav.js?v=3';
 import {createRetractableTethers} from './retractable-tethers.js?v=mount1';

@@ -1,5 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=2';
-import {createStudyDimensions} from './study-dimensions.js?v=3';
+import {createFinishPicker} from './case-finishes.js?v=simple-controls1';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 
@@ -10,10 +9,9 @@ const studies=[
  {id:'binder',file:'binder-model.glb?v=textures-20261111',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
  {id:'case',file:'case-model.glb?v=textures-20261111',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
  {id:'pockets',file:'pockets-model.glb?v=textures-20261111',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'wave-model.glb?v=textures-20261111',x:.19,y:0,z:.045,label:[.19,.015,.42]}
+ {id:'wave',file:'belt-model.glb?v=textures-20261111',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
-const scaleBar=document.querySelector('#scaleBar'),scaleValue=document.querySelector('#scaleValue');
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];
 const wood=new THREE.MeshStandardMaterial({color:'#d5c6ad',roughness:.8});
 const edge=new THREE.MeshStandardMaterial({color:'#b9bdad',roughness:.9});
@@ -21,16 +19,10 @@ const group=new THREE.Group();
 function slab(size,position,material=wood){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),material);m.position.set(...position);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function project(point){const v=point.clone().project(camera);return{x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2};}
 function labels(){for(const s of studies){const p=project(new THREE.Vector3(...s.label));Object.assign(links.find(a=>a.dataset.model===s.id).style,{left:p.x+'px',top:p.y+'px'});}}
-function scale(){
- const pixelsPerFoot=innerHeight/(camera.top-camera.bottom)*camera.zoom*.3048;
- const feet=[.25,.5,1,2,4].reduce((best,n)=>Math.abs(n*pixelsPerFoot-100)<Math.abs(best*pixelsPerFoot-100)?n:best,.25);
- scaleBar.style.width=feet*pixelsPerFoot+'px';scaleBar.dataset.feet=feet;
- scaleValue.textContent=feet<1?feet*12+' in':feet+' ft';
-}
 function frame(){
  const w=innerWidth,h=innerHeight,aspect=w/h;renderer.setSize(w,h,false);
  const span=Math.max(1.12,1.5/aspect);camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.zoom=1;
- const center=new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();scale();
+ const center=new THREE.Vector3(-.19,.29,.06);camera.position.copy(center).add(new THREE.Vector3(.62,.82,2.6));camera.lookAt(center);camera.updateProjectionMatrix();camera.updateMatrixWorld();labels();
 }
 function active(id){hover=id;for(const a of links)a.classList.toggle('active',a.dataset.model===id);canvas.style.cursor=id?'pointer':'default';}
 function hit(e){pointer.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);ray.setFromCamera(pointer,camera);return ray.intersectObjects(hitboxes)[0]?.object.userData.study;}
@@ -42,7 +34,7 @@ function open(id){
 }
 function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;
  if(transition&&!transition.done){transition.time=Math.min(1,transition.time+dt/.46);const p=transition.time*transition.time*(3-2*transition.time);camera.position.copy(transition.from).lerp(transition.to,p);camera.zoom=THREE.MathUtils.lerp(transition.zoom,2.7,p);camera.updateProjectionMatrix();if(transition.time===1){transition.done=true;location.href=transition.url;}}
- for(const s of studies)s.measurements?.update(!transition);renderer.render(scene,camera);requestAnimationFrame(tick);
+ renderer.render(scene,camera);requestAnimationFrame(tick);
 }
 async function boot(){try{
  renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setClearColor('#eeeae2');renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -59,13 +51,13 @@ async function boot(){try{
  const loader=new GLTFLoader(),finishes=await createFinishPicker();
  frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
-  const [gltf,data]=await Promise.all([loader.loadAsync(s.file),fetch(s.id+'-data.json?v=textures-20261111').then(r=>r.json())]),model=gltf.scene;
+  const gltf=await loader.loadAsync(s.file),model=gltf.scene;
   // Keep the cases square to the rack and the drawer opening toward its front.
   if(gltf.animations[0]){const mixer=new THREE.AnimationMixer(model),action=mixer.clipAction(gltf.animations[0]);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();const duration=s.id==='wave'?2:gltf.animations[0].duration;mixer.setTime(s.id==='binder'?0:duration);}
   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;for(const mat of Array.isArray(o.material)?o.material:[o.material])if(mat?.map)mat.map.anisotropy=4;}if(o.userData.tether_rest)o.visible=false;});
   finishes.attach(model,s.id);
   const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());
-  const mount=new THREE.Group();mount.add(model);model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));mount.position.set(s.x,s.y,s.z);group.add(mount);mount.updateMatrixWorld(true);s.bounds=new THREE.Box3().setFromObject(mount);s.model=mount;s.dimensions=size.toArray();models.push(mount);s.measurements=createStudyDimensions({model,camera,canvas,kind:s.id,data,compact:true});
+  const mount=new THREE.Group();mount.add(model);model.position.sub(new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2));mount.position.set(s.x,s.y,s.z);group.add(mount);mount.updateMatrixWorld(true);s.bounds=new THREE.Box3().setFromObject(mount);s.model=mount;s.dimensions=size.toArray();models.push(mount);
   const hitbox=new THREE.Mesh(new THREE.BoxGeometry(size.x+.012,Math.max(size.y,.09),size.z+.012),new THREE.MeshBasicMaterial({visible:false}));hitbox.position.copy(s.bounds.getCenter(new THREE.Vector3()));hitbox.userData.study=s.id;scene.add(hitbox);hitboxes.push(hitbox);
  }));
  ready=true;document.querySelector('#loading').hidden=true;frame();

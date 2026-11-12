@@ -20,7 +20,7 @@ async function texturePair(type){
   maps.forEach((t,i)=>{t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;t.colorSpace=i===0?THREE.SRGBColorSpace:THREE.NoColorSpace;const scale=type==='cloth'?1/.0064:type==='wood'?1/.16:1/.0254;t.repeat.set(scale,scale);});return maps;
  })());return texturePromise.get(type);
 }
-export async function createFinishPicker({kind=null}={}){
+export async function createFinishPicker({kind=null,showControls=false}={}){
  const config=await fetch(new URL('./finish-config.json?v=1',import.meta.url)).then(r=>{if(!r.ok)throw Error('Missing finish palette');return r.json();});
  const textures=Object.fromEntries(await Promise.all(TYPES.map(async t=>[t,await texturePair(t)])));
  let saved={};try{saved=JSON.parse(localStorage.getItem(STORE))||{};}catch{}
@@ -43,6 +43,8 @@ export async function createFinishPicker({kind=null}={}){
  }
  function apply(id){for(const {mesh,role} of registry.get(id)||[])mesh.material=material(role,state[id]);}
  function attach(model,id){const surfaces=[];model.traverse(mesh=>{if(!mesh.isMesh)return;let ancestor=mesh;while(ancestor){if(ancestor.userData.finish_locked)return;ancestor=ancestor.parent;}let owner=mesh;while(owner!==model&&!owner.userData.name)owner=owner.parent;const role=mesh.userData.finish_role||finishRole(owner?.userData.name||mesh.name,id,config);if(!role)return;surfaceUV(mesh);surfaces.push({mesh,role});});registry.set(id,[...(registry.get(id)||[]),...surfaces]);apply(id);return surfaces.length;}
+ // Keep the established case appearance without exposing finish/color controls.
+ if(!showControls)return {attach,config,state,update(){},root:null};
  function persist(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
  const link=document.createElement('link');link.rel='stylesheet';link.href=new URL('./case-finishes.css?v=1',import.meta.url);document.head.append(link);
  const root=document.createElement('aside');root.className='case-finish-picker';root.setAttribute('aria-label','Case finishes');root.dataset.view=kind||'shelf';

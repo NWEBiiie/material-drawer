@@ -1,4 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=2';
+import {createFinishPicker} from './case-finishes.js?v=simple-controls1';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
 import './study-nav.js?v=3';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
@@ -9,7 +9,7 @@ import {createSampleInspection} from './binder-inspection.js?v=7';
 
 const $=id=>document.getElementById(id),canvas=$('miniScene');
 const mode=new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave',wave=mode==='wave';
-const params=new URLSearchParams(location.search),vp=Number(params.get('volume')),volume=Number.isInteger(vp)&&vp>=1&&vp<=6?vp:1,belt=wave&&params.get('drive')==='belt';
+const params=new URLSearchParams(location.search),vp=Number(params.get('volume')),volume=Number.isInteger(vp)&&vp>=1&&vp<=6?vp:1,belt=wave;
 const prefix=(belt?'belt':mode)+(volume===1?'':'-volume-'+volume);
 let beltMesh,dowel,beltBase,travelDirection=1,dowelInput;
 let socketControl, socketChoice, clampChoice, nominalStations, socketMove;
