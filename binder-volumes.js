@@ -6,7 +6,7 @@ volumes.forEach(([name,count],i)=>{const o=new Option(`${String(i+1).padStart(2,
 select.onchange=()=>{const url=new URL(location.href);url.searchParams.set('volume',select.value);location.assign(url.href);};
 root.append(label);
 if(wave){
- const d=document.createElement('label');d.className='dowel-control';d.textContent='Push / pull dowel ';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=17;slider.step=.01;slider.value=7;slider.id='dowelPosition';slider.setAttribute('aria-label','Dowel position');d.append(slider);root.append(d);
+ const d=document.createElement('label');d.hidden=true;d.className='dowel-control';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=17;slider.step=.01;slider.value=7;slider.id='dowelPosition';d.append(slider);root.append(d);
 }
 if(current!==1){const note=document.createElement('small');note.textContent='Material references · unknown dimensions flagged';root.append(note);}
 root.addEventListener('keydown',e=>e.stopPropagation());document.body.append(root);

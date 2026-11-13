@@ -1,6 +1,6 @@
 import {createFinishPicker} from './case-finishes.js?v=folio-plastic-20261113';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
-import './study-nav.js?v=4';
+import './study-nav.js?v=folio-names-20261113';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
@@ -23,8 +23,8 @@ const followers=[],springs=[],panels=[];
 const carriers=[],homes=new Map(),ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const fraction=n=>{const w=Math.floor(n),num=Math.round((n-w)*32);if(!num)return String(w);let a=num,b=32;while(b)[a,b]=[b,a%b];return `${w?w+' ':''}${num/a}/${32/a}`;};
 const size=a=>a.slice(0,2).map(fraction).join(' × ')+'″';
-const heading=wave?(belt?'Belt wave drawer':'Wave drawer'):'Pocket box';
-document.title=heading+' — UTSW Folio';$('studyTitle').innerHTML=heading+'<span>'+(wave?'03':'04')+'</span>';
+const heading=wave?'Wave drawer':'Pocket box';
+document.title=heading+' — UTSW Folio';$('studyTitle').textContent=heading;
 document.querySelector(`[data-mode=${mode}]`).setAttribute('aria-current','page');
 $('studyDescription').textContent=wave?'Padded blue fabric, stitched binding, and soft pull tabs. A handwheel lifts the samples in a wave.':'Small square samples sit in individual fitted foam pockets. Lift a piece to read its back label.';
 $('blendDownload').href=prefix+'-model.blend';$('glbDownload').href=prefix+'-model.glb';
@@ -64,7 +64,7 @@ function setupSockets(){
  for(const [value,label] of [[-1,'Forward 1/16″'],[0,'Centered'],[1,'Back 1/16″']])socketChoice.add(new Option(label,String(value)));
  socketControl.append(socketChoice);dowelInput.closest('aside').append(socketControl);socketControl.hidden=true;
  const label=document.createElement('label');clampChoice=document.createElement('input');clampChoice.type='checkbox';
- label.append(clampChoice,document.createTextNode(' Tighten side bolts'));socketControl.after(label);
+ label.hidden=true;label.append(clampChoice);socketControl.after(label);
  clampChoice.onchange=()=>toggleClamp(selected);
  const key='sample-room:belt-sockets:chart2:'+volume;
  function valid(step,i){return Number.isInteger(step)&&step>=-1&&step<=1&&!(i===0&&step<0)&&!(i===carriers.length-1&&step>0);}

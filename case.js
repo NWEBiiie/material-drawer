@@ -1,14 +1,11 @@
 import {createFinishPicker} from './case-finishes.js?v=folio-home-fix-20261113';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
-import './study-nav.js?v=4';
+import './study-nav.js?v=folio-names-20261113';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 import {OrbitControls} from './binder-orbit.js';
 import {createSampleInspection} from './binder-inspection.js?v=5';
-document.title='UTSW Folio';
-document.querySelector('header h1').textContent='UTSW Folio';
-document.querySelector('header .archive-link').href='./?v=folio-home-fix-20261113';
 const $=id=>document.getElementById(id),canvas=$('caseScene'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const vp=Number(new URLSearchParams(location.search).get('volume')),volume=Number.isInteger(vp)&&vp>=1&&vp<=6?vp:1;
 const prefix=volume===1?'case':'case-volume-'+volume,recordsPrefix=volume===1?'binder':'volume-'+volume;
