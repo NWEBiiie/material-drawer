@@ -1,4 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=folio-plastic-20261113';
+import {createFinishPicker} from './case-finishes.js?v=folio-home-fix-20261113';
 import {createStudyDimensions} from './study-dimensions.js?v=3';
 import './study-nav.js?v=4';
 import {createRetractableTethers} from './retractable-tethers.js?v=2';
@@ -6,6 +6,9 @@ import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 import {OrbitControls} from './binder-orbit.js';
 import {createSampleInspection} from './binder-inspection.js?v=5';
+document.title='UTSW Folio';
+document.querySelector('header h1').textContent='UTSW Folio';
+document.querySelector('header .archive-link').href='./?v=folio-home-fix-20261113';
 const $=id=>document.getElementById(id),canvas=$('caseScene'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const vp=Number(new URLSearchParams(location.search).get('volume')),volume=Number.isInteger(vp)&&vp>=1&&vp<=6?vp:1;
 const prefix=volume===1?'case':'case-volume-'+volume,recordsPrefix=volume===1?'binder':'volume-'+volume;
@@ -66,7 +69,7 @@ async function boot(){try{
  scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-.5,.5,.4,-.4,.001,10);controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enableZoom=false;controls.enablePan=false;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.5,right:.5,top:.6,bottom:-.5,near:.01,far:2});key.shadow.normalBias=.0006;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
- const results=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v=folio-plastic-20261113'),fetch(recordsPrefix+'-data.json?v=textures-20261111').then(r=>{if(!r.ok)throw Error('Missing materials');return r.json();}),fetch(prefix+'-data.json?v=textures-20261111').then(r=>{if(!r.ok)throw Error('Missing case');return r.json();})]);
+ const results=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v=folio-home-fix-20261113'),fetch(recordsPrefix+'-data.json?v=textures-20261111').then(r=>{if(!r.ok)throw Error('Missing materials');return r.json();}),fetch(prefix+'-data.json?v=textures-20261111').then(r=>{if(!r.ok)throw Error('Missing case');return r.json();})]);
  const gltf=results[0];data=results[1];caseData=results[2];
  const cuts=new Map(caseData.samples.map(sample=>[sample.id,sample.cut]));
  for(const record of data.materials)record.cut=cuts.get(record.id);

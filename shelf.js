@@ -1,15 +1,17 @@
-import {createFinishPicker} from './case-finishes.js?v=folio-plastic-20261113';
+import {createFinishPicker} from './case-finishes.js?v=folio-home-fix-20261113';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 
 const canvas=document.querySelector('#shelfScene'),links=[...document.querySelectorAll('[data-model]')];
+function homeTitle(){document.title='UTSW Folio';document.querySelector('header h1').textContent='UTSW Folio';}
+homeTitle();
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 // GLBs are in metres. Keep every model at the same physical scale.
 const studies=[
- {id:'binder',file:'binder-model.glb?v=folio-plastic-20261113',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
- {id:'case',file:'case-model.glb?v=folio-plastic-20261113',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
- {id:'pockets',file:'pockets-model.glb?v=folio-plastic-20261113',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'belt-model.glb?v=folio-plastic-20261113',x:.19,y:0,z:.045,label:[.19,.015,.42]}
+ {id:'binder',file:'binder-model.glb?v=folio-home-fix-20261113',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
+ {id:'case',file:'case-model.glb?v=folio-home-fix-20261113',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
+ {id:'pockets',file:'pockets-model.glb?v=folio-home-fix-20261113',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
+ {id:'wave',file:'belt-model.glb?v=folio-home-fix-20261113',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];
@@ -49,6 +51,9 @@ async function boot(){try{
  }
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x47503d,opacity:.14}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
  const loader=new GLTFLoader(),finishes=await createFinishPicker();
+ // Keep the overview on the requested navy plastic, including cached palettes.
+ finishes.config.palette.navy.hex='#00355d';
+ for(const study of studies)Object.assign(finishes.state[study.id],{finish:'plastic',color:'navy'});
  frame();requestAnimationFrame(tick);
  await Promise.all(studies.map(async s=>{
   const gltf=await loader.loadAsync(s.file),model=gltf.scene;
@@ -65,4 +70,4 @@ async function boot(){try{
  window.shelfStudy={get ready(){return ready},studies,models,scene,camera,renderer,open,project,finishes};
  }catch(error){console.error(error);document.querySelector('#loading').hidden=true;document.querySelector('#shelfError').hidden=false;document.body.classList.add('failed');}}
 for(const a of links){a.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();open(a.dataset.model);});a.addEventListener('mouseenter',()=>active(a.dataset.model));a.addEventListener('mouseleave',()=>active(null));a.addEventListener('focus',()=>active(a.dataset.model));a.addEventListener('blur',()=>active(null));}
-addEventListener('resize',()=>{if(renderer&&!transition)frame();});addEventListener('pageshow',e=>{if(e.persisted){transition=null;document.body.classList.remove('opening');frame();}});boot();
+addEventListener('resize',()=>{if(renderer&&!transition)frame();});addEventListener('pageshow',e=>{homeTitle();if(e.persisted){transition=null;document.body.classList.remove('opening');frame();}});boot();
