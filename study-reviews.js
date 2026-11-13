@@ -1,11 +1,10 @@
-import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,readReview,writeReview} from './study-review-store.js?v=3';
+import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,defaultReview,readReview,writeReview} from './study-review-store.js?v=defaults-20261113';
 
 const path=location.pathname;
 const fixedModel=path.endsWith('binder.html')?'binder':path.endsWith('case.html')?'case':path.endsWith('mini.html')?(new URLSearchParams(location.search).get('view')==='pockets'?'pockets':new URLSearchParams(location.search).get('drive')==='belt'?'belt':'wave'):null;
 let selected=fixedModel||'binder',storage,readFailed=false;
 try{storage=localStorage;}catch{readFailed=true;}
 const drafts=new Map(),pending=new Map();
-const fields=['pros','cons',...CRITERIA.map(([id])=>'score.'+id)];
 const root=document.createElement('aside');
 root.className='study-review';root.dataset.view=fixedModel||'shelf';root.setAttribute('aria-label','Option review');
 root.innerHTML=`<button class="review-toggle" aria-expanded="false" aria-controls="review-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h4"/></svg><span>Pros, cons & scores</span></button>
@@ -16,8 +15,7 @@ root.innerHTML=`<button class="review-toggle" aria-expanded="false" aria-control
     <div class="review-score-summary"><span class="review-rated"></span><button class="review-clear" type="button">Clear scores</button></div>
     <label class="review-note">Pros<textarea data-note="pros" rows="3" placeholder="What works well?"></textarea></label>
     <label class="review-note">Cons<textarea data-note="cons" rows="3" placeholder="What could be improved?"></textarea></label>
-    <p class="review-status" role="status" aria-live="polite"></p>
-    <p class="review-privacy">Private to this browser. Retained after closing.</p>
+    <p class="review-status" role="status" aria-live="polite" hidden></p>
   </section>`;
 document.body.append(root);
 const panel=root.querySelector('#review-panel'),toggle=root.querySelector('.review-toggle'),status=root.querySelector('.review-status');
@@ -25,14 +23,15 @@ function get(model,field){
   const key=reviewKey(model,field);
   if(!drafts.has(key)){
     try{drafts.set(key,readReview(storage,model,field));}
-    catch{readFailed=true;drafts.set(key,field.startsWith('score.')?null:'');}
+    catch{readFailed=true;drafts.set(key,defaultReview(model,field));}
   }
   return drafts.get(key);
 }
-function showStatus(saved=false){
+function showStatus(){
   const failed=readFailed||pending.size>0;
   status.dataset.state=failed?'error':'saved';
-  status.textContent=failed?'Couldn’t save. Keep this page open and copy your notes.':saved?'Saved on this browser':'Autosaves on this browser';
+  status.hidden=!failed;
+  status.textContent=failed?'Couldn’t save. Keep this page open and copy your notes.':'';
 }
 function updateScores(){
   for(const input of root.querySelectorAll('[data-score]'))input.checked=get(selected,'score.'+input.dataset.score)===Number(input.value);
@@ -42,13 +41,13 @@ function updateScores(){
 }
 function render(){
   for(const textarea of root.querySelectorAll('[data-note]'))textarea.value=get(selected,textarea.dataset.note);
-  updateScores();showStatus(fields.some(field=>{const value=get(selected,field);return value!==null&&value!=='';}));
+  updateScores();showStatus();
 }
 function flush(){
   for(const [key,{model,field,value}] of pending){
     try{writeReview(storage,model,field,value);pending.delete(key);readFailed=false;}catch{}
   }
-  showStatus(true);
+  showStatus();
 }
 function save(field,value){
   const key=reviewKey(selected,field);
@@ -71,11 +70,11 @@ addEventListener('storage',e=>{
   // One key per model/field prevents edits to another option overwriting notes.
   if(e.key===null){for(const key of drafts.keys())if(!pending.has(key))drafts.delete(key);render();return;}
   const parsed=parseReviewKey(e.key);if(!parsed||pending.has(e.key))return;
-  drafts.set(e.key,decodeReviewValue(parsed.field,e.newValue));
+  drafts.set(e.key,e.newValue===null?defaultReview(parsed.model,parsed.field):decodeReviewValue(parsed.field,e.newValue));
   if(parsed.model===selected){
     if(parsed.field.startsWith('score.'))updateScores();
     else root.querySelector(`[data-note="${parsed.field}"]`).value=get(selected,parsed.field);
-    showStatus(true);
+    showStatus();
   }
 });
 const inspection=document.querySelector('#inspection');
