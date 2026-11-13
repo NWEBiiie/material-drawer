@@ -24,7 +24,7 @@ const carriers=[],homes=new Map(),ray=new THREE.Raycaster(),pointer=new THREE.Ve
 const fraction=n=>{const w=Math.floor(n),num=Math.round((n-w)*32);if(!num)return String(w);let a=num,b=32;while(b)[a,b]=[b,a%b];return `${w?w+' ':''}${num/a}/${32/a}`;};
 const size=a=>a.slice(0,2).map(fraction).join(' × ')+'″';
 const heading=wave?(belt?'Belt wave drawer':'Wave drawer'):'Pocket box';
-document.title=heading+' — <insert title here>';$('studyTitle').innerHTML=heading+'<span>'+(wave?'03':'04')+'</span>';
+document.title=heading+' — TITLE';$('studyTitle').innerHTML=heading+'<span>'+(wave?'03':'04')+'</span>';
 document.querySelector(`[data-mode=${mode}]`).setAttribute('aria-current','page');
 $('studyDescription').textContent=wave?'Padded blue fabric, stitched binding, and soft pull tabs. A handwheel lifts the samples in a wave.':'Small square samples sit in individual fitted foam pockets. Lift a piece to read its back label.';
 $('blendDownload').href=prefix+'-model.blend';$('glbDownload').href=prefix+'-model.glb';
@@ -202,7 +202,7 @@ async function boot(){try{
  scene.add(new THREE.HemisphereLight(0xffffff,0xa7a99d,2.2));const key=new THREE.DirectionalLight(0xfff7e8,3.1);key.position.set(.3,.8,.6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.65,right:.65,top:.7,bottom:-.65,near:.01,far:2});key.shadow.normalBias=.0005;key.shadow.bias=-.0001;scene.add(key);const fill=new THREE.DirectionalLight(0xe3ecff,1.2);fill.position.set(-.6,.4,-.3);scene.add(fill);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x414938,opacity:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-.002;floor.receiveShadow=true;scene.add(floor);
  const assetVersion='textures-20261111';
- const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v='+assetVersion),fetch(prefix+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
+ const [gltf,records]=await Promise.all([new GLTFLoader().loadAsync(prefix+'-model.glb?v=title-20261113'),fetch(prefix+'-data.json?v='+assetVersion).then(r=>{if(!r.ok)throw Error('Missing material data');return r.json();})]);
  data=records;model=gltf.scene;scene.add(model);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m.map)m.map.anisotropy=8;});if(o.userData.window_panel){o.castShadow=false;mats.forEach(m=>{m.transparent=true;m.opacity=.14;m.depthWrite=false;});}}if(o.userData.material_id){carriers.push(o);homes.set(o.userData.material_id,o.position.clone());}if(o.userData.motion)moving=o;if(o.userData.wave_shaft)shaft=o;if(o.userData.sliding_belt){beltMesh=o;beltBase=o.geometry.attributes.position.array.slice();o.frustumCulled=false;}if(o.userData.belt_control)dowel=o;if(o.userData.wave_follower!==undefined)followers.push(o);if(o.userData.wave_spring!==undefined)springs.push(o);if(o.userData.cutaway)panels.push(o);});carriers.sort((a,b)=>a.userData.index-b.userData.index);
  clip=gltf.animations[0];if(carriers.length!==data.materials.length||!clip||!moving)throw Error('Incomplete sample study');mixer=new THREE.AnimationMixer(model);action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;
  finishes=await createFinishPicker({kind:mode});finishes.attach(model,mode);

@@ -21,7 +21,7 @@ if args[:1] == ['--source']:
 PREFIXES = args or [p.name.removesuffix('-model.blend') for p in ROOT.glob('*-model.blend')]
 INCH = .0254
 REVISION = 1
-SITE_TITLE = '<insert title here>'
+SITE_TITLE = 'TITLE'
 
 
 def empty(name, parent=None, position=(0, 0, 0)):

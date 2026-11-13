@@ -1,4 +1,4 @@
-# &lt;insert title here&gt;
+# TITLE
 
 **Pros, cons & scores** opens a private review for each of the four options. Five criteria—portability, intuitiveness, sample visibility, cost efficiency, and compact storage—use editable five-level ratings (1 Poor through 5 Excellent), starting unrated. Pros, cons, and each score save immediately to separate browser-local keys, survive window closure, and remain consistent between the shelf and close-up pages. Notes are not uploaded or shared; use the same browser profile and site address. Clearing site data or ending a private browsing session can remove them. Storage failures are shown explicitly.
 

@@ -82,7 +82,7 @@ def build_pockets():
   box('Latch_base',(x,-D/2+.04,H-.16),(.5,.08,.3),metal,base,.025)
   box('Latch_lid',(x,-D+.14,.12),(.5,.08,.24),metal,lid,.025)
  mark=empty('Lid_mark',lid);mark.location=(m(-2.7),m(-3.8),m(LH-.225));mark.rotation_euler.x=math.pi
- text('Brand','<insert title here>',(0,0,0),.30,mark);text('Subtitle','SMALL CUTS / 04',(0,-.45,0),.14,mark)
+ text('Brand','TITLE',(0,0,0),.30,mark);text('Subtitle','SMALL CUTS / 04',(0,-.45,0),.14,mark)
  materials=data['materials'];records=[];slots=[]
  assert len(materials)<=rows*cols
  for i in range(rows*cols):
