@@ -1,7 +1,7 @@
 import {MODELS,CRITERIA,LEVELS,reviewKey,parseReviewKey,decodeReviewValue,defaultReview,readReview,writeReview} from './study-review-store.js?v=defaults-20261113';
 
 const path=location.pathname;
-const fixedModel=path.endsWith('binder.html')?'binder':path.endsWith('case.html')?'case':path.endsWith('mini.html')?(new URLSearchParams(location.search).get('view')==='pockets'?'pockets':new URLSearchParams(location.search).get('drive')==='belt'?'belt':'wave'):null;
+const fixedModel=path.endsWith('binder.html')?'binder':path.endsWith('case.html')?'case':path.endsWith('mini.html')?(new URLSearchParams(location.search).get('view')==='pockets'?'pockets':'wave'):null;
 let selected=fixedModel||'binder',storage,readFailed=false;
 try{storage=localStorage;}catch{readFailed=true;}
 const drafts=new Map(),pending=new Map();
@@ -10,7 +10,7 @@ root.className='study-review';root.dataset.view=fixedModel||'shelf';root.setAttr
 root.innerHTML=`<button class="review-toggle" aria-expanded="false" aria-controls="review-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h4"/></svg><span>Pros, cons & scores</span></button>
   <section id="review-panel" aria-labelledby="review-title" hidden>
     <div class="review-heading"><h2 id="review-title">Option review</h2><button class="review-close" aria-label="Close option review">×</button></div>
-    ${fixedModel?`<p class="review-model">${MODELS[fixedModel]}</p>`:`<label class="review-model-select">Option<select aria-label="Option to review">${Object.entries(MODELS).map(([id,name])=>`<option value="${id}">${name}</option>`).join('')}</select></label>`}
+    ${fixedModel?`<p class="review-model">${MODELS[fixedModel]}</p>`:`<label class="review-model-select">Option<select aria-label="Option to review">${Object.entries(MODELS).filter(([id])=>id!=='belt').map(([id,name])=>`<option value="${id}">${name}</option>`).join('')}</select></label>`}
     <table class="review-matrix"><caption>1 Poor · 2 Fair · 3 Good · 4 Very good · 5 Excellent</caption><thead><tr><th scope="col">Criteria</th>${LEVELS.map((level,i)=>`<th scope="col" title="${level}">${i+1}</th>`).join('')}</tr></thead><tbody>${CRITERIA.map(([id,label])=>`<tr><th scope="row">${label}</th>${LEVELS.map((level,i)=>`<td><label class="review-score"><input type="radio" name="review-${id}" value="${i+1}" data-score="${id}" aria-label="${label}: ${i+1} — ${level}"><span aria-hidden="true"></span></label></td>`).join('')}</tr>`).join('')}</tbody></table>
     <div class="review-score-summary"><span class="review-rated"></span><button class="review-clear" type="button">Clear scores</button></div>
     <label class="review-note">Pros<textarea data-note="pros" rows="3" placeholder="What works well?"></textarea></label>

@@ -7,10 +7,10 @@
     "gray": {"label": "UTSW gray", "hex": "#636466"}
   },
   "models": {
-    "binder": {"label": "Binder", "finish": "cloth", "color": "navy"},
-    "case": {"label": "Slanted case", "finish": "wood", "color": "blue"},
-    "wave": {"label": "Wave drawer", "finish": "cloth", "color": "blue"},
-    "pockets": {"label": "Pocket box", "finish": "plastic", "color": "gray"}
+    "binder": {"label": "Binder", "finish": "plastic", "color": "navy"},
+    "case": {"label": "Slanted case", "finish": "plastic", "color": "navy"},
+    "wave": {"label": "Wave drawer", "finish": "plastic", "color": "navy"},
+    "pockets": {"label": "Pocket box", "finish": "plastic", "color": "navy"}
   },
   "roles": {
     "binder": [

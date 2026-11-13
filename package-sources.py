@@ -18,7 +18,7 @@ names = [
     'build-storage.cjs', 'compact-glb.cjs', 'check-material-volumes.cjs',
     'check-collection.cjs', 'check-workshop.py', 'check-belt-clearance.py',
     'tether-source.json', 'finish-config.json', 'binder-cover.js', 'package-sources.py',
-    'refresh-material-textures.py', 'refresh-blender-textures.py',
+    'refresh-material-textures.py', 'refresh-blender-textures.py', 'apply-exterior-finish.py',
 ]
 readme = (root / 'README.md').read_text(encoding='utf-8')
 guide = ('REVISED MATERIAL COLLECTION — 75 MATERIALS\n\n'

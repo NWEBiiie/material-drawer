@@ -57,6 +57,8 @@ for mode in modes:
   nodes=m.node_tree.nodes;links=m.node_tree.links;bs=nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=(*rgb,1);bs.inputs['Roughness'].default_value=rough
   bs.inputs['Sheen Weight'].default_value=.35 if kind=='cloth' else 0;bs.inputs['Sheen Tint'].default_value=(*rgb,1);bs.inputs['Sheen Roughness'].default_value=.9
   bs.inputs['Coat Weight'].default_value=(.22 if kind=='plastic' else .1 if kind=='wood' else 0) if role=='shell' else 0;bs.inputs['Coat Roughness'].default_value=.4
+  if role=='thread' and setting['finish']!='cloth':
+   bs.inputs['Alpha'].default_value=0;m.diffuse_color=(*rgb,0);m.surface_render_method='DITHERED'
   if role not in ['ink','thread']:
    uv=nodes.new('ShaderNodeTexCoord');mapping=nodes.new('ShaderNodeMapping');scale=1/.0064 if kind=='cloth' else 1/.16 if kind=='wood' else 1/.0254;mapping.inputs['Scale'].default_value=(scale,scale,1);links.new(uv.outputs['UV'],mapping.inputs['Vector'])
    tex=nodes.new('ShaderNodeTexImage');normal_tex=nodes.new('ShaderNodeTexImage')
@@ -79,7 +81,12 @@ for mode in modes:
  count=0
  for o in bpy.data.objects:
   if o.type!='MESH':continue
-  role=next((role for role,pattern in config['roles'][mode] if re.search(pattern,o.name)),None)
+  owner=o;locked=False
+  while owner:
+   if owner.get('finish_locked'):locked=True;break
+   owner=owner.parent
+  if locked:continue
+  role=o.get('finish_role') or next((role for role,pattern in config['roles'][mode] if re.search(pattern,o.name)),None)
   if not role:continue
   o.data=o.data.copy()
   if not o.data.uv_layers:o.data.uv_layers.new()

@@ -1,4 +1,4 @@
-import {createFinishPicker} from './case-finishes.js?v=simple-controls1';
+import {createFinishPicker} from './case-finishes.js?v=folio-plastic-20261113';
 import * as THREE from './three.module.min.js';
 import {GLTFLoader} from './binder-loader.js';
 
@@ -6,10 +6,10 @@ const canvas=document.querySelector('#shelfScene'),links=[...document.querySelec
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 // GLBs are in metres. Keep every model at the same physical scale.
 const studies=[
- {id:'binder',file:'binder-model.glb?v=title-20261113',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
- {id:'case',file:'case-model.glb?v=title-20261113',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
- {id:'pockets',file:'pockets-model.glb?v=title-20261113',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
- {id:'wave',file:'belt-model.glb?v=title-20261113',x:.19,y:0,z:.045,label:[.19,.015,.42]}
+ {id:'binder',file:'binder-model.glb?v=folio-plastic-20261113',x:-.38,y:.07,z:.055,label:[-.38,.035,.265]},
+ {id:'case',file:'case-model.glb?v=folio-plastic-20261113',x:-.56,y:.265,z:0,label:[-.56,.23,.265]},
+ {id:'pockets',file:'pockets-model.glb?v=folio-plastic-20261113',x:-.20,y:.265,z:.01,label:[-.20,.23,.265]},
+ {id:'wave',file:'belt-model.glb?v=folio-plastic-20261113',x:.19,y:0,z:.045,label:[.19,.015,.42]}
 ];
 let renderer,scene,camera,ready=false,transition=null,hover=null,last=performance.now();
 const pointer=new THREE.Vector2(),ray=new THREE.Raycaster(),models=[],hitboxes=[];

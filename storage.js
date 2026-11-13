@@ -1,7 +1,7 @@
 import * as THREE from './three.module.min.js';
 import {OrbitControls} from './binder-orbit.js';
 import {GLTFLoader} from './binder-loader.js';
-import {createFinishPicker} from './case-finishes.js?v=simple-controls1';
+import {createFinishPicker} from './case-finishes.js?v=folio-plastic-20261113';
 const $=id=>document.getElementById(id),views=[];
 const names={binder:'Binders',case:'Slanted cases',wave:'Wave drawers',pockets:'Pocket boxes'};
 // The closed assets are exported from the same Blender scenes as the close-ups.
@@ -14,7 +14,7 @@ function url(item){const u=new URL(item.url,location.href);if(item.kind==='wave'
 async function buildItem(item,scene,pickables){
  const group=new THREE.Group();group.position.set(...item.position);group.userData.item=item;scene.add(group);pickables.push(group);
  const prefix=item.kind==='binder'?(item.volume===1?'binder':'volume-'+item.volume):(item.kind==='wave'?'belt':item.kind)+(item.volume===1?'':'-volume-'+item.volume);
- const file=prefix+'-storage.glb?v='+(prefix.startsWith('pockets')?'slots21':'chart2');
+ const file=prefix+'-storage.glb?v=folio-plastic-20261113';
  if(!assets.has(file))assets.set(file,loader.loadAsync(file));
  const gltf=await assets.get(file),model=gltf.scene.clone(true);model.scale.setScalar(1/.0254);
  if(item.kind==='pockets')model.rotation.y=Math.PI/2;

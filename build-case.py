@@ -91,7 +91,7 @@ for x in [-2.6,2.6]:
     hinge=cylinder('Hinge_barrel',(x,D/2-.08,H),.10,.82,nickel,case);hinge.rotation_euler.y=math.pi/2
     cube('Hinge_leaf',(x,-.12,.18),(.82,.40,.035),nickel,lid,.025)
 mark=empty('Lid_inner_mark',lid);mark.location=(m(-2.8),m(-6.0),m(lidH-.278));mark.rotation_euler.x=math.pi
-text('Case_brand','TITLE',(0,0,0),.28,mark)
+text('Case_brand','UTSW Folio',(0,0,0),.28,mark)
 text('Case_subtitle','MATERIAL STUDIES / 02',(0,-.42,0),.135,mark)
 text('Case_count','18 SAMPLES  /  LVT - RT - SV - EF - CPT - RB',(0,-.72,0),.11,mark)
 
